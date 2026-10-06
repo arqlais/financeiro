@@ -489,14 +489,14 @@ const BANKS={
 const BANK_RULES=[[/\bnu\b|nubank|fatura p[fj]\b/,'nubank'],[/\binter\b/,'inter'],[/m\.\s?pago|mercado\s?pago/,'mercado pago'],[/ita[uú]/,'itaú'],[/\bc6\b/,'c6 bank'],[/riachuelo/,'riachuelo'],[/santander/,'santander'],[/bradesco/,'bradesco'],[/\bcaixa\b/,'caixa'],[/\bbb\b|banco do brasil/,'banco do brasil'],[/picpay/,'picpay']];
 const BOLETO=/claro|vivo|\btim\b|mrv|obra|mensalidade|rematr|acordo|\bcasa\b|assinatura|serasa|anual|aluguel|condom|\bluz\b|internet|tia dani/;
 const CATS=[
-  ['comida fora','var(--s1)',['almoço','almoco','lanche','pizza','açaí','acai','japonês','japones','mcdonald','mc donald','burger','salgado','marmita','café','cafe','doce','sorvete','cachorro','churros','milk','paçoca','pacoca','pão de queijo','chiclete','besteira','cookie','ifood','restaurante','bar','caldocana','lanchonete','chocolate','comida','salgadinho','adega','bebida','coca','kfc','popeyes','churras','chorão','cerveja','feijoada','snickers','guloseima','gin','refri','bolo']],
-  ['mercado','var(--s6)',['mercado','coop','pão','pao','padaria','feira','hortifruti','banana','água','agua','refrigerante','biscoito','carolina','kyomoto','atacad','assai','assaí','carrefour','extra','compre bem','carne','rosélia','roselia','aguá']],
-  ['transporte','var(--s3)',['uber','99','gasolina','sptrans','transporte','estacionamento','pedágio','recarga','metrô','metro','ônibus','onibus','estudante','bilhete','passagem','trem']],
-  ['casa','var(--s4)',['casa','mrv','obra','colchão','colchao','cama','edredom','leroy','móveis','moveis','aluguel','condomínio','luz','internet','manta','pilha']],
-  ['estudo e trabalho','var(--s7)',['maquete','monitor','teclado','xeque-mate','mensalidade','rematrícula','rematricula','faculdade','curso','kalunga','papelaria','livro','impressão','impressao','agenda','placas','frete','adesivo','caderno','arquivo','elo7','lápis','tabela']],
-  ['lazer e viagem','var(--s2)',['viagem','airbnb','cinema','ingresso','praia','show','megafest','narguilé','narguile','rifa','passeio','chácara','chacara','pula-pula','liberdade']],
-  ['beleza e saúde','var(--s5)',['cabelo','cosmético','cosmetico','esmalte','shampoo','creatina','farmácia','farmacia','perfume','natação','natacao','academia','médico','medico','mucilon','whey','zelo','desodorante','rímel','rimel','remédio','remedio','perfumaria']],
-  ['roupas e compras','var(--s8)',['tenis','tênis','blusa','shein','camiseta','roupa','crocs','adidas','boné','bone','pijama','shopee','iphone','celular','fone','notebook','guarda-chuva','presente','flores','rihappy','chip','caixa','capinha']],
+  ['comida fora','var(--s1)',['almoço','almoco','lanche','pizza','açaí','acai','japonês','japones','mcdonald','mc donald','burger','salgado','marmita','café','cafe','doce','sorvete','cachorro','churros','milk','paçoca','pacoca','pão de queijo','chiclete','besteira','cookie','ifood','restaurante','bar','caldocana','lanchonete','chocolate','comida','salgadinho','adega','bebida','coca','kfc','popeyes','churras','chorão','cerveja','feijoada','snickers','guloseima','gin','refri','bolo','ifood','rappi','delivery','hamburguer','hambúrguer','pastel','sushi','esfiha','padoca','boteco','sorveteria','cafeteria','starbucks','subway','burger king','bk','outback','coxinha','tapioca','espetinho','yakisoba','temaki','poke','brigadeiro','bombom','suco','energético','energetico','guaraná','guarana','gatorade','ice','bala','pipoca','casquinha','pastéis','pasteis','espeto','canelinha','kariri','goya','mel']],
+  ['mercado','var(--s6)',['mercado','coop','pão','pao','padaria','feira','hortifruti','banana','água','agua','refrigerante','biscoito','carolina','kyomoto','atacad','assai','assaí','carrefour','extra','compre bem','carne','rosélia','roselia','aguá','supermercado','hortifrúti','sacolão','açougue','acougue','frutas','verdura','leite','ovos','arroz','feijão','feijao','café em pó','pão de açúcar','pao de acucar','sams','makro','atacadão','tenda','oxxo','minimercado','mercearia','frango','milho','limão','limao','alface','tomate','morango','repolho','comprebem','legumes','batata','cebola']],
+  ['transporte','var(--s3)',['uber','99','gasolina','sptrans','transporte','estacionamento','pedágio','recarga','metrô','metro','ônibus','onibus','estudante','bilhete','passagem','trem','combustível','combustivel','posto','shell','ipiranga','etanol','diesel','pedagio','sem parar','veloe','taxi','táxi','cabify','indrive','bicicleta','patinete','metro','cptm','zul','estacionar','lavagem','lava-jato','oficina','pneu','ipva','licenciamento','seguro carro','carro','combustível']],
+  ['casa','var(--s4)',['casa','mrv','obra','colchão','colchao','cama','edredom','leroy','móveis','moveis','aluguel','condomínio','luz','internet','manta','pilha','condominio','aluguel','energia','enel','sabesp','comgás','comgas','gás','gas','água e esgoto','faxina','diarista','limpeza','detergente','sabão','sabao','amaciante','papel higiênico','vassoura','tok&stok','tok stok','camicado','ikea','utensílio','panela','reforma','pintura','tinta','ferragens','eletricista','encanador','mangueira']],
+  ['estudo e trabalho','var(--s7)',['maquete','monitor','teclado','xeque-mate','mensalidade','rematrícula','rematricula','faculdade','curso','kalunga','papelaria','livro','impressão','impressao','agenda','placas','frete','adesivo','caderno','arquivo','elo7','lápis','tabela','material','livraria','apostila','udemy','alura','coursera','xerox','plotagem','plotter','software','autocad','sketchup','revit','adobe','canva','domínio','dominio','hospedagem','escritório','escritorio','freepik','imagens ia','pincel','fita métrica','trabalho','freela','pasta']],
+  ['lazer e viagem','var(--s2)',['viagem','airbnb','cinema','ingresso','praia','show','megafest','narguilé','narguile','rifa','passeio','chácara','chacara','pula-pula','liberdade','hotel','pousada','passagem aérea','aéreo','aereo','latam','gol','azul','festa','balada','teatro','museu','parque','ingressos','spotify','netflix','prime video','disney','hbo','max','globoplay','jogo','game','steam','playstation','xbox','churrasco','aniversário','aniversario','futebol','ddtank','foto']],
+  ['beleza e saúde','var(--s5)',['cabelo','cosmético','cosmetico','esmalte','shampoo','creatina','farmácia','farmacia','perfume','natação','natacao','academia','médico','medico','mucilon','whey','zelo','desodorante','rímel','rimel','remédio','remedio','perfumaria','drogasil','raia','droga raia','pague menos','drogaria','dentista','consulta','exame','psicólogo','psicologo','terapia','fisioterapia','manicure','unha','sobrancelha','depilação','depilacao','maquiagem','salão','salao','barbearia','barbeiro','skincare','protetor','vitamina','plano de saúde','unimed','smartfit','smart fit','pilates','yoga','crossfit','pomada','injeção','injecao','caabelo','caneleira']],
+  ['roupas e compras','var(--s8)',['tenis','tênis','blusa','shein','camiseta','roupa','crocs','adidas','boné','bone','pijama','shopee','iphone','celular','fone','notebook','guarda-chuva','presente','flores','rihappy','chip','caixa','capinha','amazon','mercado livre','magalu','magazine','americanas','aliexpress','zara','renner','c&a','cea','hering','marisa','centauro','netshoes','nike','sapato','sandália','sandalia','bolsa','mochila','óculos','oculos','relógio','relogio','acessório','calça','calca','vestido','short','meia','cueca','calcinha','sutiã','presente','película','pelicula','loja 1 real','amigo secreto','saia']],
   ['cartões','var(--s0)',['fatura','nubank','itaú','itau','c6','riachuelo','inter','m. pago']],
   ['contas e telefone','var(--s0)',['claro','vivo','tim','assinatura','netflix','spotify','serasa']],
 ];
@@ -519,7 +519,11 @@ const ddmm=iso=>iso?`${iso.slice(8)} de ${MESES[+iso.slice(5,7)-1].slice(0,3)}`:
 const sum=a=>a.reduce((s,i)=>s+(+i.valor||0),0);
 const parc=d=>{const m=/(\d+)\s*\/\s*(\d+)\s*$/.exec(d||'');return m?{x:+m[1],y:+m[2],base:d.slice(0,m.index).trim()}:null};
 const baseOf=it=>(parc(it.desc)?.base||it.desc||'').trim().toLowerCase();
-function cat(it){ if(it.cat){const c=String(it.cat).toLowerCase(); if(CATN.includes(c)) return c;} const d=' '+(it.desc||'').toLowerCase()+' ';
+// categories are guessed from the description; when someone corrects one, every later entry with the same
+// description follows that correction (learned from items that carry an explicit cat)
+let learnVer=-1, learned=new Map();
+function learnedCat(desc){ if(learnVer!==ver){ learned=new Map(); for(const i of items.values()) if(i.cat&&i.tipo==='gasto'&&!i.removido) learned.set((parc(i.desc)?.base||i.desc||'').trim().toLowerCase(),String(i.cat).toLowerCase()); learnVer=ver; } return learned.get((parc(desc)?.base||desc||'').trim().toLowerCase()); }
+function cat(it){ if(it.cat){const c=String(it.cat).toLowerCase(); if(CATN.includes(c)) return c;} const lc=learnedCat(it.desc); if(lc&&CATN.includes(lc)) return lc; const d=' '+(it.desc||'').toLowerCase().normalize('NFC')+' ';
   for(const [n,,ks] of CATS) if(ks.some(k=>d.includes(k.length<=3?' '+k+' ':k))) return n; return 'outros'; }
 function banco(it){ if(it.banco!==undefined) return it.banco?String(it.banco).toLowerCase():'boleto'; if(it.tipo!=='conta') return null;
   const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) return b; return BOLETO.test(d)?'boleto':null; }
@@ -745,7 +749,7 @@ function quickForm(p,tipo){
   const dDef=m===t.slice(0,7)?t:`${m}-${tipo==='conta'?'10':'01'}`;
   const extra=tipo==='conta'?`<select id="${p}-parc" data-keep aria-label="parcelas">${[1,2,3,4,5,6,7,8,9,10,12,18,24].map(n=>`<option value="${n}">${n===1?'à vista':n+'x'}</option>`).join('')}</select>
       <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão: não sei</option><option value="boleto">boleto ou pix</option>${Object.keys(BK()).map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
-    :tipo==='gasto'?`<select id="${p}-cat" data-keep aria-label="categoria">${CATN.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>`:'';
+    :'';
   return `<form class="qadd" id="${p}F" data-tipo="${tipo}" novalidate>
     <div class="qrow"><div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>
       <div class="chipset">${Object.entries(QUEM).filter(([k])=>tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${qq===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
@@ -755,6 +759,7 @@ function quickForm(p,tipo){
       <input id="${p}-data" data-keep type="date" value="${dDef}" aria-label="${tipo==='conta'?'vencimento':'data'}">
       ${extra}
       <button class="btn dark" type="submit">${ic('plus','sm')} adicionar</button></div>
+    ${tipo==='gasto'?`<p class="hint" id="${p}-cathint">a categoria é identificada sozinha pelo que você escrever.</p>`:''}
     <p class="err" id="${p}-err" hidden></p></form>`;
 }
 const keepVals=p=>{const k={}; ['desc','valor','data'].forEach(x=>{const el=$('#'+p+'-'+x); if(el) k[x]=el.value;}); return k;};
@@ -913,12 +918,11 @@ async function quickAdd(p){
   if(!desc) return err('escreva o que foi.'); if(raw===''||!(v>=0)) return err('digite o valor, por exemplo 45,90.');
   const tipo=f.dataset.tipo; let quem=ui.qquem||'juntos'; if(tipo==='entrada'&&quem==='juntos') quem='lais';
   const base={tipo,quem,desc,valor:v,data,mes:(data||ui.mes).slice(0,7)};
-  if(tipo==='gasto'){ const c=$('#'+p+'-cat')?.value; if(c&&c!==cat({desc})) base.cat=c; }
   if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc})||''; if(b!==auto) base.banco=b==='boleto'?'':b; }
   const n=tipo==='conta'?+($('#'+p+'-parc')?.value||1):1;
   if(p==='s') $('#sheetHost').innerHTML=''; else { ['desc','valor'].forEach(x=>$('#'+p+'-'+x).value=''); if($('#'+p+'-parc')) $('#'+p+'-parc').value='1'; }
   if(n>1){ const d0=data||base.mes+'-10'; for(let i=0;i<n;i++){ const dt=addMd(d0,i); await safe(store.put({...base,id:uid(),desc:`${desc} ${i+1}/${n}`,data:dt,mes:dt.slice(0,7)})); } toast(`${n} parcelas lançadas`,'layers'); }
-  else await safe(store.put({...base,id:uid()}),`${tipo} adicionad${tipo==='gasto'?'o':'a'}`);
+  else await safe(store.put({...base,id:uid()}),tipo==='gasto'?`gasto adicionado em ${cat(base)}`:`${tipo} adicionada`);
   if(p!=='s') $('#'+p+'-desc')?.focus();
 }
 
@@ -1161,7 +1165,7 @@ document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefau
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
   if(e.target.id==='bk-cor'){ $('#bk-sw').style.background=e.target.value; return; }
-  if(/^[qs]-desc$/.test(e.target.id)){ const p=e.target.id[0], d=e.target.value; const c=$('#'+p+'-cat'); if(c) c.value=cat({desc:d}); const b=$('#'+p+'-bank'); if(b){ const k=banco({tipo:'conta',desc:d}); b.value=k||''; } }
+  if(/^[qs]-desc$/.test(e.target.id)){ const p=e.target.id[0], d=e.target.value; const ch=$('#'+p+'-cathint'); if(ch) ch.innerHTML=d.trim()?`categoria: <b>${esc(cat({desc:d}))}</b> · dá para trocar depois tocando no gasto`:'a categoria é identificada sozinha pelo que você escrever.'; const b=$('#'+p+'-bank'); if(b){ const k=banco({tipo:'conta',desc:d}); b.value=k||''; } }
   if(e.target.id==='q-busca'){ ui.busca=e.target.value; clearTimeout(window._bq); window._bq=setTimeout(render,120); return; }
   if(e.target.id==='busca'){ ui.q=e.target.value; const p=e.target.selectionStart; render(); const b=$('#busca'); b.focus(); try{b.setSelectionRange(p,p)}catch(_){} }
   if(e.target.id==='f-desc'){ if($('#f-cat')) $('#f-cat').value=cat({desc:e.target.value}); if($('#f-bank')&&form&&form.bankSel===undefined&&form.banco===undefined){ const b=banco({tipo:'conta',desc:e.target.value}); $('#f-bank').value=b||''; } }
