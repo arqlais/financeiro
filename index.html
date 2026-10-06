@@ -1083,16 +1083,13 @@ function pAjustes(){
   <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece na tela de início</span></div>
     <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
     ${icone.id==='iniciais'?`<div class="toolbar" style="margin-top:12px"><label class="search" style="max-width:220px"><input id="ic-txt" maxlength="3" value="${esc(icone.txt||'l&i')}" placeholder="ex.: l&i" aria-label="iniciais"></label><span class="muted" style="font-size:.82rem">até 3 letras</span></div>`:''}
-    <p class="hint" style="margin-top:12px">para trocar o ícone da tela de início: apague o atalho, abra o site no safari (ou chrome), entre na conta e adicione de novo. a escolha fica salva na sua conta, então o navegador já sabe qual usar.</p></section>
+    </section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
     <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${k.custom&&canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>
     ${canWrite?`<div class="toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><label class="search" style="max-width:none">${ic('bank','sm')}<input id="bk-nome" placeholder="nome do banco ou cartão (ex.: neon, will, renner)" maxlength="30" aria-label="nome do banco"></label>
       <label class="pill-btn" style="position:relative;height:42px;gap:8px"><span id="bk-sw" class="dot" style="width:16px;height:16px;background:#5a7d9a"></span>cor<input type="color" id="bk-cor" value="#5a7d9a" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="cor do banco"></label>
       <button class="btn dark" data-bankadd="1">${ic('plus','sm')} adicionar</button></div>`:''}</section>
-  <section class="card"><div class="card-h"><h2>instalar no celular</h2>${ic('phone','sm')}</div><div class="grid-2e">
-    <div><b style="font-weight:600">iphone</b><ol class="steps"><li>abra este site no safari.</li><li>toque em compartilhar (o quadrado com a seta).</li><li>toque em adicionar à tela de início.</li></ol></div>
-    <div><b style="font-weight:600">android</b><ol class="steps"><li>abra este site no chrome.</li><li>toque nos três pontinhos.</li><li>toque em instalar app ou adicionar à tela inicial.</li></ol></div>
-  </div></section>`;
+`;
 }
 async function saveFile(name,data,type){
   try{ const dl=window.claude?.use? await window.claude.use('downloads'):null; if(dl){ await dl.save({filename:name,data}); return; } }catch(e){ if(e?.code==='declined') return; }
