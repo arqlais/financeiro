@@ -229,6 +229,14 @@ button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
 .cal .d.today{outline:1.5px solid var(--ink);outline-offset:1px}
 .scale{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:10px;font-size:.72rem;color:var(--muted)}
 .scale i{width:14px;height:10px;border-radius:3px}
+.ym-link{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;padding:14px 16px}
+.ym-link>.ico{width:40px;height:40px;padding:10px;border-radius:12px;background:var(--rose-soft);color:var(--rose)}
+.ym-link b{display:block;font-weight:600}.ym-link small{color:var(--muted);font-size:.8rem}
+.bankhero{display:flex;align-items:center;gap:14px}
+.bankhero h1{margin:0;font-size:clamp(1.6rem,4vw,2.2rem);font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.bankhero span{color:var(--muted);font-size:.84rem}
+.bm.big{width:56px;height:56px;border-radius:16px;font-size:1.05rem;background:var(--bk);color:#fff;display:grid;place-items:center;font-weight:700}
+.pbar{display:block;height:5px;border-radius:99px;background:var(--sunk);overflow:hidden;margin-top:6px;max-width:220px}.pbar i{display:block;height:100%;border-radius:99px}
 .ym{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:12px 0;border-bottom:1px solid var(--line);text-align:left}
 .ym:last-of-type{border-bottom:0}
 .ym:hover{background:var(--sunk)}
@@ -612,7 +620,7 @@ function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); 
 let ver=0; class Store extends Map{ set(k,v){ver++;return super.set(k,v)} delete(k){ver++;return super.delete(k)} clear(){ver++;return super.clear()} }
 let items=new Store(), store=null, canWrite=true, ready=false, autoDone=false, bannerMsg='';
 const ui={page:'inicio', mes:today().slice(0,7), filtro:'aberto', bank:null, quem:'todos', q:'', cat:null, ano:today().slice(0,4)};
-try{const s=JSON.parse(localStorage.getItem('fin2-ui')||'{}'); if(['inicio','lanc','ano','ajustes'].includes(s.page)) ui.page=s.page;}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('fin2-ui')||'{}'); if(['inicio','lanc','ano','ajustes','bancos'].includes(s.page)) ui.page=s.page;}catch(e){}
 const saveUi=()=>{try{localStorage.setItem('fin2-ui',JSON.stringify({page:ui.page}))}catch(e){}};
 let idxVer=-1, idx={live:[],byMes:new Map(),meses:[]};
 function index(){ if(idxVer===ver) return idx; const lv=[],bm=new Map(),ms=new Set();
@@ -740,7 +748,7 @@ function render(){
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
   if(gate==='login'){ m.innerHTML=vLogin(); return; }
   if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
-  const v={inicio:pInicio,lanc:pLanc,ano:pAno,ajustes:pAjustes}[ui.page]||pInicio;
+  const v={inicio:pInicio,lanc:pLanc,ano:pAno,ajustes:pAjustes,bancos:pBancos}[ui.page]||pInicio;
   // keep what is being typed in the quick-add line when live updates re-render the page
   const keep={}; m.querySelectorAll('[data-keep]').forEach(el=>keep[el.id]=el.value); const fid=document.activeElement?.id;
   m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+v();
@@ -832,7 +840,38 @@ function cardBancosMini(contas){
   const g={}; contas.forEach(c=>{const b=banco(c); if(b&&b!=='boleto') (g[b]=g[b]||[]).push(c)});
   const a=Object.entries(g).sort((x,y)=>sum(y[1])-sum(x[1])); if(!a.length) return '';
   const B=BK();
-  return `<section class="card"><div class="card-h"><h2>por cartão</h2></div><div class="bars">${a.map(([b,l])=>{const ab=l.filter(c=>!c.pago), f=sum(ab);return `<div class="bar"><span><span class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></span>${esc(b)}</span><span class="num">${fmt(sum(l))}</span><small class="muted" style="grid-column:1/-1;font-size:.76rem">${ab.length?`falta ${fmt(f)}`:'pago'}</small></div>`}).join('')}</div></section>`;
+  return `<section class="card"><div class="card-h"><h2>por cartão</h2></div><div class="bars">${a.map(([b,l])=>{const ab=l.filter(c=>!c.pago), f=sum(ab);return `<button class="bar" data-banco="${esc(b)}"><span><span class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></span>${esc(b)}</span><span class="num">${fmt(sum(l))}</span><small class="muted" style="grid-column:1/-1;font-size:.76rem">${ab.length?`falta ${fmt(f)}`:'pago'}</small></button>`}).join('')}</div><button class="link" style="margin-top:12px" data-banco="">explorar bancos ${ic('arrow','sm')}</button></section>`;
+}
+// ---------- explore a bank ----------
+function bankStats(){
+  // every bill that has a card, grouped by card, across all months
+  const g=new Map(); for(const i of live()){ if(i.tipo!=='conta') continue; const b=banco(i); if(!b||b==='boleto') continue; if(!g.has(b)) g.set(b,[]); g.get(b).push(i); } return g; }
+function pBancos(){
+  const g=bankStats(), B=BK(), cm=today().slice(0,7);
+  const all=[...g.entries()].map(([b,l])=>({b,l,mes:sum(l.filter(i=>i.mes===cm)),tot:sum(l)})).sort((x,y)=>y.mes-x.mes||y.tot-x.tot);
+  let h=`<p class="greet">bancos e cartões</p>`;
+  if(!all.length) return h+`<section class="card empty">${ic('card')}<div>nenhuma conta com cartão ainda. ao lançar uma conta, escolha o cartão.</div></section>`;
+  const sel=ui.bk&&g.has(ui.bk)?ui.bk:all[0].b, k=B[sel]||B['outro cartão'], list=g.get(sel);
+  h+=`<div class="catchips">${all.map(x=>`<button class="chip" data-banco="${esc(x.b)}" aria-pressed="${x.b===sel}"><span class="bk-dot" style="background:${(B[x.b]||B['outro cartão']).c}"></span>${esc(x.b)}</button>`).join('')}</div>`;
+  // this month, average of the last 6 months with bills on this card, what is still ahead in installments
+  const by=new Map(); list.forEach(i=>by.set(i.mes,(by.get(i.mes)||0)+(+i.valor||0)));
+  const past=[...by.entries()].filter(([m])=>m<cm).sort().slice(-6); const media=past.length?past.reduce((s,[,v])=>s+v,0)/past.length:0;
+  const atual=list.filter(i=>i.mes===cm); const abertas=atual.filter(i=>!i.pago);
+  const parcs=atual.map(i=>({i,p:parc(i.desc)})).filter(o=>o.p&&o.p.y>1);
+  const futuro=parcs.reduce((s,o)=>s+(o.p.y-o.p.x)*(+o.i.valor||0),0);
+  h+=`<section class="bankhero" style="--bk:${k.c}"><span class="bm big">${esc(k.m)}</span><div><h1>${esc(sel)}</h1><span>${list.length} conta${list.length>1?'s':''} registrada${list.length>1?'s':''}</span></div></section>`;
+  h+=sum3([[`em ${mName(cm)}`,fmt(sum(atual))],['média por mês',fmt(media)],['parcelas pela frente',fmt(futuro)]]);
+  // last 12 months on this card
+  const ms=[]; for(let j=11;j>=0;j--) ms.push(addM(cm,-j));
+  const W=vizW(760),H=200,L=34,R=4,T=12,Bm=28, mx=Math.max(...ms.map(m=>by.get(m)||0),1), st=nice(mx/3), top=Math.ceil(mx/st)*st, y=v=>T+(H-T-Bm)*(1-v/top), bw=(W-L-R)/12;
+  let svg=''; for(let v=0;v<=top+1e-6;v+=st) svg+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${kfmt(v)}</text>`;
+  ms.forEach((m,j)=>{ const v=by.get(m)||0, w=Math.min(22,bw*.55), x=L+j*bw+(bw-w)/2; svg+=`<g class="bar-m" data-tip="${esc(`<b>${mName(m)} ${m.slice(0,4)}</b>|${fmtT(v)}`)}"><rect x="${L+j*bw}" y="${T}" width="${bw}" height="${H-T-Bm}" fill="transparent"/><path d="${barPath(x,y(v),w,y(0)-y(v))}" fill="${k.c}" opacity="${m===cm?1:.7}"/></g><text x="${L+j*bw+bw/2}" y="${H-8}" text-anchor="middle" ${m===cm?'style="fill:var(--ink);font-weight:600"':''}>${innerWidth<700?mName(m).slice(0,1):mName(m).slice(0,3)}</text>`; });
+  h+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div><div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(sel)} nos últimos 12 meses">${svg}</svg></div></section>`;
+  h+=`<div class="dash">`;
+  h+=`<section class="sec"><div class="sec-h"><h2>parcelas em andamento</h2><span>${parcs.length}</span></div>${parcs.length?parcs.sort((a,b)=>(b.p.y-b.p.x)*b.i.valor-(a.p.y-a.p.x)*a.i.valor).map(({i,p})=>`<div class="ln"><span class="tap" data-edit="${esc(i.id)}"><span style="min-width:0"><b>${esc(p.base)}</b><small>${p.x} de ${p.y} · ${p.x<p.y?`termina em ${mName(addM(cm,p.y-p.x))}`:'última parcela'}</small><span class="pbar"><i style="width:${p.x/p.y*100}%;background:${k.c}"></i></span></span><span class="v">${fmt(i.valor)}<small style="display:block;text-align:right;font-weight:400">${p.x<p.y?`faltam ${fmt((p.y-p.x)*i.valor)}`:''}</small></span></span></div>`).join(''):'<div class="empty-ln">nenhuma compra parcelada neste cartão.</div>'}</section>`;
+  h+=`<section class="sec"><div class="sec-h"><h2>contas de ${mName(cm)}</h2><span>${abertas.length?`falta <b>${fmt(sum(abertas))}</b>`:atual.length?'tudo pago':''}</span></div>${atual.length?atual.sort(byDate).map(c=>`<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c)}<span class="v">${fmt(c.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nada neste cartão este mês.</div>'}</section>`;
+  h+=`</div>`;
+  return h;
 }
 function vSemana(contas,t,C,falta){
   const pend=contas.filter(c=>!c.pago&&c.data&&dDiff(c.data,t)<=7).sort(byDate);
@@ -978,6 +1017,7 @@ function pAno(){
       <span class="ym-v ${r.S<0?'neg':'pos'}">${r.S<0?'−':'+'}${fmt(Math.abs(r.S))}</span></button>`).join('')}
     <div class="legend" style="margin-top:12px"><span><i class="sw" style="background:var(--ink)"></i>entrou</span><span><i class="sw" style="background:var(--rose-mid)"></i>saiu</span><span>à direita: quanto sobrou</span></div></section>`;
   h+=chartAcumulado(Y);
+  h+=`<button class="sec ym-link" data-banco="">${ic('card')}<span><b>bancos e cartões</b><small>quanto foi em cada cartão, parcelas e histórico</small></span>${ic('right','sm')}</button>`;
   h+=`<div class="dash">${cardCats(yr.filter(i=>i.tipo==='gasto'),'para onde foi no ano')}${cardQuem(null,yr.filter(i=>i.tipo!=='entrada'))}</div>`;
   return h;
 }
@@ -1140,10 +1180,11 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-fotodel],[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-banco],[data-fotodel],[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ if(d.icone==='foto'&&!foto) return; setIcone({id:d.icone}); toast('ícone salvo'); return; }
+  if(d.banco!==undefined){ if(d.banco) ui.bk=d.banco; ui.page='bancos'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto')}catch(e){} if(icone.id==='foto') icone.id='wallet'; setIcone({}); toast('foto removida'); return; }
   if(d.mesjump){ openMesJump(); return; }
   if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
