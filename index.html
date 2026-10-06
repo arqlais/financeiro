@@ -418,7 +418,8 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
   .rs-3{border-top:0;padding-top:0;border-left:1px solid rgba(255,255,255,.14);padding-left:24px}
   .rs-3 b{font-size:1.15rem}.rs-3 .brl{display:inline}
 }
-.mpills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-6px -16px 0;padding:4px 16px;scroll-behavior:smooth}
+.mpills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-6px -16px 0;padding:4px 16px;overscroll-behavior-x:contain}
+.mp{transition:background .2s,color .2s,border-color .2s}
 .mpills::-webkit-scrollbar{display:none}
 .mp{flex:none;height:36px;min-width:52px;padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-size:.86rem;font-weight:500;color:var(--ink-2);position:relative}
 .mp.on{background:var(--ink);color:var(--on-ink);font-weight:600}
@@ -478,6 +479,7 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .upd button{background:var(--c-acc);color:#fff;font-weight:600;padding:7px 14px;border-radius:999px}
 .upd button:disabled{opacity:.7}
 /* no zoom: double-tap does nothing, and fields at 16px keep the iphone from zooming in when tapped */
+html,body{overscroll-behavior-x:none}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (max-width:899px){input,select,textarea{font-size:16px!important}}
 .bar.meta small{grid-column:1/-1;font-size:.76rem;color:var(--muted)}
@@ -563,6 +565,13 @@ body:has(.scrim){overflow:hidden}
   .dock a[aria-current="page"]{color:var(--rose);background:var(--rose-soft);font-weight:600}
   .dock a .dotb{box-shadow:0 0 0 2px var(--surface)}
   .dock .plus{background:var(--ink);color:var(--on-ink);box-shadow:0 0 0 6px var(--bg),0 10px 24px color-mix(in srgb,var(--c-ink) 40%,transparent)}
+}
+/* month change: the new month slides in softly from the side it came from */
+@media (prefers-reduced-motion:no-preference){
+  .main.swap>.tiles,.main.swap>.folha3,.main.swap>.dash,.main.swap>.seg3,.main.swap>.mais{animation:mesIn .28s cubic-bezier(.2,.7,.2,1) both}
+  .main.swap[data-dir="-1"]>.tiles,.main.swap[data-dir="-1"]>.folha3,.main.swap[data-dir="-1"]>.dash,.main.swap[data-dir="-1"]>.seg3,.main.swap[data-dir="-1"]>.mais{animation-name:mesInL}
+  @keyframes mesIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+  @keyframes mesInL{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 }
 </style>
 
@@ -946,11 +955,20 @@ function render(){
   const v={inicio:pInicio,lanc:pLanc,ano:pAno,ajustes:pAjustes,bancos:pBancos}[ui.page]||pInicio;
   // keep what is being typed in the quick-add line when live updates re-render the page
   const keep={}; m.querySelectorAll('[data-keep]').forEach(el=>keep[el.id]=el.value); const fid=document.activeElement?.id;
+  const oldL=$('#mpills')?.scrollLeft, trocou=render.mes!==undefined&&render.mes!==ui.mes&&render.page===ui.page; render.mes=ui.mes; render.page=ui.page;
   m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+(outbox.length?`<div class="pending">${ic('cloud','sm')}${outbox.length} ${outbox.length>1?'alterações esperando':'alteração esperando'} a internet voltar · já estão salvas neste celular</div>`:'')+v();
   for(const [id,val] of Object.entries(keep)){ const el=document.getElementById(id); if(el&&val) el.value=val; }
   if(fid&&keep[fid]!==undefined) document.getElementById(fid)?.focus();
-  const mp=$('#mpills'), on=mp?.querySelector('.mp.on:not(.ano)'); if(on) mp.scrollLeft=on.offsetLeft-(mp.clientWidth-on.offsetWidth)/2;
+  // month strip: keep where it was and glide to the new month, instead of jumping back to january
+  const mp=$('#mpills'), on=mp?.querySelector('.mp.on:not(.ano)');
+  if(on){ const alvo=on.offsetLeft-(mp.clientWidth-on.offsetWidth)/2;
+    if(oldL===undefined) mp.scrollLeft=alvo; else { mp.scrollLeft=oldL; if(trocou) mp.scrollTo({left:alvo,behavior:'smooth'}); } }
+  if(trocou){ m.dataset.dir=render.dir||1; m.classList.remove('swap'); void m.offsetWidth; m.classList.add('swap'); clearTimeout(render.t); render.t=setTimeout(()=>m.classList.remove('swap'),320); }
+  render.dir=0;
 }
+// one place that changes the month (pills, year chips and swipes)
+function irMes(k){ if(!k||k===ui.mes) return; render.dir=k>ui.mes?1:-1; ui.mes=k; ui.add=null; $('#sheetHost').innerHTML=''; render(); }
+const mesOk=k=>meses().includes(k)||k<=addM(today().slice(0,7),1);
 function resumo(m){ const E=sum(ofMes(m,'entrada')),C=sum(ofMes(m,'conta')),G=sum(ofMes(m,'gasto')); return {E,C,G,S:E-C-G}; }
 
 const byDate=(a,b)=>(a.data||'9').localeCompare(b.data||'9');
@@ -1467,8 +1485,8 @@ document.addEventListener('click',e=>{
   if(d.cropok){ foto=cropSalvar(); crop=null; $('#sheetHost').innerHTML=''; try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); return; }
   if(d.cropclose){ if(e.target===t||t.tagName==='BUTTON'){ crop=null; $('#sheetHost').innerHTML=''; } return; }
   if(d.mesjump){ openMesJump(); return; }
-  if(d.pickmes){ ui.mes=d.pickmes; ui.add=null; $('#sheetHost').innerHTML=''; render(); return; }
-  if(d.anomes){ const ms=meses().filter(x=>x.startsWith(d.anomes)); const cm=today().slice(0,7); ui.mes=ms.includes(cm)?cm:ms.includes(d.anomes+ui.mes.slice(4))?d.anomes+ui.mes.slice(4):ms.at(-1); render(); return; }
+  if(d.pickmes){ irMes(d.pickmes); return; }
+  if(d.anomes){ const ms=meses().filter(x=>x.startsWith(d.anomes)); const cm=today().slice(0,7); irMes(ms.includes(cm)?cm:ms.includes(d.anomes+ui.mes.slice(4))?d.anomes+ui.mes.slice(4):ms.at(-1)); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
   if(d.addrow!==undefined){ ui.add=d.addrow||null; render(); if(ui.add) setTimeout(()=>$('#'+PFX[ui.add]+'-desc')?.focus(),50); return; }
   if(d.buscaon){ ui.buscaOn=!ui.buscaOn; if(!ui.buscaOn) ui.busca=''; render(); if(ui.buscaOn) setTimeout(()=>$('#q-busca')?.focus(),30); return; }
@@ -1551,6 +1569,11 @@ document.addEventListener('pointerup',()=>{ drag=null; }); document.addEventList
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 
+let sw=null;
+document.addEventListener('touchstart',e=>{ if(e.touches.length!==1||!['inicio','lanc'].includes(ui.page)||$('#sheetHost').innerHTML||e.target.closest('.mpills,.catchips,.cartoes,.chart,.viz,input,select,textarea,.dock,.topnav,.addrow')){ sw=null; return; }
+  sw={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()}; },{passive:true});
+document.addEventListener('touchend',e=>{ if(!sw) return; const t=e.changedTouches[0], dx=t.clientX-sw.x, dy=t.clientY-sw.y, dt=Date.now()-sw.t; sw=null;
+  if(Math.abs(dx)>70&&Math.abs(dy)<Math.abs(dx)*.5&&dt<600){ const k=addM(ui.mes,dx<0?1:-1); if(mesOk(k)) irMes(k); } },{passive:true});
 document.addEventListener('toggle',e=>{ if(e.target.classList?.contains('mais')) ui.mais=e.target.open; },true);
 
 applyIcone();
