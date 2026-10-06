@@ -694,8 +694,23 @@ async function safe(p,ok){try{await p; if(ok) toast(ok);}catch(e){toast(e?.code=
 
 // Installments carry over by themselves: for the current and the next month, every x/y from the month
 // before with x<y gets its x+1/y as an unpaid bill. The last one (y/y) does not continue.
+// one-time fix: in the 2026 spreadsheet the purple rows were all on the nubank card. those bills get banco nubank,
+// and so do the other installments of the same purchases (earlier and later months), unless a card was already chosen.
+const ROXO_NUBANK=[['2026-08','juntos','cama 4/12'],['2026-08','juntos','rihappy 2/3'],['2026-08','igor','perfume 1/2'],['2026-08','lais','crocs 1/4'],
+  ['2026-09','juntos','cama 5/12'],['2026-09','juntos','rihappy 3/3'],['2026-09','igor','perfume 2/2'],['2026-09','lais','crocs 2/4'],['2026-09','juntos','assinaturas'],['2026-09','igor','boné 1/2'],['2026-09','juntos','adidas 2/2'],
+  ['2026-10','juntos','lanche'],['2026-10','juntos','cama 6/12'],['2026-10','lais','crocs 3/4'],['2026-10','juntos','assinaturas'],['2026-10','igor','boné 2/2']];
+async function migrarRoxo(){
+  const MK='migr_roxo_nubank'; if(items.has(MK)) return;
+  const exato=new Set(ROXO_NUBANK.map(([m,q,d])=>m+'|'+q+'|'+d)), serie=new Set(), fixa=new Set();
+  for(const [,q,d] of ROXO_NUBANK){ const p=parc(d); if(p) serie.add(q+'|'+p.base.toLowerCase()+'|'+p.y); else if(d==='assinaturas') fixa.add(q+'|'+d); }
+  const alvo=[...items.values()].filter(i=>{ if(i.tipo!=='conta'||i.banco!==undefined) return false; const d=(i.desc||'').trim().toLowerCase(), p=parc(d);
+    return exato.has(i.mes+'|'+i.quem+'|'+d)||(p&&serie.has(i.quem+'|'+p.base.toLowerCase()+'|'+p.y))||(fixa.has(i.quem+'|'+d)&&i.mes>='2026-09'); });
+  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
+    if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas como nubank`,'card'); }catch(e){}
+}
 async function autoParcelas(){
   if(autoDone||!canWrite||!store) return; autoDone=true;
+  await migrarRoxo();
   const cur=today().slice(0,7); let n=0;
   for(const m of [cur, addM(cur,1)]){
     const prev=addM(m,-1);
