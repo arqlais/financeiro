@@ -94,7 +94,7 @@ h1,h2,.brand b{font-family:var(--f-display)}
 @media (max-width:1040px){.nav a .ico{display:none}.nav a{padding:10px 12px}.brand div{display:none}}
 @media (max-width:700px){
   .nav,.nav-r{display:none}
-  .topnav{justify-content:center}
+  .topnav{justify-content:center;position:relative;top:0}
   .brand div{display:block}
   .topnav{padding:6px 6px 6px 8px}
   .main{padding:22px 16px calc(120px + env(safe-area-inset-bottom,0px));gap:18px}
@@ -338,25 +338,22 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .tcap{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 -14px 0;padding:12px 14px;border-radius:18px 18px 0 0;background:var(--rose-soft);color:var(--ink);font-weight:600;font-size:.98rem}
 .tcap .chip{height:28px;padding:0 10px;font-size:.78rem}
 .chip.on{border-color:var(--ink);color:var(--ink);font-weight:600}
-.trow{display:grid;grid-template-columns:52px minmax(0,1fr) 40px 86px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:.9rem}
-.trow.ck{grid-template-columns:24px 52px minmax(0,1fr) 40px 86px}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.trow.ck{grid-template-columns:24px minmax(0,1fr) auto}
 @media (max-width:699px){.trow .vl{font-size:.86rem}.trow{gap:7px}}
 .trow .tap{display:contents;cursor:pointer}
 .trow.th{font-size:.72rem;color:var(--ink-2);font-weight:500;padding:8px 14px 7px;margin:0 -14px;background:color-mix(in srgb,var(--sunk) 60%,var(--surface));border-bottom:1.5px solid var(--ink)}
 .trow .q{font-size:.76rem;color:var(--ink-2);display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden}
 .trow .d{min-width:0;display:flex;flex-direction:column;gap:1px}
-.trow .d b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.trow .d small{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
+.trow .d b{font-size:.95rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .d small{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap;line-height:1.35}
 .trow .d small.pp{color:var(--ink-2)}.trow .d small.pp b{display:inline;font-weight:600;color:var(--warn)}
 .trow .dt{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .trow .vl{text-align:right;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
 .trow .vl.in{color:var(--good)}
 .trow.th .vl{font-weight:500;font-size:inherit!important}
 .cdot{display:none;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle;position:relative;top:-1px}
-@media (max-width:699px){.trow .d small.cat{display:none}.cdot{display:inline-block}}
-@media (min-width:700px){.trow .d{flex-direction:row;align-items:baseline;gap:12px}.trow .d b{flex:0 1 auto}.trow .d small{flex:none}}
 .trow.paid .d b,.trow.paid .vl{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
-@media (min-width:700px){.trow{grid-template-columns:90px minmax(0,1fr) 70px 130px}.trow.ck{grid-template-columns:28px 90px minmax(0,1fr) 70px 130px}.trow .q{font-size:.84rem}.trow .dt{font-size:.84rem}}
 .tempty{padding:14px 0;color:var(--muted);font-size:.86rem;border-bottom:1px solid var(--line)}
 .addbtn{display:flex;align-items:center;gap:6px;width:100%;padding:11px 0;color:var(--rose);font-weight:600;font-size:.86rem;border-bottom:1px dashed var(--rose-mid)}
 .addrow{padding:10px 0;border-bottom:1px dashed var(--rose-mid);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
@@ -389,9 +386,9 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
   .folha{max-width:none}
   .secpills{display:none!important}
   .folha3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
-  .folha3 .trow{grid-template-columns:60px minmax(0,1fr) 40px 92px}.folha3 .trow.ck{grid-template-columns:24px 60px minmax(0,1fr) 40px 92px}
-  .folha3 .trow .q,.folha3 .trow .dt{font-size:.78rem}
-  .folha3 .trow .d{flex-direction:column;align-items:stretch;gap:1px}
+  
+  
+  
   .bal{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;column-gap:0;padding-bottom:12px}
   .bal .tcap{grid-column:1/-1}
   .bal .brow{flex-direction:column;align-items:flex-start;gap:2px;border:0;padding:12px 16px 4px;margin:0}
@@ -410,7 +407,10 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
   .bal .brow.tot,.bal .brow.sub{grid-column:1/-1;flex-direction:row;align-items:baseline;justify-content:space-between;padding-left:0;border-left:0}
   .bal .brow.tot{border-top:0;border-bottom:0}.bal .brow.tot span{font-size:.92rem;color:var(--ink)}.bal .brow.tot b{font-size:1.2rem}
   .bal .brow.sub b{font-size:.84rem}
-  .bal .brow:not(.tot):not(.sub) .brl{display:none}
+  .bal .brow:not(.tot):not(.sub){display:none}
+  .bal .tcap{display:none}
+  .bal{padding:4px 16px 8px}
+  .bal .brow.tot{padding-top:10px}
   .folha3 .tcard>.tcap:not(:has(.chip)){display:none}
   .folha3 .tcard{padding-top:0;overflow:hidden}
   .folha3 .tcard .trow.th{border-radius:0}
@@ -932,7 +932,7 @@ function pLanc(){
     <div class="brow"><span>entradas</span><b class="num">${fmt(r.E)}</b></div>
     <div class="brow"><span>contas</span><b class="num">${fmt(r.C)}</b></div>
     <div class="brow"><span>gastos</span><b class="num">${fmt(r.G)}</b></div>
-    <div class="brow tot ${r.S<0?'neg':'pos'}"><span>balanço</span><b class="num">${r.S<0?'−':''}${fmt(Math.abs(r.S))}</b></div>
+    <div class="brow tot ${r.S<0?'neg':'pos'}"><span>balanço do mês</span><b class="num">${r.S<0?'−':''}${fmt(Math.abs(r.S))}</b></div>
     ${falta?`<div class="brow sub"><span>contas ainda a pagar</span><b class="num">${fmt(falta)}</b></div>`:''}</section>`;
   const lt=ui.lt||'gastos', ativo={entradas:'entrada',contas:'conta',gastos:'gasto'}[lt]||'gasto';
   h+=`<div class="ltabs2 chipset secpills" role="tablist">${[['entradas','entradas',r.E,ents.length],['contas','contas',r.C,contas.length],['gastos','saídas',r.G,gastos.length]].map(([k,l,v,n])=>`<button type="button" data-lt="${k}" aria-pressed="${lt===k}"><span>${l} <span class="n">${n}</span></span><small>${fmt(v)}</small></button>`).join('')}</div>`;
@@ -953,16 +953,19 @@ function pLanc(){
 function tabela(tipo,list,foot){
   const [tit,um]=SEC[tipo], ck=tipo==='conta', t=today();
   const filtro=tipo==='gasto'&&ui.cat?`<button class="chip on" data-cat="">${esc(ui.cat)} ${ic('x','sm')}</button>`:'';
-  let h=`<section class="tcard" id="sec-${tipo}" data-sec="${tipo}"><div class="tcap">${tit}${filtro}</div>
-    <div class="trow th ${ck?'ck':''}">${ck?'<span></span>':''}<span>quem</span><span>descrição</span><span>${ck?'vence':'data'}</span><span class="vl">valor</span></div>`;
+  let h=`<section class="tcard" id="sec-${tipo}" data-sec="${tipo}"><div class="tcap">${tit}${filtro}</div>`;
   if(!list.length) h+=`<div class="tempty">nenhuma ${um} neste mês.</div>`;
   for(const i of list){
+    // one row = what it was, a single quiet line with who and when, and the value
     const late=ck&&!i.pago&&i.data&&i.data<t, pp=ck&&!i.pago?pagoParte(i):0, b=ck?banco(i):null;
-    const sub=tipo==='gasto'?`<small class="cat"><span class="dot" style="background:${CATC[cat(i)]}"></span>${esc(cat(i))}</small>`
-      :ck?((b&&b!=='boleto'?`<small><span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}${late?' · <span class="late">atrasada</span>':''}</small>`:late?'<small><span class="late">atrasada</span></small>':'')
-        +(pp>0?`<small class="pp">pagou ${fmt(pp)} · falta <b>${fmt(resta(i))}</b></small>`:'')):'';
+    const dt=i.data?i.data.slice(8)+'/'+i.data.slice(5,7):'';
+    const info=[`<span class="dot ${i.quem}"></span>${QUEM[i.quem]||''}`, dt?(ck?'vence '+dt:dt):'',
+      ck&&b&&b!=='boleto'?`<span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'',
+      tipo==='gasto'?`<span class="dot" style="background:${CATC[cat(i)]}"></span>${esc(cat(i))}`:'',
+      late?'<span class="late">atrasada</span>':''].filter(Boolean).join(' · ');
     h+=`<div class="trow ${ck?'ck':''} ${i.pago?'paid':''}">${ck?`<button class="box ${i.pago?'on':pp>0?'half':''}" data-pagar="${esc(i.id)}" aria-label="${i.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${i.pago?ic('check','sm'):''}</button>`:''}`
-      +`<span class="tap" data-edit="${esc(i.id)}"><span class="q"><span class="dot ${i.quem}"></span>${QUEM[i.quem]||''}</span><span class="d"><b>${tipo==='gasto'?`<span class="cdot" style="background:${CATC[cat(i)]}" title="${esc(cat(i))}"></span>`:''}${esc(i.desc)}</b>${sub}</span><span class="dt">${i.data?i.data.slice(8)+'/'+i.data.slice(5,7):''}</span><span class="vl ${tipo==='entrada'?'in':''}">${fmt(i.valor)}</span></span></div>`;
+      +`<span class="tap" data-edit="${esc(i.id)}"><span class="d"><b>${esc(i.desc)}</b><small>${info}</small>${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta <b>${fmt(resta(i))}</b></small>`:''}</span>`
+      +`<span class="vl ${tipo==='entrada'?'in':''}">${fmt(i.valor)}</span></span></div>`;
   }
   if(canWrite) h+=ui.add===tipo?`<div class="addrow">${quickForm(PFX[tipo],tipo,true)}<button class="link" data-addrow="">fechar</button></div>`
     :`<button class="addbtn" data-addrow="${tipo}">${ic('plus','sm')} nova ${um}</button>`;
