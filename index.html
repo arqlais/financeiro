@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Financeiro</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -332,6 +332,9 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .fileb input{position:absolute;inset:0;opacity:0;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(18px);opacity:.5}}}
 .tip{text-transform:none}
+/* no zoom: double-tap does nothing, and fields at 16px keep the iphone from zooming in when tapped */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media (max-width:899px){input,select,textarea{font-size:16px!important}}
 .bar.meta small{grid-column:1/-1;font-size:.76rem;color:var(--muted)}
 .bar.meta small.warn{color:var(--warn)}.bar.meta small.bad{color:var(--bad);font-weight:600}
 .metas{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 20px}
@@ -751,7 +754,7 @@ function quickForm(p,tipo){
   return `<form class="qadd" id="${p}F" data-tipo="${tipo}" novalidate>
     <div class="qrow"><div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>
       <div class="chipset">${Object.entries(QUEM).filter(([k])=>tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${qq===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
-    <div class="qrow"><input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="next" placeholder="${tipo==='conta'?'qual conta (ex.: claro, notebook)':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
+    <div class="qrow"><input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="next" placeholder="${tipo==='conta'?'qual conta':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
       <datalist id="${p}dl">${sugestoes(tipo)}</datalist>
       <input id="${p}-valor" data-keep inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
       <input id="${p}-data" data-keep type="date" value="${dDef}" aria-label="${tipo==='conta'?'vencimento':'data'}">
@@ -1261,6 +1264,10 @@ let drag=null;
 document.addEventListener('pointerdown',e=>{ if(!crop||!e.target.closest?.('#cropBox')) return; e.preventDefault(); drag={x:e.clientX,y:e.clientY,ox:crop.x,oy:crop.y}; try{$('#cropBox').setPointerCapture(e.pointerId)}catch(_){} });
 document.addEventListener('pointermove',e=>{ if(!drag||!crop) return; crop.x=drag.ox+e.clientX-drag.x; crop.y=drag.oy+e.clientY-drag.y; cropPaint(); });
 document.addEventListener('pointerup',()=>{ drag=null; }); document.addEventListener('pointercancel',()=>{ drag=null; });
+
+// iphone safari ignores user-scalable=no for pinch, so the pinch gesture is blocked here
+['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefault(); },{passive:false});
 
 applyIcone();
 boot();
