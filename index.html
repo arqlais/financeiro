@@ -570,11 +570,12 @@ const temaCustom=acc=>({id:'custom',acc,ink:mixHex(acc,'#141414',.62),paper:mixH
 applyTema();
 
 // ---------- app icon per device ----------
-const ICONES=[['wallet','carteira'],['piggy','porquinho'],['coins','moedas'],['dollar','cifrão'],['up','gráfico'],['receipt','recibo'],['iniciais','iniciais']];
+const ICONES=[['wallet','carteira'],['piggy','porquinho'],['iniciais','iniciais']];
 let icone={id:'wallet',txt:'l&i'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
 let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
 if(icone.id==='foto'){ icone.id='wallet'; icone.usaFoto=true; }
+if(!ICONES.some(([id])=>id===icone.id)) icone.id='wallet';
 const markInner=(ic_=icone)=>ic_.id==='iniciais'?esc(ic_.txt||'l&i'):ic(ic_.id==='foto'?'wallet':ic_.id,'mk');
 // the profile spot inside the app shows the photo when there is one; the app icon is always a drawing
 const markHead=()=>icone.usaFoto&&foto?`<img src="${foto}" alt="foto de perfil">`:markInner();
