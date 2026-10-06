@@ -308,7 +308,7 @@ h1,h2,.brand b{font-family:var(--f-display)}
 .hint{font-size:.8rem;color:var(--muted);margin:0}
 .err{font-size:.84rem;color:var(--bad);margin:0}
 .sheet-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:var(--ink);color:var(--on-ink);padding:12px 18px;border-radius:14px;font-weight:500;font-size:.88rem;z-index:60;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow);white-space:nowrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:var(--ink);color:var(--on-ink);padding:12px 18px;border-radius:14px;font-weight:500;font-size:.88rem;z-index:60;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow);max-width:calc(100% - 32px);width:max-content}
 @media (max-width:700px){.toast{bottom:calc(150px + env(safe-area-inset-bottom,0px))}}
 .banner{font-size:.85rem;color:var(--muted);padding:10px 16px;border-radius:12px;background:var(--sunk)}
 .temas{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
@@ -332,6 +332,20 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .fileb input{position:absolute;inset:0;opacity:0;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(18px);opacity:.5}}}
 .tip{text-transform:none}
+::placeholder,.brl{text-transform:none!important}
+.parcial{color:var(--warn)}
+.pbox{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;background:var(--sunk)}
+.pbox-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:.84rem}
+.pbox-h>span{color:var(--muted)}.pbox-h>span b{color:var(--ink)}
+.pl{display:grid;grid-template-columns:1fr auto 32px;gap:8px;align-items:center;font-size:.86rem;color:var(--muted)}
+.pl b{color:var(--ink);font-weight:600}.pl .icbtn{width:32px;height:32px}
+.pl-add{display:flex;gap:8px}
+.pl-add input{flex:1;min-width:0;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:0 12px;font-weight:600}
+.pl-add .btn{height:44px}
+.crop{position:relative;width:260px;height:260px;margin:0 auto;border-radius:50%;overflow:hidden;background:var(--sunk);touch-action:none;cursor:grab;box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--line)}
+.crop img{position:absolute;left:50%;top:50%;max-width:none;user-select:none;-webkit-user-select:none;pointer-events:none}
+.zoom{display:flex;align-items:center;gap:10px;color:var(--muted);max-width:260px;margin:0 auto;width:100%}
+.zoom input{flex:1;accent-color:var(--c-acc)}
 body:has(.scrim){overflow:hidden}
 .toast .undo{margin-left:6px;color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .pending{font-size:.8rem;color:var(--warn);background:var(--warn-soft);padding:8px 14px;border-radius:12px;display:flex;gap:8px;align-items:center}
@@ -430,6 +444,10 @@ const addMd=(iso,n)=>{const [y,m,d]=iso.split('-').map(Number);const ym=addM(`${
 const dDiff=(a,b)=>Math.round((Date.parse(a+'T12:00')-Date.parse(b+'T12:00'))/864e5);
 const mName=ym=>MESES[+ym.slice(5)-1];
 const sum=a=>a.reduce((s,i)=>s+(+i.valor||0),0);
+// part of a bill can be paid early (e.g. half the card bill before it closes): what is left is what still counts as "falta"
+const pagoParte=c=>(c.parciais||[]).reduce((s,p)=>s+(+p.v||0),0);
+const resta=c=>c.pago?0:Math.max(0,Math.round(((+c.valor||0)-pagoParte(c))*100)/100);
+const sumResta=a=>a.reduce((s,c)=>s+resta(c),0);
 const parc=d=>{const m=/(\d+)\s*\/\s*(\d+)\s*$/.exec(d||'');return m?{x:+m[1],y:+m[2],base:d.slice(0,m.index).trim()}:null};
 const baseOf=it=>(parc(it.desc)?.base||it.desc||'').trim().toLowerCase();
 // categories are guessed from the description; when someone corrects one, every later entry with the same
@@ -515,7 +533,25 @@ function loadPerfil(){ const d=perfilId()&&items.get(perfilId()); if(!d) { saveP
   if(d.foto){ foto=d.foto; try{localStorage.setItem('fin-foto',foto)}catch(e){} }
   if(d.icone&&d.icone.id){ icone={...icone,...d.icone}; if(icone.id==='foto'){ icone.id='wallet'; icone.usaFoto=true; } try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} }
   applyIcone(); }
-// photo: center-cropped square, 512px jpeg (small enough to sync)
+// photo: opens a framing step (drag to move, slider to zoom), then saves a 512px jpeg square (small enough to sync)
+let crop=null;
+function abrirFoto(src){ const im=new Image(); im.onload=()=>{ crop={im,src,z:1,x:0,y:0}; drawCrop(); }; im.onerror=()=>toast('não consegui abrir essa foto.','alert'); im.src=src; }
+const CW=260;
+function cropFix(){ const c=crop, s=CW/Math.min(c.im.width,c.im.height)*c.z, mx=(c.im.width*s-CW)/2, my=(c.im.height*s-CW)/2; c.x=Math.max(-mx,Math.min(mx,c.x)); c.y=Math.max(-my,Math.min(my,c.y)); return s; }
+function cropPaint(){ const el=$('#cropImg'); if(!el) return; const s=cropFix(); el.style.width=crop.im.width*s+'px'; el.style.height=crop.im.height*s+'px'; el.style.transform=`translate(calc(-50% + ${crop.x}px),calc(-50% + ${crop.y}px))`; }
+function drawCrop(){
+  $('#sheetHost').innerHTML=`<div class="scrim" data-cropclose="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="enquadrar foto">
+    <div class="card-h" style="margin:0"><h2>enquadrar <span class="script">foto</span></h2><button type="button" class="icbtn" data-cropclose="1" aria-label="fechar">${ic('x')}</button></div>
+    <p class="hint" style="text-align:center">arraste para posicionar e use a barra para aproximar.</p>
+    <div class="crop" id="cropBox"><img id="cropImg" src="${crop.src}" alt="" draggable="false"></div>
+    <label class="zoom">${ic('search','sm')}<input type="range" id="cropZ" min="1" max="4" step="0.01" value="${crop.z}" aria-label="aproximar"></label>
+    <div class="sheet-foot"><button type="button" class="btn line" data-cropclose="1">cancelar</button><button type="button" class="btn dark" data-cropok="1">${ic('check','sm')} usar foto</button></div></div></div>`;
+  cropPaint();
+}
+function cropSalvar(){ const c=crop, s=cropFix(), k=CW/s, sx=c.im.width/2+(-CW/2-c.x)/s, sy=c.im.height/2+(-CW/2-c.y)/s;
+  const cv=document.createElement('canvas'); cv.width=cv.height=512; cv.getContext('2d').drawImage(c.im,sx,sy,k,k,0,0,512,512); return cv.toDataURL('image/jpeg',.85); }
+// keeps a reduced copy of the original on this phone, so "ajustar" can reframe without losing quality
+function lerOriginal(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,1400/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); ok(c.toDataURL('image/jpeg',.86)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
 function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height), c=document.createElement('canvas'); c.width=c.height=512; c.getContext('2d').drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,512,512); ok(c.toDataURL('image/jpeg',.82)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
 
 // ---------- state ----------
@@ -534,7 +570,9 @@ const live=()=>index().live;
 let bdVer=-1, bdC=[], bkVer=-1, bkC=null;
 const bankDocs=()=>{ if(bdVer!==ver){ bdC=[...items.values()].filter(i=>i.tipo==='banco'&&!i.removido); bdVer=ver; } return bdC; };
 function BK(){ if(bkVer===ver) return bkC; bkVer=ver; return bkC=bk0(); }
-function bk0(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(n&&b.oculto){ delete o[n]; return; } if(n) o[n]={m:(b.sigla||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||'#8e8580',custom:!BANKS[n]}; }); return o; }
+// a removed bank leaves only the list of choices: bills that already used it, in any month, keep its name and color
+const bkAtivos=()=>Object.keys(BK()).filter(n=>!BK()[n].oculto);
+function bk0(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(!n) return; const k=BANKS[n]; o[n]={m:(b.sigla||k?.m||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||k?.c||'#8e8580',custom:!k,oculto:!!b.oculto}; }); return o; }
 const ofMes=(m,t)=>{const a=index().byMes.get(m)||[]; return t?a.filter(i=>i.tipo===t):a.slice();};
 const meses=()=>{const a=index().meses, c=today().slice(0,7); return a.includes(c)?a:[...a,c].sort();};
 
@@ -690,7 +728,7 @@ function quickForm(p,tipo){
   const t=today(), m=ui.mes; let qq=ui.qquem||'juntos'; if(tipo==='entrada'&&qq==='juntos') qq='lais';
   const dDef=m===t.slice(0,7)?t:`${m}-${tipo==='conta'?'10':'01'}`;
   const extra=tipo==='conta'?`<select id="${p}-parc" data-keep aria-label="parcelas">${[1,2,3,4,5,6,7,8,9,10,12,18,24].map(n=>`<option value="${n}">${n===1?'à vista':n+'x'}</option>`).join('')}</select>
-      <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão: não sei</option><option value="boleto">boleto ou pix</option>${Object.keys(BK()).map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
+      <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão: não sei</option><option value="boleto">boleto ou pix</option>${bkAtivos().map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
     :'';
   return `<form class="qadd" id="${p}F" data-tipo="${tipo}" novalidate>
     <div class="qrow"><div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>
@@ -717,7 +755,7 @@ function openQuick(tipo){
 function pInicio(){
   const m=ui.mes, t=today(), r=resumo(m);
   const hr=new Date().getHours(); const saud=hr<12?'bom dia,':hr<18?'boa tarde,':'boa noite,';
-  const contas=ofMes(m,'conta').sort(byDate); const falta=sum(contas.filter(c=>!c.pago));
+  const contas=ofMes(m,'conta').sort(byDate); const falta=sumResta(contas);
   let h=monthNav(`<span class="script">${saud}</span> laís &amp; igor`)+sum3([['entrou',fmt(r.E)],['saiu',fmt(r.C+r.G)],[r.S<0?'faltou':'sobrou',fmt(Math.abs(r.S)),r.S<0?'neg':'pos']]);
   h+=`<div class="dash"><div class="col">${m===t.slice(0,7)?vSemana(contas,t,r.C,falta):''}
       ${chartRitmo(m)}<section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section></div>
@@ -733,11 +771,11 @@ function pLanc(){
   const contas=ofMes(m,'conta').sort(byDate), gastos=ofMes(m,'gasto'), ents=ofMes(m,'entrada').sort((a,b)=>(b.data||'').localeCompare(a.data||''));
   h+=`<div class="ltabs2 chipset" role="tablist">${[['contas','contas',r.C],['gastos','gastos',r.G],['entradas','entradas',r.E]].map(([k,l,v])=>`<button type="button" data-lt="${k}" aria-pressed="${lt===k}">${l}<small>${fmt(v)}</small></button>`).join('')}</div>`;
   if(lt==='contas'){
-    const falta=sum(contas.filter(c=>!c.pago));
+    const falta=sumResta(contas);
     h+=`<div class="dash wide"><section class="sec"><div class="sec-h"><h2>contas</h2><span>${contas.filter(c=>c.pago).length} de ${contas.length} pagas${falta?` · falta <b>${fmt(falta)}</b>`:''}</span></div>
       ${contas.length?contas.map(c=>{const late=!c.pago&&c.data&&c.data<t; const b=banco(c);
-        return `<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c,(b&&b!=='boleto'?` · <span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'')+(late?' · <span class="late">atrasada</span>':''))}<span class="v">${fmt(c.valor)}</span></span></div>`}).join(''):'<div class="empty-ln">nenhuma conta neste mês.</div>'}
-      ${canWrite&&contas.length?`<div class="more"><span>parcelas passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir as fixas em ${mName(addM(m,1))}</button></div>`:''}</section>
+        return `<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c,(b&&b!=='boleto'?` · <span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'')+(late?' · <span class="late">atrasada</span>':'')+(!c.pago&&pagoParte(c)>0?` · <span class="parcial">pagou ${fmt(pagoParte(c))} · falta ${fmt(resta(c))}</span>`:''))}<span class="v">${fmt(c.valor)}</span></span></div>`}).join(''):'<div class="empty-ln">nenhuma conta neste mês.</div>'}
+      ${canWrite&&contas.length?`<div class="more"><span>pagou só uma parte? toque na conta. parcelas passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir as fixas em ${mName(addM(m,1))}</button></div>`:''}</section>
       <div class="col">${cardBancosMini(contas)}</div></div>`;
   } else if(lt==='gastos'){
     const cats={}; gastos.forEach(g=>{const k=cat(g);cats[k]=(cats[k]||0)+(+g.valor||0)}); const ca=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
@@ -757,7 +795,7 @@ function cardBancosMini(contas){
   const g={}; contas.forEach(c=>{const b=banco(c); if(b&&b!=='boleto') (g[b]=g[b]||[]).push(c)});
   const a=Object.entries(g).sort((x,y)=>sum(y[1])-sum(x[1])); if(!a.length) return '';
   const B=BK();
-  return `<section class="card"><div class="card-h"><h2>por cartão</h2></div><div class="bars">${a.map(([b,l])=>{const ab=l.filter(c=>!c.pago), f=sum(ab);return `<button class="bar" data-banco="${esc(b)}"><span><span class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></span>${esc(b)}</span><span class="num">${fmt(sum(l))}</span><small class="muted" style="grid-column:1/-1;font-size:.76rem">${ab.length?`falta ${fmt(f)}`:'pago'}</small></button>`}).join('')}</div><button class="link" style="margin-top:12px" data-banco="">explorar bancos ${ic('arrow','sm')}</button></section>`;
+  return `<section class="card"><div class="card-h"><h2>por cartão</h2></div><div class="bars">${a.map(([b,l])=>{const ab=l.filter(c=>!c.pago), f=sumResta(ab);return `<button class="bar" data-banco="${esc(b)}"><span><span class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></span>${esc(b)}</span><span class="num">${fmt(sum(l))}</span><small class="muted" style="grid-column:1/-1;font-size:.76rem">${ab.length?`falta ${fmt(f)}`:'pago'}</small></button>`}).join('')}</div><button class="link" style="margin-top:12px" data-banco="">explorar bancos ${ic('arrow','sm')}</button></section>`;
 }
 // ---------- explore a bank ----------
 function bankStats(){
@@ -786,14 +824,14 @@ function pBancos(){
   h+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div><div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(sel)} nos últimos 12 meses">${svg}</svg></div></section>`;
   h+=`<div class="dash">`;
   h+=`<section class="sec"><div class="sec-h"><h2>parcelas em andamento</h2><span>${parcs.length}</span></div>${parcs.length?parcs.sort((a,b)=>(b.p.y-b.p.x)*b.i.valor-(a.p.y-a.p.x)*a.i.valor).map(({i,p})=>`<div class="ln"><span class="tap" data-edit="${esc(i.id)}"><span style="min-width:0"><b>${esc(p.base)}</b><small>${p.x} de ${p.y} · ${p.x<p.y?`termina em ${mName(addM(cm,p.y-p.x))}`:'última parcela'}</small><span class="pbar"><i style="width:${p.x/p.y*100}%;background:${k.c}"></i></span></span><span class="v">${fmt(i.valor)}<small style="display:block;text-align:right;font-weight:400">${p.x<p.y?`faltam ${fmt((p.y-p.x)*i.valor)}`:''}</small></span></span></div>`).join(''):'<div class="empty-ln">nenhuma compra parcelada neste cartão.</div>'}</section>`;
-  h+=`<section class="sec"><div class="sec-h"><h2>contas de ${mName(cm)}</h2><span>${abertas.length?`falta <b>${fmt(sum(abertas))}</b>`:atual.length?'tudo pago':''}</span></div>${atual.length?atual.sort(byDate).map(c=>`<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c)}<span class="v">${fmt(c.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nada neste cartão este mês.</div>'}</section>`;
+  h+=`<section class="sec"><div class="sec-h"><h2>contas de ${mName(cm)}</h2><span>${abertas.length?`falta <b>${fmt(sumResta(abertas))}</b>`:atual.length?'tudo pago':''}</span></div>${atual.length?atual.sort(byDate).map(c=>`<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c)}<span class="v">${fmt(c.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nada neste cartão este mês.</div>'}</section>`;
   h+=`</div>`;
   return h;
 }
 function vSemana(contas,t,C,falta){
   const pend=contas.filter(c=>!c.pago&&c.data&&dDiff(c.data,t)<=7).sort(byDate);
   return `<section class="week"><div class="week-h"><h2>esta <span class="script">semana</span></h2><span>${pend.length?`${pend.length} para pagar`:'tudo em dia'}</span></div>
-    ${pend.slice(0,4).map(c=>{const d=dDiff(c.data,t);return `<div class="wrow">${canWrite?`<button class="wck" data-pagar="${esc(c.id)}" aria-label="marcar ${esc(c.desc)} como paga"></button>`:'<span></span>'}<span style="min-width:0"><b>${esc(c.desc)}</b><small class="${d<0?'late-l':''}">${d<0?`atrasada ${-d}d`:d===0?'hoje':`em ${d} dia${d>1?'s':''}`} · ${QUEM[c.quem]}</small></span><span class="wv">${fmt(c.valor)}</span></div>`}).join('')}
+    ${pend.slice(0,4).map(c=>{const d=dDiff(c.data,t);return `<div class="wrow">${canWrite?`<button class="wck" data-pagar="${esc(c.id)}" aria-label="marcar ${esc(c.desc)} como paga"></button>`:'<span></span>'}<span style="min-width:0"><b>${esc(c.desc)}</b><small class="${d<0?'late-l':''}">${d<0?`atrasada ${-d}d`:d===0?'hoje':`em ${d} dia${d>1?'s':''}`} · ${QUEM[c.quem]}</small></span><span class="wv">${fmt(resta(c))}</span></div>`}).join('')}
     ${pend.length>4?`<div class="wmore">e mais ${pend.length-4}</div>`:''}
     <div class="wfoot"><span>falta pagar no mês</span><b>${fmt(falta)}</b></div><div class="fbar"><i style="width:${C?(C-falta)/C*100:0}%"></i></div></section>`;
 }
@@ -997,12 +1035,12 @@ function pAjustes(){
       <label class="tema" aria-pressed="${tema.id==='custom'}"><span class="sw2" style="background:conic-gradient(#e0707a,#e6b85c,#7bb07a,#5c9bd6,#9b7ad0,#e0707a)"><input type="color" id="temaCor" value="${tema.acc}" aria-label="escolher qualquer cor"></span>escolher</label></div></section>
   <section class="card"><div class="card-h"><h2>foto de <span class="script">perfil</span></h2><span class="muted" style="font-size:.84rem">aparece só dentro do app, no topo · nunca vira o ícone</span></div>
     <div class="opt-row" style="border:0;grid-template-columns:56px minmax(0,1fr)"><span class="mark big">${foto&&icone.usaFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${foto&&icone.usaFoto?'sua foto':'sem foto'}</b><small>${foto&&icone.usaFoto?'só vocês dois veem, dentro do app.':'escolha uma foto da galeria.'}</small></span>
-      <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn" style="position:relative">${foto&&icone.usaFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${foto&&icone.usaFoto?`<button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
+      <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn" style="position:relative">${foto&&icone.usaFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${foto&&icone.usaFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
   <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece na tela de início</span></div>
     <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id})}</span>${nome}</button>`).join('')}</div>
     </section>
-  <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
-    <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>${bankDocs().some(b=>b.oculto)&&canWrite?`<button class="link" style="margin-top:8px" data-bankrestore="1">mostrar os bancos removidos (${bankDocs().filter(b=>b.oculto).length})</button>`:''}
+  <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · remover não muda as contas que já usaram</span></div>
+    <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n,k])=>n!=='outro cartão'&&!k.oculto).map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>${bankDocs().some(b=>b.oculto)&&canWrite?`<button class="link" style="margin-top:8px" data-bankrestore="1">mostrar os bancos removidos (${bankDocs().filter(b=>b.oculto).length})</button>`:''}
     ${canWrite?`<div class="toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><label class="search" style="max-width:none">${ic('bank','sm')}<input id="bk-nome" placeholder="nome do banco ou cartão (ex.: neon, will, renner)" maxlength="30" aria-label="nome do banco"></label>
       <label class="pill-btn" style="position:relative;height:42px;gap:8px"><span id="bk-sw" class="dot" style="width:16px;height:16px;background:#5a7d9a"></span>cor<input type="color" id="bk-cor" value="#5a7d9a" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="cor do banco"></label>
       <button class="btn dark" data-bankadd="1">${ic('plus','sm')} adicionar</button></div>`:''}</section>
@@ -1054,12 +1092,19 @@ function drawSheet(){
     <div class="f"><label>de quem</label><div class="segf">${Object.entries(QUEM).filter(([k])=>f.tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-fq="${k}" aria-pressed="${f.quem===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
     <div class="f2"><div class="f"><label for="f-data">${f.tipo==='conta'?'vencimento':'data'}</label><input id="f-data" type="date" value="${esc(f.data||'')}"></div>
       ${f.tipo==='gasto'?`<div class="f"><label for="f-cat">categoria (troque se errou)</label><select id="f-cat">${CATN.map(c=>`<option value="${c}" ${c===cat(f)?'selected':''}>${c}</option>`).join('')}</select></div>`
-       :f.tipo==='conta'?`<div class="f"><label for="f-bank">banco ou cartão</label><select id="f-bank"><option value="" ${!bk?'selected':''}>não sei ainda</option><option value="boleto" ${bk==='boleto'?'selected':''}>boleto ou pix</option>${Object.keys(BK()).map(b=>`<option value="${b}" ${bk===b?'selected':''}>${b}</option>`).join('')}</select></div>`:'<div></div>'}</div>
+       :f.tipo==='conta'?`<div class="f"><label for="f-bank">banco ou cartão</label><select id="f-bank"><option value="" ${!bk?'selected':''}>não sei ainda</option><option value="boleto" ${bk==='boleto'?'selected':''}>boleto ou pix</option>${[...new Set([...bkAtivos(),...(bk&&bk!=='boleto'?[bk]:[])])].map(b=>`<option value="${b}" ${bk===b?'selected':''}>${b}${BK()[b]?.oculto?' (removido)':''}</option>`).join('')}</select></div>`:'<div></div>'}</div>
+    ${f.tipo==='conta'?vParciais(f):''}
     ${f.tipo==='conta'?`<div class="f"><label for="f-pago">situação</label><select id="f-pago"><option value="0">a pagar</option><option value="1" ${f.pago?'selected':''}>paga</option></select></div>`:''}
     <p class="err" id="f-err" hidden></p>
     <div class="sheet-foot">${f.confirm?`<button type="button" class="btn line" style="color:var(--bad)" data-del="1">${ic('trash','sm')} confirmar exclusão</button>`:`<button type="button" class="btn line" data-askdel="1">${ic('trash','sm')} excluir</button>`}
       <button type="submit" class="btn dark">${ic('check','sm')} salvar</button></div>
   </form></div>`;
+}
+function vParciais(f){
+  const ps=f.parciais||[], v=parseV(f.valor), pg=ps.reduce((s,p)=>s+(+p.v||0),0), falta=Math.max(0,(isFinite(v)?v:0)-pg);
+  return `<div class="pbox"><div class="pbox-h"><b>pagar uma parte</b><span>${ps.length?`pagou ${fmt(pg)} · falta <b>${fmt(f.pago?0:falta)}</b>`:'pagou antes de fechar ou vencer? anote aqui'}</span></div>
+    ${ps.map((p,i)=>`<div class="pl"><span>${p.d?qd({data:p.d}):''}</span><b class="num">${fmt(p.v)}</b><button type="button" class="icbtn" data-delparc="${i}" aria-label="apagar esse pagamento">${ic('x','sm')}</button></div>`).join('')}
+    <div class="pl-add"><input id="f-pv" inputmode="decimal" placeholder="R$ 0,00" aria-label="valor pago agora"><button type="button" class="btn line" data-addparc="1">${ic('check','sm')} paguei</button></div></div>`;
 }
 function readForm(){ const f=form; f.valor=$('#f-valor').value; f.desc=$('#f-desc').value; f.data=$('#f-data').value;
   if($('#f-cat')) f.cat=$('#f-cat').value; if($('#f-pago')) f.pago=$('#f-pago').value==='1';
@@ -1071,7 +1116,7 @@ async function submit(){
   if(!f.desc.trim()) return err('escreva uma descrição curta, por exemplo mercado.');
   const o={tipo:f.tipo,quem:f.tipo==='entrada'&&f.quem==='juntos'?'lais':f.quem,desc:f.desc.trim(),valor:v,data:f.data||null,mes:(f.data||ui.mes).slice(0,7)};
   if(f.tipo==='gasto'&&f.cat&&f.cat!==catGuess(o.desc)) o.cat=f.cat;
-  if(f.tipo==='conta'){ o.pago=!!f.pago; const auto=banco({...o})||''; const sel=f.bankSel??auto; if(sel!==auto) o.banco=sel==='boleto'?'':sel; else if(f.banco!==undefined) o.banco=f.banco; if(f.auto) o.auto=true; }
+  if(f.tipo==='conta'){ o.pago=!!f.pago; if(f.parciais?.length) o.parciais=f.parciais; const auto=banco({...o})||''; const sel=f.bankSel??auto; if(sel!==auto) o.banco=sel==='boleto'?'':sel; else if(f.banco!==undefined) o.banco=f.banco; if(f.auto) o.auto=true; }
   form=null; drawSheet();
   await safe(store.put({...o,id:f.id}), o.mes!==ui.mes?`alterado · foi para ${mName(o.mes)}`:'alterado');
 }
@@ -1083,33 +1128,35 @@ async function repetirFixas(){
   toast(n?`${n} conta${n>1?'s fixas repetidas':' fixa repetida'} em ${mName(nx)}`:`${mName(nx)} já tem essas contas`, n?'repeat':'check');
 }
 async function exportCsv(){
-  const rows=[['tipo','mes','data','quem','descricao','categoria','banco','valor','pago']].concat([...live()].sort((a,b)=>(a.mes+(a.data||'')).localeCompare(b.mes+(b.data||''))).map(i=>[i.tipo,i.mes,i.data||'',QUEM[i.quem]||i.quem,i.desc,i.tipo==='gasto'?cat(i):'',i.tipo==='conta'?(banco(i)||''):'',String(i.valor).replace('.',','),i.tipo==='conta'?(i.pago?'sim':'não'):'']));
+  const rows=[['tipo','mes','data','quem','descricao','categoria','banco','valor','pago','ja pago em parte']].concat([...live()].sort((a,b)=>(a.mes+(a.data||'')).localeCompare(b.mes+(b.data||''))).map(i=>[i.tipo,i.mes,i.data||'',QUEM[i.quem]||i.quem,i.desc,i.tipo==='gasto'?cat(i):'',i.tipo==='conta'?(banco(i)||''):'',String(i.valor).replace('.',','),i.tipo==='conta'?(i.pago?'sim':'não'):'',pagoParte(i)?String(pagoParte(i)).replace('.',','):'']));
   const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
   saveFile(`financeiro-${today()}.csv`,csv,'text/csv');
 }
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-bankrestore],[data-banco],[data-fotodel],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
   if(d.banco!==undefined){ if(d.banco) ui.bk=d.banco; ui.page='bancos'; saveUi(); render(); window.scrollTo({top:0}); return; }
-  if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto')}catch(e){} setIcone({usaFoto:false}); toast('foto removida'); return; }
+  if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto');localStorage.removeItem('fin-foto-orig')}catch(e){} setIcone({usaFoto:false}); toast('foto removida'); return; }
+  if(d.fotoaj){ let o=null; try{o=localStorage.getItem('fin-foto-orig')}catch(_){} abrirFoto(o||foto); return; }
+  if(d.cropok){ foto=cropSalvar(); crop=null; $('#sheetHost').innerHTML=''; try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); return; }
+  if(d.cropclose){ if(e.target===t||t.tagName==='BUTTON'){ crop=null; $('#sheetHost').innerHTML=''; } return; }
   if(d.mesjump){ openMesJump(); return; }
   if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
   if(d.lt){ ui.lt=d.lt; ui.cat=null; ui.qtipo={contas:'conta',gastos:'gasto',entradas:'entrada'}[d.lt]; render(); return; }
   if(d.qq){ ui.qquem=d.qq; if($('#sF')){ const k=keepVals('s'); openQuick(ui.qtipo); putVals('s',k); } else render(); return; }
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
-    safe(store.put({id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value}),`${n} adicionado`); return; }
+    safe(store.put({...(items.get('banco_'+slug(n))||{}),id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value,oculto:false}),`${n} adicionado`); return; }
   if(d.bankdel){ const n=d.bankdel, id='banco_'+slug(n);
-    if(BANKS[n]) safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,oculto:true}),`${n} removido`);
-    else if(items.has(id)) safe(store.del(id),`${n} removido`);
+    safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,oculto:true}),`${n} saiu da lista`);
     return; }
-  if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.del(b.id)); toast('bancos de volta'); return; }
+  if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
-  if(d.sair){ ['fin-foto','fin-icone','fin-tema','fin-pend'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'plane',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
+  if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'plane',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }
@@ -1127,16 +1174,20 @@ document.addEventListener('click',e=>{
   if(d.csv){ exportCsv(); return; }
   if(d.ft){ readForm(); form.tipo=d.ft; if(form.tipo==='entrada'&&form.quem==='juntos') form.quem='lais'; if(d.ft==='conta'&&form.pago===undefined) form.pago=false; drawSheet(); return; }
   if(d.fq){ readForm(); form.quem=d.fq; drawSheet(); return; }
+  if(d.addparc){ readForm(); const v=parseV($('#f-pv').value); if(!(v>0)){ const e=$('#f-err'); e.textContent='digite quanto pagou agora, por exemplo 300.'; e.hidden=false; return; }
+    form.parciais=[...(form.parciais||[]),{v,d:today()}]; const tot=parseV(form.valor); if(isFinite(tot)&&form.parciais.reduce((s,p)=>s+p.v,0)>=tot-0.004) form.pago=true; drawSheet(); return; }
+  if(d.delparc!==undefined){ readForm(); form.parciais=(form.parciais||[]).filter((_,i)=>i!==+d.delparc); drawSheet(); return; }
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
   if(d.del){ const id=form.id, old=items.get(id); form=null; drawSheet(); if(!old) return;
     const soft=old.auto||(old.tipo==='conta'&&parc(old.desc));
     safe(soft?store.patch(id,{removido:true}):store.del(id)).then(()=>toast('excluído','trash',{undo:()=>{ const {removido,...back}=old; return safe(store.put(back),'voltou'); }})); return; }
   if(d.undo){ const f=toast.undo; toast.undo=null; $('#toastHost').innerHTML=''; f?.(); return; }
 });
-document.addEventListener('change',async e=>{ if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ foto=await lerFoto(e.target.files[0]); try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); }catch(_){ toast('não consegui abrir essa foto.','alert'); } return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
+document.addEventListener('change',async e=>{ if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='qF'){e.preventDefault();quickAdd('q');} if(e.target.id==='sF'){e.preventDefault();quickAdd('s');} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
+  if(e.target.id==='cropZ'&&crop){ const z=+e.target.value, r=z/crop.z; crop.x*=r; crop.y*=r; crop.z=z; cropPaint(); return; }
   if(e.target.id==='bk-cor'){ $('#bk-sw').style.background=e.target.value; return; }
   if(/^[qs]-desc$/.test(e.target.id)){ const p=e.target.id[0], d=e.target.value; const ch=$('#'+p+'-cathint'); if(ch) ch.innerHTML=d.trim()?`categoria: <b>${esc(cat({desc:d}))}</b> · dá para trocar depois tocando no gasto`:'a categoria é identificada sozinha pelo que você escrever.'; const b=$('#'+p+'-bank'); if(b){ const k=banco({tipo:'conta',desc:d}); b.value=k||''; } }
   if(e.target.id==='q-busca'){ ui.busca=e.target.value; clearTimeout(window._bq); window._bq=setTimeout(render,120); return; }
@@ -1148,7 +1199,7 @@ function showTip(el,x,y){ const t=tipEl(); t.innerHTML=el.dataset.tip.split('|')
 document.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse') return; const el=e.target.closest?.('[data-tip]'); if(el) showTip(el,e.clientX,e.clientY); else if(!tipEl().hidden) tipEl().hidden=true; });
 document.addEventListener('pointerdown',e=>{ if(e.pointerType==='mouse') return; const el=e.target.closest?.('[data-tip]'); document.querySelectorAll('.hit.on').forEach(h=>h.classList.remove('on')); if(el){ showTip(el,e.clientX,e.clientY); el.classList.add('on'); } else tipEl().hidden=true; });
 addEventListener('scroll',()=>{ if(!tipEl().hidden) tipEl().hidden=true; },{passive:true});
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&/^[qs]-desc$/.test(e.target.id)&&!$('#'+e.target.id[0]+'-valor').value){ e.preventDefault(); $('#'+e.target.id[0]+'-valor').focus(); return; } if(e.key==='Escape'){ if(form){form=null;drawSheet();} else $('#sheetHost').innerHTML=''; } });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='f-pv'){ e.preventDefault(); $('[data-addparc]')?.click(); return; } if(e.key==='Enter'&&/^[qs]-desc$/.test(e.target.id)&&!$('#'+e.target.id[0]+'-valor').value){ e.preventDefault(); $('#'+e.target.id[0]+'-valor').focus(); return; } if(e.key==='Escape'){ if(form){form=null;drawSheet();} else { crop=null; $('#sheetHost').innerHTML=''; } } });
 
 // phones keep the app suspended for hours: when it comes back, catch up with what the other one changed
 // and, if the month turned meanwhile, move to the new month and carry the installments
@@ -1160,6 +1211,12 @@ async function voltar(){
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') hiddenAt=Date.now(); else if(Date.now()-hiddenAt>45000||today()!==dia) voltar(); });
 addEventListener('online',()=>flush());
+
+// dragging the photo inside the frame (mouse or finger)
+let drag=null;
+document.addEventListener('pointerdown',e=>{ if(!crop||!e.target.closest?.('#cropBox')) return; e.preventDefault(); drag={x:e.clientX,y:e.clientY,ox:crop.x,oy:crop.y}; try{$('#cropBox').setPointerCapture(e.pointerId)}catch(_){} });
+document.addEventListener('pointermove',e=>{ if(!drag||!crop) return; crop.x=drag.ox+e.clientX-drag.x; crop.y=drag.oy+e.clientY-drag.y; cropPaint(); });
+document.addEventListener('pointerup',()=>{ drag=null; }); document.addEventListener('pointercancel',()=>{ drag=null; });
 
 applyIcone();
 boot();
