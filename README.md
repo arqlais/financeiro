@@ -6,6 +6,9 @@ site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha
 - **lançamentos**: contas, gastos e entradas na mesma aba. lançar é como na planilha (tipo, quem, o que foi, valor, data); conta mostra parcelas e cartão, gasto sugere a categoria.
 - **parcelas automáticas**: "notebook 7/10" vira "notebook 8/10" no mês seguinte e para na última.
 - **ano**: balanço de 2025 e 2026. **ajustes**: cor, ícone, bancos e backup.
+- **sem internet**: o que for lançado fica salvo no celular e sobe sozinho quando a conexão volta. ao reabrir o app, ele busca o que o outro mudou.
+- **excluiu sem querer**: o aviso de excluído tem *desfazer* por alguns segundos.
+- **planilha**: em ajustes, *baixar planilha* gera um .csv com tudo, para abrir no excel ou no google planilhas.
 
 ## publicar no github pages
 
