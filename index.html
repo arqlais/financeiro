@@ -95,7 +95,7 @@ h1,h2,.stat .v,.brand b,.tl-d b{font-family:var(--f-display)}
   .brand div{display:block}
   .topnav{padding:6px 6px 6px 8px}
   .main{padding:22px 16px calc(120px + env(safe-area-inset-bottom,0px));gap:18px}
-  .dock{display:grid;grid-template-columns:repeat(3,1fr) 64px repeat(3,1fr);align-items:end;position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--hero);border-radius:26px;padding:8px 6px;box-shadow:0 16px 40px rgba(0,0,0,.28)}
+  .dock{display:grid;grid-template-columns:repeat(2,1fr) 70px repeat(2,1fr);align-items:end;position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--hero);border-radius:26px;padding:8px 6px;box-shadow:0 16px 40px rgba(0,0,0,.28)}
   .dock a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;font-size:.6rem;font-weight:500;color:rgba(255,255,255,.62);border-radius:16px;cursor:pointer;position:relative}
   .dock a[aria-current="page"]{color:#fff;background:rgba(255,255,255,.13)}
   .dock a .dotb{position:absolute;top:5px;right:calc(50% - 15px);width:8px;height:8px;border-radius:50%;background:var(--c-acc);box-shadow:0 0 0 2px var(--hero)}
@@ -136,11 +136,11 @@ h1,h2,.stat .v,.brand b,.tl-d b{font-family:var(--f-display)}
 @media (max-width:420px){.stats{gap:10px}}
 .stat{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;width:100%}
 button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
-.stat .t{font-size:.84rem;font-weight:500;color:var(--ink-2);padding-right:44px}
-.stat .v{font-family:var(--f-num);font-size:clamp(1.6rem,3vw,2.3rem);font-weight:600;line-height:1.05;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;overflow-wrap:anywhere}
+.stat .t{font-size:.84rem;font-weight:500;color:var(--ink-2)}
+.stat .v{font-family:var(--f-num);font-size:clamp(1.05rem,4.2vw,1.7rem);font-weight:600;line-height:1.1;letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
 .stat .s{font-size:.8rem;color:var(--muted)}
 .stat .si{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:11px;background:var(--rose-soft);color:var(--rose);display:grid;place-items:center}
-@media (max-width:700px){.stat{padding:16px 14px}.stat .si{top:12px;right:12px;width:30px;height:30px}.stat .t{padding-right:34px;font-size:.78rem}}
+@media (max-width:700px){.stat{padding:16px 14px}.stat .si{top:12px;right:12px;width:30px;height:30px}.stat .t{font-size:.78rem}}
 .alert{display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:16px;border:1px solid var(--line);background:var(--rose-soft);color:var(--rose);font-size:.92rem;flex-wrap:wrap}
 .alert b{font-weight:600}
 .alert.bad{background:var(--bad-soft);color:var(--bad)}
@@ -199,6 +199,10 @@ button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
 .dash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
 .dash.wide{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
 @media (max-width:899px){.dash,.dash.wide{grid-template-columns:minmax(0,1fr)}}
+.ltabs2{display:flex;width:100%;border-radius:16px}
+.ltabs2 button{flex:1;flex-direction:column;gap:0;justify-content:center;padding:8px 6px;border-radius:13px}
+.ltabs2 small{font-size:.7rem;color:var(--muted);font-weight:500;white-space:nowrap}
+.qadd select{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);padding:0 10px;flex:1 1 140px;min-width:0}
 .catchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px}
 .catchips::-webkit-scrollbar{display:none}
 .catchips .chip{flex:none}
@@ -547,7 +551,7 @@ function setIcone(o){ icone={...icone,...o}; try{localStorage.setItem('fin-icone
 let ver=0; class Store extends Map{ set(k,v){ver++;return super.set(k,v)} delete(k){ver++;return super.delete(k)} clear(){ver++;return super.clear()} }
 let items=new Store(), store=null, canWrite=true, ready=false, autoDone=false, bannerMsg='';
 const ui={page:'inicio', mes:today().slice(0,7), filtro:'aberto', bank:null, quem:'todos', q:'', cat:null, ano:today().slice(0,4)};
-try{const s=JSON.parse(localStorage.getItem('fin2-ui')||'{}'); if(['inicio','contas','gastos','entradas','ano','ajustes'].includes(s.page)) ui.page=s.page;}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('fin2-ui')||'{}'); if(['inicio','lanc','ano','ajustes'].includes(s.page)) ui.page=s.page;}catch(e){}
 const saveUi=()=>{try{localStorage.setItem('fin2-ui',JSON.stringify({page:ui.page}))}catch(e){}};
 let idxVer=-1, idx={live:[],byMes:new Map(),meses:[]};
 function index(){ if(idxVer===ver) return idx; const lv=[],bm=new Map(),ms=new Set();
@@ -650,17 +654,17 @@ async function autoParcelas(){
 }
 
 // ---------- navigation ----------
-const PAGES=[['inicio','início','home'],['contas','contas','file'],['gastos','gastos','bag'],['entradas','entradas','up'],['ano','ano','chart']];
+const PAGES=[['inicio','início','home'],['lanc','lançamentos','file'],['ano','ano','chart']];
 function renderNav(){
   const cur=today().slice(0,7), t=today();
   const atras=ofMes(cur,'conta').filter(c=>!c.pago&&c.data&&c.data<t).length;
   const cur_=k=>ui.page===k?'aria-current="page"':'';
-  $('#nav').innerHTML=PAGES.map(([k,l])=>`<a data-page="${k}" ${cur_(k)}>${l}${k==='contas'&&atras?`<span class="badge">${atras}</span>`:''}</a>`).join('');
+  $('#nav').innerHTML=PAGES.map(([k,l])=>`<a data-page="${k}" ${cur_(k)}>${l}${k==='lanc'&&atras?`<span class="badge">${atras}</span>`:''}</a>`).join('');
   $('#navR').innerHTML=`<button class="icbtn" data-page="ajustes" aria-label="ajustes" ${cur_('ajustes')}>${ic('gear')}</button>${canWrite?`<button class="btn dark" data-new="auto">${ic('plus','sm')} lançar</button>`:''}`;
-  const d=(k,l,i)=>`<a data-page="${k}" ${cur_(k)}>${ic(i,'lg')}<span>${l}</span>${k==='contas'&&atras?'<span class="dotb"></span>':''}</a>`;
-  $('#dock').innerHTML=d('inicio','início','home')+d('contas','contas','file')+d('gastos','gastos','bag')
+  const d=(k,l,i)=>`<a data-page="${k}" ${cur_(k)}>${ic(i,'lg')}<span>${l}</span>${k==='lanc'&&atras?'<span class="dotb"></span>':''}</a>`;
+  $('#dock').innerHTML=d('inicio','início','home')+d('lanc','lançamentos','file')
     +(canWrite?`<button class="plus" data-new="auto" aria-label="lançar">${ic('plus','lg')}</button>`:'<span></span>')
-    +d('entradas','entradas','up')+d('ano','ano','chart')+d('ajustes','ajustes','gear');
+    +d('ano','ano','chart')+d('ajustes','ajustes','gear');
   document.body.classList.toggle('gated',!!gate);
 }
 
@@ -674,14 +678,14 @@ function render(){
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
   if(gate==='login'){ m.innerHTML=vLogin(); return; }
   if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
-  const v={inicio:pInicio,contas:pContas,gastos:pGastos,entradas:pEntradas,ano:pAno,ajustes:pAjustes}[ui.page]||pInicio;
+  const v={inicio:pInicio,lanc:pLanc,ano:pAno,ajustes:pAjustes}[ui.page]||pInicio;
   // keep what is being typed in the quick-add line when live updates re-render the page
   const keep={}; m.querySelectorAll('[data-keep]').forEach(el=>keep[el.id]=el.value); const fid=document.activeElement?.id;
   m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+v();
   for(const [id,val] of Object.entries(keep)){ const el=document.getElementById(id); if(el&&val) el.value=val; }
   if(fid&&keep[fid]!==undefined) document.getElementById(fid)?.focus();
 }
-const stat=(t,v,s,i,go)=>`<${go?`button data-page="${go}"`:'div'} class="card stat"><span class="t">${t}</span><span class="si">${ic(i,'sm')}</span><span class="v num">${v}</span><span class="s">${s}</span></${go?'button':'div'}>`;
+const stat=(t,v,s)=>`<div class="card stat"><span class="t">${t}</span><span class="v num">${v}</span><span class="s">${s}</span></div>`;
 function resumo(m){ const E=sum(ofMes(m,'entrada')),C=sum(ofMes(m,'conta')),G=sum(ofMes(m,'gasto')); return {E,C,G,S:E-C-G}; }
 
 const byDate=(a,b)=>(a.data||'9').localeCompare(b.data||'9');
@@ -693,24 +697,32 @@ function monthNav(eyebrow){
 const sum3=cols=>`<div class="sum3">${cols.map(([l,v,c=''])=>`<div><span>${l}</span><b class="num ${c}">${v}</b></div>`).join('')}</div>`;
 const lineHtml=(it,extra='')=>`<span class="tap" data-edit="${esc(it.id)}"><span style="min-width:0"><b>${esc(it.desc)}</b><small><span class="dot ${it.quem}"></span>${QUEM[it.quem]||''}${it.data?' · '+qd(it):''}${extra}</small></span>`;
 // the planilha line: who, what, value, date. tipo is fixed on each page; the + button lets you pick it.
-function quickForm(p,tipo,pickTipo){
+// the planilha line: tipo, quem, o que foi, valor, data. extras only when they matter:
+// conta -> parcelas and cartão; gasto -> categoria (suggested from what you type).
+function quickForm(p,tipo){
   const t=today(), m=ui.mes; let qq=ui.qquem||'juntos'; if(tipo==='entrada'&&qq==='juntos') qq='lais';
   const dDef=m===t.slice(0,7)?t:`${m}-${tipo==='conta'?'10':'01'}`;
+  const extra=tipo==='conta'?`<select id="${p}-parc" data-keep aria-label="parcelas">${[1,2,3,4,5,6,7,8,9,10,12,18,24].map(n=>`<option value="${n}">${n===1?'à vista':n+'x'}</option>`).join('')}</select>
+      <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão: não sei</option><option value="boleto">boleto ou pix</option>${Object.keys(BK()).map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
+    :tipo==='gasto'?`<select id="${p}-cat" data-keep aria-label="categoria">${CATN.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>`:'';
   return `<form class="qadd" id="${p}F" data-tipo="${tipo}" novalidate>
-    <div class="qrow">${pickTipo?`<div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>`:''}
+    <div class="qrow"><div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>
       <div class="chipset">${Object.entries(QUEM).filter(([k])=>tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${qq===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
-    <div class="qrow"><input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="next" placeholder="${tipo==='conta'?'conta (ex.: claro, notebook 1/10)':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
+    <div class="qrow"><input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="next" placeholder="${tipo==='conta'?'qual conta (ex.: claro, notebook)':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
       <datalist id="${p}dl">${sugestoes(tipo)}</datalist>
       <input id="${p}-valor" data-keep inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
       <input id="${p}-data" data-keep type="date" value="${dDef}" aria-label="${tipo==='conta'?'vencimento':'data'}">
+      ${extra}
       <button class="btn dark" type="submit">${ic('plus','sm')} adicionar</button></div>
     <p class="err" id="${p}-err" hidden></p></form>`;
 }
+const keepVals=p=>{const k={}; ['desc','valor','data'].forEach(x=>{const el=$('#'+p+'-'+x); if(el) k[x]=el.value;}); return k;};
+const putVals=(p,k)=>Object.entries(k).forEach(([x,v])=>{const el=$('#'+p+'-'+x); if(el&&v) el.value=v;});
 function openQuick(tipo){
   ui.qtipo=tipo; form=null;
   $('#sheetHost').innerHTML=`<div class="scrim" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="lançar">
-    <div class="card-h" style="margin:0"><h2>novo <span class="script">${tipo}</span></h2><button type="button" class="icbtn" data-close="1" aria-label="fechar">${ic('x')}</button></div>
-    ${quickForm('s',tipo,true)}</div></div>`;
+    <div class="card-h" style="margin:0"><h2>lançar</h2><button type="button" class="icbtn" data-close="1" aria-label="fechar">${ic('x')}</button></div>
+    ${quickForm('s',tipo)}</div></div>`;
   setTimeout(()=>$('#s-desc')?.focus(),60);
 }
 
@@ -724,15 +736,33 @@ function pInicio(){
     <div class="col">${cardCats(ofMes(m,'gasto'),'para onde foi')}${cardQuem(m)}</div></div>`;
   return h;
 }
-function pContas(){
-  const m=ui.mes, t=today(); const contas=ofMes(m,'conta').sort(byDate); const C=sum(contas), falta=sum(contas.filter(c=>!c.pago));
-  let h=monthNav('contas')+sum3([['total',fmt(C)],['pago',fmt(C-falta)],['falta pagar',fmt(falta),falta?'neg':'pos']]);
-  if(canWrite) h+=quickForm('q','conta',false);
-  h+=`<div class="dash wide"><section class="sec"><div class="sec-h"><h2>contas do mês</h2><span>${contas.filter(c=>c.pago).length} de ${contas.length} pagas</span></div>
-    ${contas.length?contas.map(c=>{const late=!c.pago&&c.data&&c.data<t; const b=banco(c);
-      return `<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c,(b&&b!=='boleto'?` · <span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'')+(late?' · <span class="late">atrasada</span>':''))}<span class="v">${fmt(c.valor)}</span></span></div>`}).join(''):'<div class="empty-ln">nenhuma conta neste mês.</div>'}
-    ${canWrite&&contas.length?`<div class="more"><span>parcelas (como 3/10) passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir fixas em ${mName(addM(m,1))}</button></div>`:''}</section>
-    <div class="col">${cardBancosMini(contas)}</div></div>`;
+function pLanc(){
+  const m=ui.mes, t=today(), r=resumo(m); const lt=ui.lt||'gastos'; const tipo=ui.qtipo||{contas:'conta',gastos:'gasto',entradas:'entrada'}[lt];
+  let h=monthNav('')+`<label class="busca">${ic('search','sm')}<input id="q-busca" data-keep type="search" placeholder="buscar em todos os meses" value="${esc(ui.busca||'')}" enterkeyhint="search" aria-label="buscar em todos os meses"></label>`;
+  if(ui.busca) return h+vBusca(ui.busca);
+  h+=sum3([['entrou',fmt(r.E)],['saiu',fmt(r.C+r.G)],['sobrou',fmt(r.S),r.S<0?'neg':'pos']]);
+  if(canWrite) h+=quickForm('q',tipo);
+  const contas=ofMes(m,'conta').sort(byDate), gastos=ofMes(m,'gasto'), ents=ofMes(m,'entrada').sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  h+=`<div class="ltabs2 chipset" role="tablist">${[['contas','contas',r.C],['gastos','gastos',r.G],['entradas','entradas',r.E]].map(([k,l,v])=>`<button type="button" data-lt="${k}" aria-pressed="${lt===k}">${l}<small>${fmt(v)}</small></button>`).join('')}</div>`;
+  if(lt==='contas'){
+    const falta=sum(contas.filter(c=>!c.pago));
+    h+=`<div class="dash wide"><section class="sec"><div class="sec-h"><h2>contas</h2><span>${contas.filter(c=>c.pago).length} de ${contas.length} pagas${falta?` · falta <b>${fmt(falta)}</b>`:''}</span></div>
+      ${contas.length?contas.map(c=>{const late=!c.pago&&c.data&&c.data<t; const b=banco(c);
+        return `<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c,(b&&b!=='boleto'?` · <span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'')+(late?' · <span class="late">atrasada</span>':''))}<span class="v">${fmt(c.valor)}</span></span></div>`}).join(''):'<div class="empty-ln">nenhuma conta neste mês.</div>'}
+      ${canWrite&&contas.length?`<div class="more"><span>parcelas passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir as fixas em ${mName(addM(m,1))}</button></div>`:''}</section>
+      <div class="col">${cardBancosMini(contas)}</div></div>`;
+  } else if(lt==='gastos'){
+    const cats={}; gastos.forEach(g=>{const k=cat(g);cats[k]=(cats[k]||0)+(+g.valor||0)}); const ca=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+    let list=ui.cat?gastos.filter(g=>cat(g)===ui.cat):gastos; list=[...list].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+    let rows='',last=null;
+    for(const g of list){ const d=g.data||''; if(d!==last){ rows+=`<div class="day"><span>${d?new Date(d+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'}):'sem data'}</span><span>${fmt(sum(list.filter(x=>(x.data||'')===d)))}</span></div>`; last=d; }
+      rows+=`<div class="ln">${lineHtml(g,' · '+esc(cat(g)))}<span class="v">${fmt(g.valor)}</span></span></div>`; }
+    if(ca.length) h+=`<div class="catchips"><button class="chip" data-cat="" aria-pressed="${!ui.cat}">todas</button>${ca.map(([n,v])=>`<button class="chip" data-cat="${esc(n)}" aria-pressed="${ui.cat===n}"><span class="dot" style="background:${CATC[n]}"></span>${esc(n)} <span class="muted">${fmt(v)}</span></button>`).join('')}</div>`;
+    h+=`<div class="dash wide"><section class="sec"><div class="sec-h"><h2>${ui.cat?esc(ui.cat):'gastos do dia a dia'}</h2><span><b>${fmt(sum(list))}</b></span></div>${rows||'<div class="empty-ln">nenhum gasto neste mês.</div>'}</section>
+      <div class="col">${gastos.length?cardCats(gastos,'por categoria'):''}</div></div>`;
+  } else {
+    h+=`<section class="sec"><div class="sec-h"><h2>entradas</h2><span><b>${fmt(r.E)}</b></span></div>${ents.length?ents.map(i=>`<div class="ln">${lineHtml(i)}<span class="v in">${fmt(i.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nenhuma entrada neste mês.</div>'}</section>`;
+  }
   return h;
 }
 function cardBancosMini(contas){
@@ -740,30 +770,6 @@ function cardBancosMini(contas){
   const a=Object.entries(g).sort((x,y)=>sum(y[1])-sum(x[1])); if(!a.length) return '';
   const B=BK();
   return `<section class="card"><div class="card-h"><h2>por cartão</h2></div><div class="bars">${a.map(([b,l])=>{const ab=l.filter(c=>!c.pago), f=sum(ab);return `<div class="bar"><span><span class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></span>${esc(b)}</span><span class="num">${fmt(sum(l))}</span><small class="muted" style="grid-column:1/-1;font-size:.76rem">${ab.length?`falta ${fmt(f)}`:'pago'}</small></div>`}).join('')}</div></section>`;
-}
-function pGastos(){
-  const m=ui.mes; const all=ofMes(m,'gasto'); const T=sum(all);
-  let h=monthNav('gastos do dia a dia')+`<label class="busca">${ic('search','sm')}<input id="q-busca" data-keep type="search" placeholder="buscar em todos os meses (ex.: mercado)" value="${esc(ui.busca||'')}" enterkeyhint="search" aria-label="buscar em todos os meses"></label>`;
-  if(ui.busca) return h+vBusca(ui.busca);
-  const cats={}; all.forEach(g=>{const k=cat(g);cats[k]=(cats[k]||0)+(+g.valor||0)}); const ca=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
-  const days=new Set(all.map(g=>g.data).filter(Boolean)).size;
-  h+=sum3([['gasto no mês',fmt(T)],['por dia',fmt(days?T/days:0)],['maior',ca[0]?esc(ca[0][0]):'—']]);
-  if(canWrite) h+=quickForm('q','gasto',false);
-  let list=ui.cat?all.filter(g=>cat(g)===ui.cat):all; list=[...list].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
-  let rows='',last=null;
-  for(const g of list){ const d=g.data||''; if(d!==last){ rows+=`<div class="day"><span>${d?new Date(d+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'}):'sem data'}</span><span>${fmt(sum(list.filter(x=>(x.data||'')===d)))}</span></div>`; last=d; }
-    rows+=`<div class="ln">${lineHtml(g,' · '+esc(cat(g)))}<span class="v">${fmt(g.valor)}</span></span></div>`; }
-  h+=`<div class="catchips"><button class="chip" data-cat="" aria-pressed="${!ui.cat}">todas</button>${ca.map(([n,v])=>`<button class="chip" data-cat="${esc(n)}" aria-pressed="${ui.cat===n}"><span class="dot" style="background:${CATC[n]}"></span>${esc(n)} <span class="muted">${fmt(v)}</span></button>`).join('')}</div>`;
-  h+=`<div class="dash wide"><section class="sec"><div class="sec-h"><h2>${ui.cat?esc(ui.cat):'todos os gastos'}</h2><span><b>${fmt(sum(list))}</b></span></div>${rows||'<div class="empty-ln">nada ainda.</div>'}</section>
-    <div class="col">${cardCats(all,'por categoria')}${cardQuem(m,all)}</div></div>`;
-  return h;
-}
-function pEntradas(){
-  const m=ui.mes; const all=ofMes(m,'entrada').sort((a,b)=>(b.data||'').localeCompare(a.data||'')); const e={lais:0,igor:0}; all.forEach(i=>{if(e[i.quem]!==undefined) e[i.quem]+=+i.valor||0});
-  let h=monthNav('entradas')+sum3([['recebido',fmt(sum(all))],['laís',fmt(e.lais)],['igor',fmt(e.igor)]]);
-  if(canWrite) h+=quickForm('q','entrada',false);
-  h+=`<section class="sec"><div class="sec-h"><h2>recebimentos</h2><span><b>${fmt(sum(all))}</b></span></div>${all.length?all.map(i=>`<div class="ln">${lineHtml(i)}<span class="v in">${fmt(i.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nada ainda.</div>'}</section>`;
-  return h;
 }
 function vSemana(contas,t,C,falta){
   const pend=contas.filter(c=>!c.pago&&c.data&&dDiff(c.data,t)<=7).sort(byDate);
@@ -807,9 +813,14 @@ async function quickAdd(p){
   const desc=$('#'+p+'-desc').value.trim(), raw=$('#'+p+'-valor').value, v=parseV(raw), data=$('#'+p+'-data').value||null;
   if(!desc) return err('escreva o que foi.'); if(raw===''||!(v>=0)) return err('digite o valor, por exemplo 45,90.');
   const tipo=f.dataset.tipo; let quem=ui.qquem||'juntos'; if(tipo==='entrada'&&quem==='juntos') quem='lais';
-  const it={id:uid(),tipo,quem,desc,valor:v,data,mes:(data||ui.mes).slice(0,7)}; if(tipo==='conta') it.pago=false;
-  if(p==='s') $('#sheetHost').innerHTML=''; else { $('#'+p+'-desc').value=''; $('#'+p+'-valor').value=''; }
-  await safe(store.put(it),`${tipo} adicionad${tipo==='conta'||tipo==='entrada'?'a':'o'}`); if(p!=='s') $('#'+p+'-desc')?.focus();
+  const base={tipo,quem,desc,valor:v,data,mes:(data||ui.mes).slice(0,7)};
+  if(tipo==='gasto'){ const c=$('#'+p+'-cat')?.value; if(c&&c!==cat({desc})) base.cat=c; }
+  if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc})||''; if(b!==auto) base.banco=b==='boleto'?'':b; }
+  const n=tipo==='conta'?+($('#'+p+'-parc')?.value||1):1;
+  if(p==='s') $('#sheetHost').innerHTML=''; else { ['desc','valor'].forEach(x=>$('#'+p+'-'+x).value=''); if($('#'+p+'-parc')) $('#'+p+'-parc').value='1'; }
+  if(n>1){ const d0=data||base.mes+'-10'; for(let i=0;i<n;i++){ const dt=addMd(d0,i); await safe(store.put({...base,id:uid(),desc:`${desc} ${i+1}/${n}`,data:dt,mes:dt.slice(0,7)})); } toast(`${n} parcelas lançadas`,'layers'); }
+  else await safe(store.put({...base,id:uid()}),`${tipo} adicionad${tipo==='gasto'?'o':'a'}`);
+  if(p!=='s') $('#'+p+'-desc')?.focus();
 }
 
 function cardQuem(m, list){
@@ -831,9 +842,9 @@ function pAno(){
   const E=rows.reduce((s,r)=>s+r.E,0),C=rows.reduce((s,r)=>s+r.C,0),G=rows.reduce((s,r)=>s+r.G,0);
   const yr=live().filter(i=>i.mes.startsWith(Y));
   const bk={}; yr.filter(i=>i.tipo==='conta').forEach(c=>{const b=banco(c); if(b&&b!=='boleto') bk[b]=(bk[b]||0)+c.valor}); const ba=Object.entries(bk).sort((a,b)=>b[1]-a[1]); const bmx=ba[0]?.[1]||1;
-  let html=`<div class="ph"><div class="ph-l"><span class="eyebrow">financeiro · balanço anual</span><div class="mnav"><h1>balanço <span class="script">${Y}</span></h1></div></div>
+  let html=`<div class="ph"><div class="ph-l"><div class="mnav"><h1>balanço de <span class="script">${Y}</span></h1></div></div>
     <div class="ph-r"><div class="seg">${years.map(y=>`<button data-ano="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div></div></div>`;
-  html+=`<div class="stats">${stat('entrou no ano',fmt(E),`${rows.length} meses registrados`,'up')}${stat('contas',fmt(C),`média de ${fmt(C/(rows.length||1))} por mês`,'file')}${stat('gastos do dia a dia',fmt(G),`média de ${fmt(G/(rows.length||1))} por mês`,'bag')}${stat('saldo do ano',`<span style="color:var(--${E-C-G<0?'bad':'good'})">${fmt(E-C-G)}</span>`,'entradas menos saídas','target')}</div>`;
+  html+=`<div class="stats">${stat('entrou',fmt(E),`em ${rows.length} meses`)}${stat('contas',fmt(C),`${fmt(C/(rows.length||1))} por mês`)}${stat('gastos',fmt(G),`${fmt(G/(rows.length||1))} por mês`)}${stat('saldo',`<span style="color:var(--${E-C-G<0?'bad':'good'})">${fmt(E-C-G)}</span>`,'entrou menos saiu')}</div>`;
   html+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div>${chartN(today().slice(0,7),12)}</section>`;
   html+=`<section class="card"><div class="card-h"><h2>mês a mês</h2><span class="muted" style="font-size:.84rem">toque num mês para abrir as contas</span></div><div class="chart"><table class="yr num"><thead><tr><th>mês</th><th>entrou</th><th>contas</th><th>gastos</th><th>sobrou</th></tr></thead><tbody>
     ${rows.map(r=>`<tr class="${r.m===today().slice(0,7)?'cur':''}"><td><button class="link" style="color:var(--ink)" data-goto="${r.m}">${r.n}</button></td><td>${fmt(r.E)}</td><td>${fmt(r.C)}</td><td>${fmt(r.G)}</td><td style="font-weight:600;color:var(--${r.S<0?'bad':'good'})">${fmt(r.S)}</td></tr>`).join('')}
@@ -1000,14 +1011,15 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo neste aparelho'); return; }
   if(d.mesjump){ openMesJump(); return; }
   if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
-  if(d.qt){ openQuick(d.qt); return; }
-  if(d.qq){ ui.qquem=d.qq; if($('#sF')){ const k={}; ['desc','valor','data'].forEach(x=>k[x]=$('#s-'+x).value); openQuick(ui.qtipo); ['desc','valor','data'].forEach(x=>{ if(k[x]) $('#s-'+x).value=k[x]; }); } else render(); return; }
+  if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
+  if(d.lt){ ui.lt=d.lt; ui.cat=null; ui.qtipo={contas:'conta',gastos:'gasto',entradas:'entrada'}[d.lt]; render(); return; }
+  if(d.qq){ ui.qquem=d.qq; if($('#sF')){ const k=keepVals('s'); openQuick(ui.qtipo); putVals('s',k); } else render(); return; }
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
     safe(store.put({id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value}),`${n} adicionado`); return; }
   if(d.bankdel){ const id='banco_'+slug(d.bankdel); if(items.has(id)) safe(store.del(id),'banco removido'); return; }
@@ -1021,14 +1033,14 @@ document.addEventListener('click',e=>{
   if(d.goto&&ui.busca){ ui.busca=''; }
   if(d.page){ ui.page=d.page; ui.cat=null; ui.bank=null; ui.q=''; ui.quem='todos'; ui.busca=''; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.mstep){ ui.mes=addM(ui.mes,+d.mstep); ui.bank=null; render(); return; }
-  if(d.goto){ ui.mes=d.goto; ui.page=ui.page==='ano'?'contas':ui.page; saveUi(); render(); window.scrollTo({top:0}); return; }
+  if(d.goto){ ui.mes=d.goto; ui.page='lanc'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.pagar){ if(!canWrite) return; const it=items.get(d.pagar); if(it) safe(store.patch(it.id,{pago:!it.pago}), it.pago?'voltou para a pagar':'conta paga'); return; }
   if(d.edit){ if(!canWrite) return; const it=items.get(d.edit); if(it) openSheet(it); return; }
-  if(d.new){ openQuick(d.new==='auto'?({contas:'conta',entradas:'entrada'}[ui.page]||'gasto'):d.new); return; }
+  if(d.new){ openQuick(d.new==='auto'?({contas:'conta',entradas:'entrada'}[ui.lt]||'gasto'):d.new); return; }
   if(d.filtro){ ui.filtro=d.filtro; render(); return; }
   if(d.bank!==undefined){ ui.bank=d.bank&&ui.bank!==d.bank?d.bank:null; render(); return; }
   if(d.quem){ ui.quem=d.quem; render(); return; }
-  if(d.cat!==undefined){ ui.cat=d.cat||null; if(ui.page!=='gastos'){ ui.page='gastos'; saveUi(); window.scrollTo({top:0}); } render(); return; }
+  if(d.cat!==undefined){ ui.cat=d.cat||null; ui.lt='gastos'; if(ui.page!=='lanc'){ ui.page='lanc'; saveUi(); window.scrollTo({top:0}); } render(); return; }
   if(d.ano){ ui.ano=d.ano; render(); return; }
   if(d.copiar){ repetirFixas(); return; }
   if(d.csv){ exportCsv(); return; }
@@ -1042,6 +1054,7 @@ document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefau
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
   if(e.target.id==='bk-cor'){ $('#bk-sw').style.background=e.target.value; return; }
+  if(/^[qs]-desc$/.test(e.target.id)){ const p=e.target.id[0], d=e.target.value; const c=$('#'+p+'-cat'); if(c) c.value=cat({desc:d}); const b=$('#'+p+'-bank'); if(b){ const k=banco({tipo:'conta',desc:d}); b.value=k||''; } }
   if(e.target.id==='q-busca'){ ui.busca=e.target.value; clearTimeout(window._bq); window._bq=setTimeout(render,120); return; }
   if(e.target.id==='busca'){ ui.q=e.target.value; const p=e.target.selectionStart; render(); const b=$('#busca'); b.focus(); try{b.setSelectionRange(p,p)}catch(_){} }
   if(e.target.id==='f-desc'){ if($('#f-cat')) $('#f-cat').value=cat({desc:e.target.value}); if($('#f-bank')&&form&&form.bankSel===undefined&&form.banco===undefined){ const b=banco({tipo:'conta',desc:e.target.value}); $('#f-bank').value=b||''; } }

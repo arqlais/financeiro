@@ -2,10 +2,10 @@
 
 site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha. funciona no celular, no tablet e no computador, e pode ser instalado na tela inicial como app.
 
-- **mês**: resumo (entrou, saiu, sobrou), uma linha para lançar gasto, conta ou entrada, e as listas do mês, como na planilha.
-- **contas**: marcar como paga com um toque; parcelas (como 3/10) passam sozinhas para o mês seguinte e param na última.
-- **ano**: balanço de 2025 e 2026.
-- **ajustes**: cor de cada um, bancos, backup.
+- **início**: entrou, saiu e sobrou, contas da semana, gráfico, para onde foi e quem gastou.
+- **lançamentos**: contas, gastos e entradas na mesma aba. lançar é como na planilha (tipo, quem, o que foi, valor, data); conta mostra parcelas e cartão, gasto sugere a categoria.
+- **parcelas automáticas**: "notebook 7/10" vira "notebook 8/10" no mês seguinte e para na última.
+- **ano**: balanço de 2025 e 2026. **ajustes**: cor, ícone, bancos e backup.
 
 ## publicar no github pages
 
