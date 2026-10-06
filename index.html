@@ -572,6 +572,7 @@ body:has(.scrim){overflow:hidden}
 /* planê font (the seasons), when the couple uploaded it in ajustes */
 .seasons .script{font-family:"The Seasons","Cormorant Garamond",serif;font-weight:300;font-size:1.14em;letter-spacing:0;line-height:1}
 .seasons .greet .script{font-size:1.2em}
+.seasons .card-h .script,.seasons .week-h .script,.seasons .greet .script,.seasons .sheet h2 .script,.seasons .lst-h .script{font-weight:400}
 </style>
 
 <div class="glow" aria-hidden="true"></div>
@@ -790,18 +791,20 @@ function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); 
 // the seasons is for personal use, so it never goes to the public repo: the file is uploaded once in ajustes and
 // kept with the couple's data (members only), then registered here. demo files lack accents, so those fall back to cormorant.
 let fontesKey='', fonteCripto=false;
-function usarFonteBuf(buf){ try{ const ff=new FontFace('The Seasons',buf,{weight:'300',style:'italic'}); return ff.load().then(x=>{ document.fonts.add(x); fonteCripto=true; document.documentElement.classList.add('seasons'); }).catch(()=>{}); }catch(e){} }
+function usarFonteBuf(buf,peso=300,estilo='italic'){ try{ const ff=new FontFace('The Seasons',buf,{weight:String(peso),style:estilo}); return ff.load().then(x=>{ document.fonts.add(x); fonteCripto=true; document.documentElement.classList.add('seasons'); }).catch(()=>{}); }catch(e){} }
 const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
-try{ const c=localStorage.getItem('fin-fonte'); if(c) usarFonteBuf(b64(c).buffer); }catch(e){}
+// cache: {"300":base64,"400":base64} (an older cache held just the light italic as a plain string)
+try{ const c=localStorage.getItem('fin-fonte'); if(c){ const o=c[0]==='{'?JSON.parse(c):{300:c}; for(const [p,d] of Object.entries(o)) usarFonteBuf(b64(d).buffer,+p); } }catch(e){}
 async function fonteInicial(){
   if(fonteCripto||!sb||!crypto?.subtle) return;
   try{ const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); const chave=k.data?.valor; if(!chave) return;
     const r=await fetch('fonte.enc.json'); if(!r.ok) return; const e=await r.json();
     const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(chave),'PBKDF2',false,['deriveKey']);
     const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
-    const buf=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.data));
-    await usarFonteBuf(buf);
-    try{ let s=''; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=8192) s+=String.fromCharCode(...u.subarray(i,i+8192)); localStorage.setItem('fin-fonte',btoa(s)); }catch(_){}
+    const lista=e.fontes||[{peso:300,estilo:'italic',iv:e.iv,data:e.data}], cache={};
+    for(const f of lista){ const buf=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(f.iv)},key,b64(f.data)); await usarFonteBuf(buf,f.peso,f.estilo);
+      try{ let s=''; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=8192) s+=String.fromCharCode(...u.subarray(i,i+8192)); cache[f.peso]=btoa(s); }catch(_){} }
+    try{ localStorage.setItem('fin-fonte',JSON.stringify(cache)); }catch(_){}
   }catch(err){} }
 function fontesSync(){
   const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido&&i.data); const key=fs.map(f=>f.id+':'+f.data.length).join('|'); if(key===fontesKey) return; fontesKey=key;
