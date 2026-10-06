@@ -1,6 +1,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>financeiro laís &amp; igor</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#f5f0ed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="financeiro">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap">
 <style>
@@ -31,6 +40,7 @@
   --good:#8cc29f; --good-soft:#203229; --bad:#f09a86; --bad-soft:#3d2420; --warn:#e3b86c; --warn-soft:#382d1b;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{min-height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-transform:lowercase}
 .brl,input,select,textarea{text-transform:none}
@@ -274,6 +284,20 @@ table.yr tr.cur td{background:var(--rose-soft)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:var(--ink);color:var(--on-ink);padding:12px 18px;border-radius:14px;font-weight:500;font-size:.88rem;z-index:60;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow);white-space:nowrap}
 @media (max-width:700px){.toast{bottom:calc(150px + env(safe-area-inset-bottom,0px))}}
 .banner{font-size:.85rem;color:var(--muted);padding:10px 16px;border-radius:12px;background:var(--sunk)}
+body.gated .nav,body.gated .tabbar,body.gated .fab,body.gated .side-foot,body.gated .mtop .icbtn{display:none!important}
+.login{max-width:420px;width:100%;margin:6vh auto 0;display:flex;flex-direction:column;gap:14px;text-align:left}
+.login .mark{width:56px;height:56px;font-size:1.7rem}
+.login h1{margin:4px 0 0;font-size:1.9rem;font-weight:700;letter-spacing:-.03em}
+.login .btn{justify-content:center;width:100%}
+.login .link{justify-content:center;width:100%;padding:6px}
+.opt{display:flex;flex-direction:column;gap:12px}
+.opt-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.opt-row:first-child{border-top:0}
+@media (max-width:520px){.opt-row{grid-template-columns:40px minmax(0,1fr)}.opt-row>:last-child{grid-column:2;justify-self:start}}
+.opt-row b{font-weight:500;display:block}.opt-row small{color:var(--muted);font-size:.8rem}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;color:var(--ink-2)}
+.fileb{position:relative;overflow:hidden}
+.fileb input{position:absolute;inset:0;opacity:0;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(18px);opacity:.5}}}
 </style>
 
@@ -284,7 +308,7 @@ table.yr tr.cur td{background:var(--rose-soft)}
     <div class="side-foot"><span class="lbl">como funciona</span><span>parcelas passam sozinhas para o mês seguinte. na última, elas param.</span></div>
   </aside>
   <div style="min-width:0">
-    <div class="mtop"><div class="brand"><span class="mark" style="width:38px;height:38px;font-size:1.15rem">l&amp;i</span><div><b style="font-size:1.1rem">financeiro<i>.</i></b></div></div></div>
+    <div class="mtop"><div class="brand"><span class="mark" style="width:38px;height:38px;font-size:1.15rem">l&amp;i</span><div><b style="font-size:1.1rem">financeiro<i>.</i></b></div></div><button class="icbtn" data-page="ajustes" aria-label="ajustes" id="mgear"></button></div>
     <main class="main" id="main"></main>
   </div>
 </div>
@@ -321,6 +345,12 @@ const P = {
   layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
   repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
   arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  phone:'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
 };
 const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
 
@@ -389,11 +419,14 @@ const ofMes=(m,t)=>live().filter(i=>i.mes===m&&(!t||i.tipo===t));
 const meses=()=>{const s=new Set(live().map(i=>i.mes)); s.add(today().slice(0,7)); return [...s].sort();};
 
 // ---------- storage ----------
+// Three places the data can live: the claude.ai artifact store, a supabase project (github pages + config.js), or this browser only.
+let mode='local', sb=null, session=null, gate=null, userEmail='', channel=null;
 async function boot(){
   render();
   let db=null;
   try{ db=window.claude?.use? await window.claude.use('db'):null; }catch(e){}
   if(db){
+    mode='claude';
     try{ const u=await window.claude.use('user'); const c=u?.can? await u.can('data.write'):null; if(c===false) canWrite=false; }catch(e){}
     const col=db.collection('lancamentos');
     store={put:it=>col.doc(it.id).set(it), del:id=>col.doc(id).delete(), patch:(id,o)=>col.doc(id).update(o)};
@@ -402,18 +435,54 @@ async function boot(){
       if(!ready){ ready=true; setTimeout(autoParcelas,400); }
       render();
     }, ()=>{ bannerMsg='não consegui carregar os lançamentos agora. recarregue a página.'; render(); });
-  } else {
-    let arr=null; try{arr=JSON.parse(localStorage.getItem('fin2-itens')||'null')}catch(e){}
-    if(!arr){ arr=[]; for(const f of ['dados-2025.json','dados.json']){ try{const r=await fetch(f); if(r.ok) arr=arr.concat(await r.json());}catch(e){} } }
-    arr.forEach(i=>items.set(i.id,i));
-    const persist=()=>{try{localStorage.setItem('fin2-itens',JSON.stringify([...items.values()]))}catch(e){}};
-    store={put:async it=>{items.set(it.id,it);persist();render()}, del:async id=>{items.delete(id);persist();render()}, patch:async(id,o)=>{items.set(id,{...items.get(id),...o});persist();render()}};
-    bannerMsg='modo local: os lançamentos ficam salvos só neste navegador.';
-    ready=true; render(); autoParcelas();
+    return;
   }
+  const cfg=window.FIN_CONFIG||{};
+  if(cfg.supabaseUrl&&cfg.supabaseKey){ mode='nuvem'; return bootNuvem(cfg); }
+  let arr=null; try{arr=JSON.parse(localStorage.getItem('fin2-itens')||'null')}catch(e){}
+  if(!arr){ arr=[]; for(const f of ['dados-2025.json','dados.json']){ try{const r=await fetch(f); if(r.ok) arr=arr.concat(await r.json());}catch(e){} } }
+  arr.forEach(i=>items.set(i.id,i));
+  const persist=()=>{try{localStorage.setItem('fin2-itens',JSON.stringify([...items.values()]))}catch(e){}};
+  store={put:async it=>{items.set(it.id,it);persist();render()}, del:async id=>{items.delete(id);persist();render()}, patch:async(id,o)=>{items.set(id,{...items.get(id),...o});persist();render()},
+    bulk:async arr=>{arr.forEach(it=>items.set(it.id,it));persist();render()}};
+  bannerMsg='modo local: os lançamentos ficam salvos só neste aparelho. veja ajustes para sincronizar.';
+  ready=true; render(); autoParcelas();
+}
+const loadScript=src=>new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});
+const row=it=>({id:it.id,doc:it,updated_at:new Date().toISOString()});
+async function bootNuvem(cfg){
+  try{ await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'); }
+  catch(e){ bannerMsg='sem internet: não consegui conectar ao banco de dados. tente de novo.'; ready=true; render(); return; }
+  sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
+  const T=()=>sb.from('lancamentos');
+  const chk=({error})=>{ if(error) throw error; };
+  store={
+    put:async it=>{items.set(it.id,it);render();chk(await T().upsert(row(it)));},
+    del:async id=>{items.delete(id);render();chk(await T().delete().eq('id',id));},
+    patch:async(id,o)=>{const it={...items.get(id),...o};items.set(id,it);render();chk(await T().upsert(row(it)));},
+    bulk:async arr=>{for(let i=0;i<arr.length;i+=500) chk(await T().upsert(arr.slice(i,i+500).map(row))); arr.forEach(it=>items.set(it.id,it)); render();},
+  };
+  const {data}=await sb.auth.getSession(); session=data.session;
+  sb.auth.onAuthStateChange((ev,s)=>{ const had=!!session; session=s;
+    if(!s){ items.clear(); gate='login'; ready=true; autoDone=false; render(); }
+    else if(!had){ setTimeout(afterLogin,0); } });
+  if(session) await afterLogin(); else { gate='login'; ready=true; render(); }
+}
+async function afterLogin(){
+  userEmail=session?.user?.email||''; gate=null; ready=false; render();
+  const mem=await sb.from('membros').select('email').limit(1);
+  if(mem.error||!mem.data?.length){ gate='semacesso'; ready=true; render(); return; }
+  const all=[];
+  for(let from=0;;from+=1000){ const {data,error}=await sb.from('lancamentos').select('id,doc').range(from,from+999);
+    if(error){ bannerMsg='não consegui carregar os lançamentos. recarregue a página.'; break; } all.push(...data); if(data.length<1000) break; }
+  items.clear(); all.forEach(r=>items.set(r.id,{...r.doc,id:r.id}));
+  if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
+    if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); }
+    render(); }).subscribe();
+  ready=true; render(); setTimeout(autoParcelas,400);
 }
 function toast(t,i='check'){const h=$('#toastHost');h.innerHTML=`<div class="toast">${ic(i,'sm')}${esc(t)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>h.innerHTML='',2400);}
-async function safe(p,ok){try{await p; if(ok) toast(ok);}catch(e){toast(e?.code==='invalid_argument'?'você não tem permissão para editar.':'não salvou. tente de novo.','alert');}}
+async function safe(p,ok){try{await p; if(ok) toast(ok);}catch(e){toast(e?.code==='invalid_argument'||e?.code==='42501'?'você não tem permissão para editar.':'não salvou. confira a internet e tente de novo.','alert');}}
 
 // Installments carry over by themselves: for the current and the next month, every x/y from the month
 // before with x<y gets its x+1/y as an unpaid bill. The last one (y/y) does not continue.
@@ -443,9 +512,10 @@ function renderNav(){
   const cur=today().slice(0,7), t=today();
   const atras=ofMes(cur,'conta').concat(ofMes(addM(cur,-1),'conta')).filter(c=>!c.pago&&c.data&&c.data<=t).length;
   const link=(k,l,i)=>`<a data-page="${k}" ${ui.page===k?'aria-current="page"':''} title="${l}">${ic(i,'lg')}<span class="t">${l}</span>${k==='contas'&&atras?`<span class="badge">${atras}</span><span class="dotb"></span>`:''}</a>`;
-  $('#nav').innerHTML=`<div class="nav-sec lbl">dia a dia</div>${PAGES.slice(0,4).map(p=>link(...p)).join('')}<div class="nav-sec lbl">análise</div>${link(...PAGES[4])}`;
+  $('#nav').innerHTML=`<div class="nav-sec lbl">dia a dia</div>${PAGES.slice(0,4).map(p=>link(...p)).join('')}<div class="nav-sec lbl">análise</div>${link(...PAGES[4])}<div class="nav-sec lbl">conta</div>${link('ajustes','ajustes','gear')}`;
+  $('#mgear').innerHTML=ic('gear','lg'); document.body.classList.toggle('gated',!!gate);
   $('#tabbar').innerHTML=PAGES.map(([k,l,i])=>`<a data-page="${k}" ${ui.page===k?'aria-current="page"':''}>${ic(i,'lg')}<span>${l}</span>${k==='contas'&&atras?'<span class="dotb"></span>':''}</a>`).join('');
-  $('#fab').innerHTML=ic('plus','lg'); $('#fab').hidden=!canWrite;
+  $('#fab').innerHTML=ic('plus','lg'); $('#fab').hidden=!canWrite||!!gate||ui.page==='ajustes';
 }
 
 // ---------- render ----------
@@ -453,7 +523,9 @@ function render(){
   renderNav();
   const m=$('#main');
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
-  const v={inicio:pInicio,contas:pContas,gastos:pGastos,entradas:pEntradas,ano:pAno}[ui.page]||pInicio;
+  if(gate==='login'){ m.innerHTML=vLogin(); return; }
+  if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
+  const v={inicio:pInicio,contas:pContas,gastos:pGastos,entradas:pEntradas,ano:pAno,ajustes:pAjustes}[ui.page]||pInicio;
   m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+v();
 }
 function header(eyebrow, actions=''){
@@ -629,6 +701,72 @@ function pAno(){
   return html;
 }
 
+// ---------- login / ajustes ----------
+let signup=false, importPend=null;
+function vLogin(){
+  return `<section class="card login"><span class="mark">l&amp;i</span>
+    <div><span class="eyebrow">financeiro</span><h1>${signup?'criar':'entrar'} <span class="script">${signup?'sua senha':'na conta'}</span></h1></div>
+    <p class="muted" style="margin:0">${signup?'use o mesmo email que foi liberado para vocês dois. a senha precisa ter pelo menos 6 caracteres.':'entre com o seu email e senha. a sessão fica salva neste aparelho.'}</p>
+    <form id="loginF" class="opt" novalidate>
+      <div class="f"><label for="l-email">email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" autocapitalize="none"></div>
+      <div class="f"><label for="l-pass">senha</label><input id="l-pass" type="password" autocomplete="${signup?'new-password':'current-password'}"></div>
+      <p class="err" id="l-err" hidden></p>
+      <button class="btn dark" type="submit">${ic('lock','sm')} ${signup?'criar senha e entrar':'entrar'}</button>
+      <button class="link" type="button" data-signup="1">${signup?'já tenho senha · entrar':'primeira vez aqui? criar senha'}</button>
+    </form></section>`;
+}
+function vSemAcesso(){
+  return `<section class="card login"><span class="mark">l&amp;i</span><h1>ainda <span class="script">sem acesso</span></h1>
+    <p class="muted" style="margin:0">o email <b>${esc(userEmail)}</b> entrou, mas ainda não foi liberado para ver os dados. adicione esse email na tabela <b>membros</b> do supabase e entre de novo.</p>
+    <button class="btn line" data-sair="1">${ic('logout','sm')} sair</button></section>`;
+}
+function pAjustes(){
+  const n=live().length;
+  const where=mode==='claude'?['salvo no claude','os dados ficam no link do claude e sincronizam entre vocês dois.']
+    :mode==='nuvem'?['salvo na nuvem',`sincroniza entre os aparelhos de vocês. conectado como ${esc(userEmail)}.`]
+    :['salvo só neste aparelho','para sincronizar entre os dois celulares, configure o supabase (veja o readme do projeto).'];
+  return `<div class="ph"><div class="ph-l"><span class="eyebrow">financeiro · conta</span><div class="mnav"><h1>ajustes <span class="script">e backup</span></h1></div></div></div>
+  <div class="grid-2e">
+  <section class="card"><div class="card-h"><h2>onde ficam os dados</h2>${ic('cloud','sm')}</div><div class="opt">
+    <div class="opt-row"><span class="tico">${ic(mode==='local'?'phone':'cloud','sm')}</span><span><b>${where[0]}</b><small>${where[1]}</small></span><span class="tag">${n} lançamentos</span></div>
+    ${mode==='nuvem'?`<div class="opt-row"><span class="tico">${ic('logout','sm')}</span><span><b>sair desta conta</b><small>o site pede email e senha de novo.</small></span><button class="pill-btn" data-sair="1">sair</button></div>`:''}
+  </div></section>
+  <section class="card"><div class="card-h"><h2>backup</h2>${ic('down','sm')}</div><div class="opt">
+    <div class="opt-row"><span class="tico">${ic('down','sm')}</span><span><b>baixar backup</b><small>um arquivo .json com todos os lançamentos.</small></span><button class="pill-btn" data-export="1">baixar</button></div>
+    <div class="opt-row"><span class="tico">${ic('upload','sm')}</span><span><b>importar backup</b><small>lançamentos com o mesmo código são atualizados, nada é apagado.</small></span>${canWrite?`<label class="pill-btn fileb">escolher arquivo<input type="file" id="impFile" accept=".json,application/json"></label>`:''}</div>
+    ${importPend?`<div class="alert">${ic('upload')}<span>importar <b>${importPend.length}</b> lançamentos?</span><span style="margin-left:auto;display:flex;gap:8px"><button class="pill-btn" data-impcancel="1">cancelar</button><button class="pill-btn rose" data-impok="1">importar</button></span></div>`:''}
+  </div></section></div>
+  <section class="card"><div class="card-h"><h2>instalar no celular</h2>${ic('phone','sm')}</div><div class="grid-2e">
+    <div><b style="font-weight:600">iphone</b><ol class="steps"><li>abra este site no safari.</li><li>toque em compartilhar (o quadrado com a seta).</li><li>toque em adicionar à tela de início.</li></ol></div>
+    <div><b style="font-weight:600">android</b><ol class="steps"><li>abra este site no chrome.</li><li>toque nos três pontinhos.</li><li>toque em instalar app ou adicionar à tela inicial.</li></ol></div>
+  </div></section>`;
+}
+async function saveFile(name,data,type){
+  try{ const dl=window.claude?.use? await window.claude.use('downloads'):null; if(dl){ await dl.save({filename:name,data}); return; } }catch(e){ if(e?.code==='declined') return; }
+  try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type})); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ toast('não consegui gerar o arquivo.','alert'); }
+}
+function exportJson(){ saveFile(`financeiro-backup-${today()}.json`, JSON.stringify({app:'financeiro',versao:1,exportado:new Date().toISOString(),itens:live()}), 'application/json'); }
+async function readImport(file){
+  try{ const j=JSON.parse(await file.text()); const arr=(Array.isArray(j)?j:j.itens||[]).filter(i=>i&&i.id&&i.tipo&&i.mes);
+    if(!arr.length){ toast('esse arquivo não tem lançamentos.','alert'); return; } importPend=arr; render();
+  }catch(e){ toast('não consegui ler esse arquivo.','alert'); }
+}
+async function doImport(){
+  const arr=importPend; importPend=null; render(); toast(`importando ${arr.length} lançamentos…`,'upload');
+  try{ if(store.bulk) await store.bulk(arr); else for(const it of arr) await store.put(it); toast(`${arr.length} lançamentos importados`); autoDone=false; autoParcelas(); }
+  catch(e){ toast('a importação parou no meio. tente de novo.','alert'); }
+}
+async function doLogin(){
+  const email=$('#l-email').value.trim(), pass=$('#l-pass').value; const err=t=>{const e=$('#l-err');e.textContent=t;e.hidden=false};
+  if(!email||!pass) return err('preencha email e senha.');
+  if(signup&&pass.length<6) return err('a senha precisa ter pelo menos 6 caracteres.');
+  const btn=$('#loginF button[type=submit]'); btn.disabled=true;
+  const r=signup? await sb.auth.signUp({email,password:pass}) : await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;
+  if(r.error){ const m=r.error.message||''; return err(/invalid login/i.test(m)?'email ou senha incorretos.':/not confirmed/i.test(m)?'confirme o email que enviamos e depois entre aqui.':/already registered/i.test(m)?'esse email já tem senha. toque em entrar.':'não deu certo: '+m.toLowerCase()); }
+  if(signup&&!r.data.session){ signup=false; render(); toast('enviamos um email de confirmação. depois é só entrar.','alert'); }
+}
+
 // ---------- sheet ----------
 let form=null;
 function openSheet(it,tipo){
@@ -688,9 +826,14 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del],#fab');
+  const t=e.target.closest('[data-signup],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del],#fab');
   if(!t) return;
   const d=t.dataset;
+  if(d.signup){ signup=!signup; render(); return; }
+  if(d.sair){ sb?.auth.signOut(); return; }
+  if(d.export){ exportJson(); return; }
+  if(d.impok){ doImport(); return; }
+  if(d.impcancel){ importPend=null; render(); return; }
   if(d.close!==undefined){ if(e.target===t||t.tagName==='BUTTON'){form=null;drawSheet();} return; }
   if(d.page){ ui.page=d.page; ui.cat=null; ui.bank=null; ui.q=''; ui.quem='todos'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.mstep){ ui.mes=addM(ui.mes,+d.mstep); ui.bank=null; render(); return; }
@@ -711,8 +854,8 @@ document.addEventListener('click',e=>{
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
   if(d.del){ const id=form.id, auto=form.auto; form=null; drawSheet(); safe(auto?store.patch(id,{removido:true}):store.del(id),'excluído'); return; }
 });
-document.addEventListener('change',e=>{ if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} });
-document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} });
+document.addEventListener('change',e=>{ if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); });
+document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} });
 document.addEventListener('input',e=>{
   if(e.target.id==='busca'){ ui.q=e.target.value; const p=e.target.selectionStart; render(); const b=$('#busca'); b.focus(); try{b.setSelectionRange(p,p)}catch(_){} }
   if(e.target.id==='f-desc'){ if($('#f-cat')) $('#f-cat').value=cat({desc:e.target.value}); if($('#f-bank')&&form&&form.bankSel===undefined&&form.banco===undefined){ const b=banco({tipo:'conta',desc:e.target.value}); $('#f-bank').value=b||''; } }
