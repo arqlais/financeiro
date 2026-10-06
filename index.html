@@ -342,7 +342,7 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .trow.ck{grid-template-columns:24px 52px minmax(0,1fr) 40px 86px}
 @media (max-width:699px){.trow .vl{font-size:.86rem}.trow{gap:7px}}
 .trow .tap{display:contents;cursor:pointer}
-.trow.th{font-size:.72rem;color:var(--muted);font-weight:500;padding:8px 0 6px;border-bottom:1.5px solid var(--ink)}
+.trow.th{font-size:.72rem;color:var(--ink-2);font-weight:500;padding:8px 14px 7px;margin:0 -14px;background:color-mix(in srgb,var(--sunk) 60%,var(--surface));border-bottom:1.5px solid var(--ink)}
 .trow .q{font-size:.76rem;color:var(--ink-2);display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden}
 .trow .d{min-width:0;display:flex;flex-direction:column;gap:1px}
 .trow .d b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -374,7 +374,47 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .brow.tot{border-bottom:0;border-top:1.5px solid var(--ink);margin-top:-1px;font-weight:600}.brow.tot b{font-size:1.15rem}
 .brow.tot.neg b{color:var(--bad)}.brow.tot.pos b{color:var(--good)}
 .brow.sub{border:0;padding-top:2px;font-size:.8rem;color:var(--muted)}.brow.sub b{color:var(--warn)}
+.mpills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-6px -16px 0;padding:4px 16px;scroll-behavior:smooth}
+.mpills::-webkit-scrollbar{display:none}
+.mp{flex:none;height:36px;min-width:52px;padding:0 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-size:.86rem;font-weight:500;color:var(--ink-2);position:relative}
+.mp.on{background:var(--ink);color:var(--on-ink);font-weight:600}
+.mp.now:not(.on)::after{content:"";position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--c-acc)}
+.mp:disabled{opacity:.35;box-shadow:none;background:transparent;cursor:default}
+.mp-anos{display:flex;gap:6px;padding-right:8px;margin-right:2px;border-right:1px solid var(--line)}
+.mp.ano{background:var(--rose-soft);color:var(--rose);box-shadow:none}.mp.ano.on{background:var(--rose);color:#fff}
+.secpills button .n{font-size:.7rem;color:var(--muted);font-weight:500;margin-left:2px}
+.folha3{display:flex;flex-direction:column;gap:16px}
+@media (max-width:1099px){.folha3[data-ativo="entrada"] .tcard:not([data-sec="entrada"]),.folha3[data-ativo="conta"] .tcard:not([data-sec="conta"]),.folha3[data-ativo="gasto"] .tcard:not([data-sec="gasto"]){display:none}}
+@media (min-width:1100px){
+  .folha{max-width:none}
+  .secpills{display:none!important}
+  .folha3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+  .folha3 .trow{grid-template-columns:60px minmax(0,1fr) 40px 92px}.folha3 .trow.ck{grid-template-columns:24px 60px minmax(0,1fr) 40px 92px}
+  .folha3 .trow .q,.folha3 .trow .dt{font-size:.78rem}
+  .folha3 .trow .d{flex-direction:column;align-items:stretch;gap:1px}
+  .bal{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;column-gap:0;padding-bottom:12px}
+  .bal .tcap{grid-column:1/-1}
+  .bal .brow{flex-direction:column;align-items:flex-start;gap:2px;border:0;padding:12px 16px 4px;margin:0}
+  .bal .brow+.brow{border-left:1px solid var(--line)}
+  .bal .brow.tot{border-top:0}.bal .brow.sub{border-left:1px solid var(--line);padding-top:12px}
+  .bal .brow span{font-size:.8rem;color:var(--muted)}.bal .brow b{font-size:1.25rem}
+}
 .jump{display:flex;gap:6px}
+@media (max-width:1099px){
+  .bal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:6px}
+  .bal .tcap{grid-column:1/-1}
+  .bal .brow{flex-direction:column;align-items:flex-start;gap:0;padding:10px 0 10px 10px;border-bottom:1px solid var(--line)}
+  .bal .brow:nth-of-type(1){padding-left:0}
+  .bal .brow+.brow:not(.tot):not(.sub){border-left:1px solid var(--line)}
+  .bal .brow span{font-size:.74rem;color:var(--muted)}.bal .brow b{font-size:.98rem}
+  .bal .brow.tot,.bal .brow.sub{grid-column:1/-1;flex-direction:row;align-items:baseline;justify-content:space-between;padding-left:0;border-left:0}
+  .bal .brow.tot{border-top:0;border-bottom:0}.bal .brow.tot span{font-size:.92rem;color:var(--ink)}.bal .brow.tot b{font-size:1.2rem}
+  .bal .brow.sub b{font-size:.84rem}
+  .bal .brow:not(.tot):not(.sub) .brl{display:none}
+  .folha3 .tcard>.tcap:not(:has(.chip)){display:none}
+  .folha3 .tcard{padding-top:0;overflow:hidden}
+  .folha3 .tcard .trow.th{border-radius:0}
+}
 .jump button{flex:1;height:36px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-size:.82rem;font-weight:500;color:var(--ink-2)}
 .jump small{color:var(--muted);font-size:.72rem;margin-left:2px}
 .mais{background:var(--surface);border-radius:18px;box-shadow:var(--shadow)}
@@ -815,14 +855,20 @@ function render(){
   m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+(outbox.length?`<div class="pending">${ic('cloud','sm')}${outbox.length} ${outbox.length>1?'alterações esperando':'alteração esperando'} a internet voltar · já estão salvas neste celular</div>`:'')+v();
   for(const [id,val] of Object.entries(keep)){ const el=document.getElementById(id); if(el&&val) el.value=val; }
   if(fid&&keep[fid]!==undefined) document.getElementById(fid)?.focus();
+  const mp=$('#mpills'), on=mp?.querySelector('.mp.on:not(.ano)'); if(on) mp.scrollLeft=on.offsetLeft-(mp.clientWidth-on.offsetWidth)/2;
 }
 function resumo(m){ const E=sum(ofMes(m,'entrada')),C=sum(ofMes(m,'conta')),G=sum(ofMes(m,'gasto')); return {E,C,G,S:E-C-G}; }
 
 const byDate=(a,b)=>(a.data||'9').localeCompare(b.data||'9');
 const qd=it=>it.data?`${it.data.slice(8)}/${MESES[+it.data.slice(5,7)-1].slice(0,3)}`:'';
 function monthNav(eyebrow){
-  const m=ui.mes, t=today(), ms=meses(), i=ms.indexOf(m);
-  return `${eyebrow?`<p class="greet">${eyebrow}</p>`:''}<div class="mhead"><button class="icbtn" data-mstep="-1" aria-label="mês anterior" ${i===0?'disabled':''}>${ic('left')}</button><button class="mtitle" data-mesjump="1" aria-label="escolher mês"><h1>${mName(m)} <span class="script">${m.slice(0,4)}</span></h1>${ic('chev','sm')}</button><button class="icbtn" data-mstep="1" aria-label="próximo mês" ${m>=addM(t.slice(0,7),1)&&i>=ms.length-1?'disabled':''}>${ic('right')}</button></div>`;
+  const m=ui.mes, Y=m.slice(0,4), cm=today().slice(0,7), ms=meses(), ys=[...new Set(ms.map(x=>x.slice(0,4)))];
+  const has=new Set(ms);
+  const pills=MESES.map((n,i)=>{ const k=`${Y}-${pad(i+1)}`, ok=has.has(k)||k<=addM(cm,1);
+    return `<button class="mp ${k===m?'on':''} ${k===cm?'now':''}" data-pickmes="${k}" ${ok?'':'disabled'} aria-current="${k===m}">${n.slice(0,3)}</button>`; }).join('');
+  const anos=ys.length>1?`<span class="mp-anos">${ys.map(y=>`<button class="mp ano ${y===Y?'on':''}" data-anomes="${y}">${y}</button>`).join('')}</span>`:'';
+  return `${eyebrow?`<p class="greet">${eyebrow}</p>`:''}<div class="mhead"><h1>${mName(m)} <span class="script">${Y}</span></h1></div>
+    <div class="mpills" id="mpills">${anos}${pills}</div>`;
 }
 const sum3=cols=>`<div class="sum3">${cols.map(([l,v,c=''])=>`<div><span>${l}</span><b class="num ${c}">${v}</b></div>`).join('')}</div>`;
 const lineHtml=(it,extra='')=>`<span class="tap" data-edit="${esc(it.id)}"><span style="min-width:0"><b>${esc(it.desc)}</b><small><span class="dot ${it.quem}"></span>${QUEM[it.quem]||''}${it.data?' · '+qd(it):''}${extra}</small></span>`;
@@ -888,7 +934,9 @@ function pLanc(){
     <div class="brow"><span>gastos</span><b class="num">${fmt(r.G)}</b></div>
     <div class="brow tot ${r.S<0?'neg':'pos'}"><span>balanço</span><b class="num">${r.S<0?'−':''}${fmt(Math.abs(r.S))}</b></div>
     ${falta?`<div class="brow sub"><span>contas ainda a pagar</span><b class="num">${fmt(falta)}</b></div>`:''}</section>`;
-  h+=`<nav class="jump" aria-label="ir para">${['entrada','conta','gasto'].map(k=>`<button data-jump="sec-${k}">${SEC[k][0].split(' ')[0]} <small>${({entrada:ents,conta:contas,gasto:gastos})[k].length}</small></button>`).join('')}</nav>`;
+  const lt=ui.lt||'gastos', ativo={entradas:'entrada',contas:'conta',gastos:'gasto'}[lt]||'gasto';
+  h+=`<div class="ltabs2 chipset secpills" role="tablist">${[['entradas','entradas',r.E,ents.length],['contas','contas',r.C,contas.length],['gastos','saídas',r.G,gastos.length]].map(([k,l,v,n])=>`<button type="button" data-lt="${k}" aria-pressed="${lt===k}"><span>${l} <span class="n">${n}</span></span><small>${fmt(v)}</small></button>`).join('')}</div>`;
+  h+=`<div class="folha3" data-ativo="${ativo}">`;
   // entradas
   h+=tabela('entrada',ents,`<div class="tfoot"><span>total</span><b class="num">${fmt(r.E)}</b></div>`+porPessoa(ents,'recebido por cada um',['lais','igor']));
   // contas
@@ -900,12 +948,12 @@ function pLanc(){
   // saídas
   const lg=ui.cat?gastos.filter(g=>cat(g)===ui.cat):gastos;
   h+=tabela('gasto',lg,`<div class="tfoot"><span>total${ui.cat?' de '+esc(ui.cat):''}</span><b class="num">${fmt(sum(lg))}${metas()[ui.cat||TOTAL]?` <small class="muted">de ${fmt(metas()[ui.cat||TOTAL])}</small>`:''}</b></div>`+porPessoa(lg,'gasto de cada um',['lais','igor','juntos']));
-  return h+`</div>`;
+  return h+`</div></div>`;
 }
 function tabela(tipo,list,foot){
   const [tit,um]=SEC[tipo], ck=tipo==='conta', t=today();
   const filtro=tipo==='gasto'&&ui.cat?`<button class="chip on" data-cat="">${esc(ui.cat)} ${ic('x','sm')}</button>`:'';
-  let h=`<section class="tcard" id="sec-${tipo}"><div class="tcap">${tit}${filtro}</div>
+  let h=`<section class="tcard" id="sec-${tipo}" data-sec="${tipo}"><div class="tcap">${tit}${filtro}</div>
     <div class="trow th ${ck?'ck':''}">${ck?'<span></span>':''}<span>quem</span><span>descrição</span><span>${ck?'vence':'data'}</span><span class="vl">valor</span></div>`;
   if(!list.length) h+=`<div class="tempty">nenhuma ${um} neste mês.</div>`;
   for(const i of list){
@@ -1303,7 +1351,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-addrow],[data-jump],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-addrow],[data-jump],[data-anomes],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1313,11 +1361,12 @@ document.addEventListener('click',e=>{
   if(d.cropok){ foto=cropSalvar(); crop=null; $('#sheetHost').innerHTML=''; try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); return; }
   if(d.cropclose){ if(e.target===t||t.tagName==='BUTTON'){ crop=null; $('#sheetHost').innerHTML=''; } return; }
   if(d.mesjump){ openMesJump(); return; }
-  if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
+  if(d.pickmes){ ui.mes=d.pickmes; ui.add=null; $('#sheetHost').innerHTML=''; render(); return; }
+  if(d.anomes){ const ms=meses().filter(x=>x.startsWith(d.anomes)); const cm=today().slice(0,7); ui.mes=ms.includes(cm)?cm:ms.includes(d.anomes+ui.mes.slice(4))?d.anomes+ui.mes.slice(4):ms.at(-1); render(); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
   if(d.addrow!==undefined){ ui.add=d.addrow||null; render(); if(ui.add) setTimeout(()=>$('#'+PFX[ui.add]+'-desc')?.focus(),50); return; }
   if(d.jump){ $('#'+d.jump)?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
-  if(d.lt){ ui.lt=d.lt; ui.cat=null; ui.qtipo={contas:'conta',gastos:'gasto',entradas:'entrada'}[d.lt]; render(); return; }
+  if(d.lt){ ui.lt=d.lt; ui.cat=null; ui.add=null; ui.qtipo={contas:'conta',gastos:'gasto',entradas:'entrada'}[d.lt]; render(); return; }
   if(d.qq){ ui.qquem=d.qq; if($('#sF')){ const k=keepVals('s'); openQuick(ui.qtipo); putVals('s',k); } else render(); return; }
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
     safe(store.put({...(items.get('banco_'+slug(n))||{}),id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value,oculto:false}),`${n} adicionado`); return; }
@@ -1338,7 +1387,7 @@ document.addEventListener('click',e=>{
   if(d.pagar){ if(!canWrite) return; const it=items.get(d.pagar); if(it) safe(store.patch(it.id,{pago:!it.pago}), it.pago?'voltou para a pagar':'conta paga'); return; }
   if(d.edit){ if(!canWrite) return; const it=items.get(d.edit); if(it) openSheet(it); return; }
   if(d.new){ openQuick(d.new==='auto'?({contas:'conta',entradas:'entrada'}[ui.lt]||'gasto'):d.new); return; }
-  if(d.cat!==undefined){ ui.cat=d.cat||null; const ir=ui.page!=='lanc'; ui.page='lanc'; saveUi(); render(); if(ir||ui.cat) $('#sec-gasto')?.scrollIntoView({block:'start'}); return; }
+  if(d.cat!==undefined){ ui.cat=d.cat||null; ui.lt='gastos'; const ir=ui.page!=='lanc'; ui.page='lanc'; saveUi(); render(); if(ir) window.scrollTo({top:0}); return; }
   if(d.ano){ ui.ano=d.ano; render(); return; }
   if(d.copiar){ repetirFixas(); return; }
   if(d.csv){ exportCsv(); return; }
