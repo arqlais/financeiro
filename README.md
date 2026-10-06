@@ -1,24 +1,21 @@
-# Finanças do casal — Laís & Igor
+# financeiro · laís & igor
 
-Site simples (um único `index.html`, sem instalar nada) para controlar entradas, contas e gastos do dia a dia, no lugar da planilha.
+site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha. funciona no celular, no tablet e no computador (um único `index.html`, sem instalar nada).
 
-- **Resumo do mês**: quanto entrou, quanto saiu em contas e em gastos, e quanto sobrou.
-- **Contas a pagar**: marcar como paga com um toque, alerta de atrasada / vence hoje, e botão para copiar as contas do mês para o próximo (parcelas avançam sozinhas: 6/12 → 7/12).
-- **Quem gastou**: Laís, Igor e Juntos.
-- **Categorias automáticas** para os gastos do dia a dia (mercado, comida fora, transporte…).
-- **Parcelas em andamento**: quanto ainda falta pagar de cada compra parcelada.
-- **Visão do ano**: gráfico e tabela mês a mês.
+- **início**: resumo do mês, contas para pagar com "marcar pago", próximos 14 dias, gráfico dos últimos meses, quem gastou e para onde foi o dinheiro.
+- **contas**: tabela com banco / cartão de cada conta, parcela, vencimento e situação. painel "por banco" ao lado com o total de cada fatura.
+- **parcelas automáticas**: uma conta "notebook 7/10" vira "notebook 8/10" no mês seguinte sozinha; depois da última parcela ela para.
+- **repetir fixas**: copia claro, mrv, mensalidade etc. para o mês seguinte com um toque.
+- **gastos**: lista por dia, categorias automáticas, busca e filtro por pessoa.
+- **entradas** e **ano** (balanço anual com 2025 e 2026).
+- exportar csv do mês.
 
-## Como usar
+os dados reais não ficam neste repositório (ele é público). no modo local, o site lê `dados.json` e `dados-2025.json` ao lado do `index.html` (ignorados pelo git) e salva no navegador.
 
-Abra o `index.html` no navegador (ou ative o GitHub Pages). Fora do Claude, os lançamentos ficam salvos no próprio navegador (`localStorage`).
-
-Os dados reais **não** ficam neste repositório, porque ele é público. Para carregar dados no modo local, coloque um arquivo `dados.json` (lista de lançamentos) ao lado do `index.html`; ele está no `.gitignore`.
-
-Formato de cada lançamento:
+formato de cada lançamento:
 
 ```json
-{"id":"s1","tipo":"gasto","mes":"2026-01","quem":"juntos","desc":"mercado","data":"2026-01-15","valor":27.26}
+{"id":"s1","tipo":"conta","mes":"2026-10","quem":"juntos","desc":"cama 6/12","data":"2026-10-13","valor":122,"pago":false,"banco":"nubank"}
 ```
 
-`tipo` é `entrada`, `conta` ou `gasto`; contas têm também `"pago": true|false`.
+`tipo`: `entrada`, `conta` ou `gasto`. `banco` é opcional (detectado pela descrição quando falta).
