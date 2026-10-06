@@ -632,7 +632,7 @@ function index(){ if(idxVer===ver) return idx; const lv=[],bm=new Map(),ms=new S
 const live=()=>index().live;
 // banks the couple added (or recolored) live in the same store as {tipo:'banco', nome, cor}
 const bankDocs=()=>[...items.values()].filter(i=>i.tipo==='banco'&&!i.removido);
-function BK(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(n) o[n]={m:(b.sigla||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||'#8e8580',custom:!BANKS[n]}; }); return o; }
+function BK(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(n&&b.oculto){ delete o[n]; return; } if(n) o[n]={m:(b.sigla||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||'#8e8580',custom:!BANKS[n]}; }); return o; }
 const ofMes=(m,t)=>{const a=index().byMes.get(m)||[]; return t?a.filter(i=>i.tipo===t):a.slice();};
 const meses=()=>{const a=index().meses, c=today().slice(0,7); return a.includes(c)?a:[...a,c].sort();};
 
@@ -1086,7 +1086,7 @@ function pAjustes(){
     ${icone.id==='iniciais'?`<div class="toolbar" style="margin-top:12px"><label class="search" style="max-width:220px"><input id="ic-txt" maxlength="3" value="${esc(icone.txt||'l&i')}" placeholder="ex.: l&i" aria-label="iniciais"></label><span class="muted" style="font-size:.82rem">até 3 letras</span></div>`:''}
     </section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
-    <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${k.custom&&canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>
+    <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>${bankDocs().some(b=>b.oculto)&&canWrite?`<button class="link" style="margin-top:8px" data-bankrestore="1">mostrar os bancos removidos (${bankDocs().filter(b=>b.oculto).length})</button>`:''}
     ${canWrite?`<div class="toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><label class="search" style="max-width:none">${ic('bank','sm')}<input id="bk-nome" placeholder="nome do banco ou cartão (ex.: neon, will, renner)" maxlength="30" aria-label="nome do banco"></label>
       <label class="pill-btn" style="position:relative;height:42px;gap:8px"><span id="bk-sw" class="dot" style="width:16px;height:16px;background:#5a7d9a"></span>cor<input type="color" id="bk-cor" value="#5a7d9a" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="cor do banco"></label>
       <button class="btn dark" data-bankadd="1">${ic('plus','sm')} adicionar</button></div>`:''}</section>
@@ -1182,7 +1182,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-banco],[data-fotodel],[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-bankrestore],[data-banco],[data-fotodel],[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1195,7 +1195,11 @@ document.addEventListener('click',e=>{
   if(d.qq){ ui.qquem=d.qq; if($('#sF')){ const k=keepVals('s'); openQuick(ui.qtipo); putVals('s',k); } else render(); return; }
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
     safe(store.put({id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value}),`${n} adicionado`); return; }
-  if(d.bankdel){ const id='banco_'+slug(d.bankdel); if(items.has(id)) safe(store.del(id),'banco removido'); return; }
+  if(d.bankdel){ const n=d.bankdel, id='banco_'+slug(n);
+    if(BANKS[n]) safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,oculto:true}),`${n} removido`);
+    else if(items.has(id)) safe(store.del(id),`${n} removido`);
+    return; }
+  if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.del(b.id)); toast('bancos de volta'); return; }
   if(d.setmes){ ui.mes=d.setmes; ui.bank=null; render(); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
   if(d.sair){ sb?.auth.signOut(); return; }
