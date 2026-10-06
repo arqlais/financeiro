@@ -5,7 +5,8 @@ site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha
 - **início**: resumo do mês, contas para pagar com "marcar pago", próximos 14 dias, gráfico e categorias.
 - **contas**: banco ou cartão de cada conta, parcela, vencimento e situação, com o painel "por banco" ao lado.
 - **parcelas automáticas**: "notebook 7/10" vira "notebook 8/10" no mês seguinte sozinha e para na última.
-- **gastos**, **entradas**, **ano** (balanço de 2025 e 2026) e **ajustes** (backup e login).
+- **gastos**, **entradas**, **ano** (balanço de 2025 e 2026) e **ajustes** (backup, login e cor).
+- **cada um com sua cor**: em ajustes, cada pessoa escolhe a cor no próprio celular (padrão: paleta do planê).
 
 ## publicar no github pages
 
