@@ -4,6 +4,6 @@
 // que só deixam entrar os emails cadastrados na tabela "membros".
 // com os dois campos vazios, o site funciona em modo local (salva só no aparelho).
 window.FIN_CONFIG = {
-  supabaseUrl: '',
+  supabaseUrl: 'https://aqoegpdvwtnjakaxuvfm.supabase.co',
   supabaseKey: 'sb_publishable_AGNRGlwFY4V21hXDJ4wy0Q_y6PYlBsK',
 };
