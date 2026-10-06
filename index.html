@@ -542,10 +542,6 @@ body:has(.scrim){overflow:hidden}
 .tile .ts{font-size:.76rem;color:var(--muted);line-height:1.35}
 .tile .tbar{display:block;height:5px;border-radius:99px;background:var(--rose-soft);overflow:hidden;margin-top:6px}.tile .tbar i{display:block;height:100%;border-radius:99px;background:var(--rose)}
 @media (max-width:420px){.tile{padding:14px 13px 12px}.tile b .brl{font-size:.7em;font-weight:500;color:var(--muted)}}
-.seg3{background:transparent;padding:0;gap:8px}
-.seg3 button{height:44px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);color:var(--ink-2)}
-.seg3 button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink);box-shadow:0 8px 20px color-mix(in srgb,var(--c-ink) 22%,transparent)}
-.seg3 button[aria-pressed="true"] span{background:color-mix(in srgb,var(--on-ink) 18%,transparent);color:var(--on-ink)}
 .grp{color:var(--rose);letter-spacing:.1em}
 .box{border-color:var(--bd);border-width:1.5px}
 /* esta semana: light, like a planê card */
@@ -573,6 +569,17 @@ body:has(.scrim){overflow:hidden}
   @keyframes mesIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
   @keyframes mesInL{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 }
+/* summary card: soft blush of the planê palette, ink numbers */
+.resumo{background:linear-gradient(140deg,color-mix(in srgb,var(--c-acc) 17%,var(--surface)) 0%,color-mix(in srgb,var(--c-acc) 7%,var(--surface)) 100%);color:var(--ink);border:1px solid var(--bd);box-shadow:0 1px 2px rgba(51,65,77,.03),0 8px 24px color-mix(in srgb,var(--c-acc) 10%,transparent)}
+.rs-main span,.rs-3 span,.rs-pl{color:var(--ink-2)}
+.rs-main b,.rs-3 b,.rs-pl b{color:var(--ink)}
+.rs-main b.neg{color:var(--rose)}
+.rs-main .brl{opacity:.55}
+.rs-3{border-top-color:color-mix(in srgb,var(--c-acc) 22%,transparent)}
+.rs-3 div+div{border-left-color:color-mix(in srgb,var(--c-acc) 22%,transparent)}
+.rs-p .trk{background:color-mix(in srgb,var(--c-acc) 18%,var(--surface))}.rs-p .trk i{background:var(--rose)}
+.seg3{background:color-mix(in srgb,var(--c-acc) 9%,var(--sunk));border:1px solid var(--bd)}
+@media (min-width:1100px){.rs-3{border-left-color:color-mix(in srgb,var(--c-acc) 22%,transparent)}}
 </style>
 
 <div class="glow" aria-hidden="true"></div>
@@ -1019,7 +1026,7 @@ function pInicio(){
   const m=ui.mes, t=today(), r=resumo(m);
   const hr=new Date().getHours(); const saud=hr<12?'bom dia,':hr<18?'boa tarde,':'boa noite,';
   const contas=ofMes(m,'conta').sort(byDate); const falta=sumResta(contas);
-  let h=monthNav(`<span class="script">${saud}</span> laís &amp; igor`)+tiles(m);
+  let h=monthNav(`<span class="script">${saud}</span> laís &amp; igor`)+resumoCard(m);
   h+=`<div class="dash"><div class="col">${m===t.slice(0,7)?vSemana(contas,t,r.C,falta):''}${cardMetas(m)}
       <section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section></div>
     <div class="col">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
@@ -1040,13 +1047,21 @@ function pLanc(){
   if(ui.busca) return h+vBusca(ui.busca);
   const ents=ofMes(m,'entrada').sort(byDate), contas=ofMes(m,'conta').sort(byDate), gastos=ofMes(m,'gasto');
   const falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, pg=r.C-falta;
-  h+=tiles(m);
+  h+=resumoCard(m);
   const lt=ui.lt||'gastos', ativo={entradas:'entrada',contas:'conta',gastos:'gasto'}[lt]||'gasto';
   h+=`<div class="seg3" role="tablist">${[['entradas','entradas',ents.length],['contas','contas',contas.length],['gastos','saídas',gastos.length]].map(([k,l,n])=>`<button type="button" role="tab" data-lt="${k}" aria-pressed="${lt===k}">${l}<span>${n}</span></button>`).join('')}</div>`;
   h+=`<div class="folha3" data-ativo="${ativo}">${lista('entrada',ents,r.E)}${lista('conta',contas,r.C)}${lista('gasto',gastos,r.G)}</div>`;
   return h;
 }
 // one quiet row: what it was, a small line with who / when / card, and the value
+function resumoCard(m){
+  const r=resumo(m), contas=ofMes(m,'conta'), falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, pg=r.C-falta;
+  return `<section class="resumo">
+    <div class="rs-main"><span>balanço do mês</span><b class="num ${r.S<0?'neg':''}">${r.S<0?'−':'+'}${fmt(Math.abs(r.S))}</b></div>
+    <div class="rs-3"><div><span>entrou</span><b class="num">${fmt(r.E)}</b></div><div><span>contas</span><b class="num">${fmt(r.C)}</b></div><div><span>gastos</span><b class="num">${fmt(r.G)}</b></div></div>
+    ${contas.length?`<div class="rs-p"><div class="trk"><i style="width:${r.C?pg/r.C*100:0}%"></i></div><div class="rs-pl"><span>${pagas} de ${contas.length} contas pagas</span><span>${falta?`falta <b class="num">${fmt(falta)}</b>`:'tudo pago'}</span></div></div>`:''}
+  </section>`;
+}
 function tiles(m){
   const r=resumo(m), contas=ofMes(m,'conta'), falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, ne=ofMes(m,'entrada').length, ns=contas.length+ofMes(m,'gasto').length;
   const t=(lbl,val,sub,cls='',extra='')=>`<div class="tile ${cls}"><span class="tl">${lbl}</span><b class="num">${val}</b><span class="ts">${sub}</span>${extra}</div>`;
