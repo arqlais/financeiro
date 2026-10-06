@@ -1,5 +1,5 @@
 -- rode este arquivo uma vez no supabase: sql editor > new query > colar > run.
--- antes de rodar, troque os dois emails no final pelos emails de vocês.
+-- antes de rodar, troque os dois emails e a chave do histórico no final.
 
 create table if not exists public.membros (
   email text primary key
@@ -37,6 +37,14 @@ create policy "membros apagam"  on public.lancamentos for delete to authenticate
 do $$ begin
   alter publication supabase_realtime add table public.lancamentos;
 exception when duplicate_object then null; end $$;
+
+-- chave que destranca o histórico (dados.enc.json); só os membros leem
+create table if not exists public.segredos (nome text primary key, valor text not null);
+alter table public.segredos enable row level security;
+drop policy if exists "membros leem segredos" on public.segredos;
+create policy "membros leem segredos" on public.segredos for select to authenticated using (public.e_membro());
+insert into public.segredos (nome, valor) values ('chave_historico', 'COLE-A-CHAVE-AQUI')
+on conflict (nome) do update set valor = excluded.valor;
 
 -- quem pode entrar (troque pelos emails de vocês)
 insert into public.membros (email) values

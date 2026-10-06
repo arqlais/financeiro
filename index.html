@@ -540,6 +540,7 @@ async function afterLogin(){
   for(let from=0;;from+=1000){ const {data,error}=await sb.from('lancamentos').select('id,doc').range(from,from+999);
     if(error){ bannerMsg='não consegui carregar os lançamentos. recarregue a página.'; break; } all.push(...data); if(data.length<1000) break; }
   items.clear(); all.forEach(r=>items.set(r.id,{...r.doc,id:r.id}));
+  if(!all.length) await seedInicial();
   if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
     if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); }
     render(); }).subscribe();
@@ -776,18 +777,33 @@ function pAno(){
   return html;
 }
 
+// The couple's history ships encrypted (dados.enc.json, AES-GCM). The key lives in the 'segredos' table, readable
+// only by the two members, so the public repo never holds readable numbers. First login into an empty table uploads it.
+async function seedInicial(){
+  const f=(window.FIN_CONFIG||{}).dadosIniciais; if(!f||!crypto?.subtle) return;
+  const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); const chave=k.data?.valor; if(!chave) return;
+  try{
+    const r=await fetch(f,{cache:'no-store'}); if(!r.ok) return; const e=await r.json();
+    const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
+    const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(chave),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    const arr=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.data))));
+    bannerMsg=''; toast(`trazendo ${arr.length} lançamentos…`,'upload');
+    await store.bulk(arr); toast(`${arr.length} lançamentos prontos`);
+  }catch(err){ bannerMsg='não consegui trazer o histórico. em ajustes, use importar backup.'; }
+}
+
 // ---------- login / ajustes ----------
-let signup=false, importPend=null;
+let importPend=null;
 function vLogin(){
   return `<section class="card login"><span class="mark">l&amp;i</span>
-    <div><span class="eyebrow">financeiro</span><h1>${signup?'criar':'entrar'} <span class="script">${signup?'sua senha':'na conta'}</span></h1></div>
-    <p class="muted" style="margin:0">${signup?'use o mesmo email que foi liberado para vocês dois. a senha precisa ter pelo menos 6 caracteres.':'entre com o seu email e senha. a sessão fica salva neste aparelho.'}</p>
+    <div><span class="eyebrow">financeiro</span><h1>entrar <span class="script">no nosso</span></h1></div>
+    <p class="muted" style="margin:0">entre com o seu email e senha. na primeira vez, é só escolher a senha aqui mesmo.</p>
     <form id="loginF" class="opt" novalidate>
-      <div class="f"><label for="l-email">email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" autocapitalize="none"></div>
-      <div class="f"><label for="l-pass">senha</label><input id="l-pass" type="password" autocomplete="${signup?'new-password':'current-password'}"></div>
+      <div class="f"><label for="l-email">email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"></div>
+      <div class="f"><label for="l-pass">senha</label><input id="l-pass" type="password" autocomplete="current-password"></div>
       <p class="err" id="l-err" hidden></p>
-      <button class="btn dark" type="submit">${ic('lock','sm')} ${signup?'criar senha e entrar':'entrar'}</button>
-      <button class="link" type="button" data-signup="1">${signup?'já tenho senha · entrar':'primeira vez aqui? criar senha'}</button>
+      <button class="btn dark" type="submit">${ic('lock','sm')} entrar</button>
     </form></section>`;
 }
 function vSemAcesso(){
@@ -840,14 +856,19 @@ async function doImport(){
   catch(e){ toast('a importação parou no meio. tente de novo.','alert'); }
 }
 async function doLogin(){
-  const email=$('#l-email').value.trim(), pass=$('#l-pass').value; const err=t=>{const e=$('#l-err');e.textContent=t;e.hidden=false};
+  const email=$('#l-email').value.trim().toLowerCase(), pass=$('#l-pass').value; const err=t=>{const e=$('#l-err');e.textContent=t;e.hidden=false};
   if(!email||!pass) return err('preencha email e senha.');
-  if(signup&&pass.length<6) return err('a senha precisa ter pelo menos 6 caracteres.');
-  const btn=$('#loginF button[type=submit]'); btn.disabled=true;
-  const r=signup? await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:location.origin+location.pathname}}) : await sb.auth.signInWithPassword({email,password:pass});
-  btn.disabled=false;
-  if(r.error){ const m=r.error.message||''; return err(/invalid login/i.test(m)?'email ou senha incorretos.':/not confirmed/i.test(m)?'confirme o email que enviamos e depois entre aqui.':/already registered/i.test(m)?'esse email já tem senha. toque em entrar.':'não deu certo: '+m.toLowerCase()); }
-  if(signup&&!r.data.session){ signup=false; render(); toast('enviamos um email de confirmação. depois é só entrar.','alert'); }
+  const btn=$('#loginF button[type=submit]'); btn.disabled=true; btn.textContent='entrando…';
+  let r=await sb.auth.signInWithPassword({email,password:pass});
+  // first time: no account yet for this email, so create it with the password just typed
+  if(r.error&&/invalid login/i.test(r.error.message||'')){
+    if(pass.length<6){ btn.disabled=false; btn.innerHTML=`${ic('lock','sm')} entrar`; return err('senha incorreta. se for o primeiro acesso, use pelo menos 6 caracteres.'); }
+    const u=await sb.auth.signUp({email,password:pass});
+    if(u.error&&/already registered/i.test(u.error.message||'')) r={error:{message:'invalid login'}}; else r=u;
+  }
+  btn.disabled=false; btn.innerHTML=`${ic('lock','sm')} entrar`;
+  if(r.error){ const m=r.error.message||''; return err(/invalid login/i.test(m)?'senha incorreta.':/not confirmed/i.test(m)?'no supabase, desligue "confirm email" e tente de novo.':'não deu certo: '+m.toLowerCase()); }
+  if(!r.data?.session) err('no supabase, desligue "confirm email" e tente de novo.');
 }
 
 // ---------- sheet ----------
@@ -909,7 +930,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-signup],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
@@ -917,7 +938,6 @@ document.addEventListener('click',e=>{
   if(d.bankdel){ const id='banco_'+slug(d.bankdel); if(items.has(id)) safe(store.del(id),'banco removido'); return; }
   if(d.setmes){ ui.mes=d.setmes; ui.bank=null; render(); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva neste aparelho'); } return; }
-  if(d.signup){ signup=!signup; render(); return; }
   if(d.sair){ sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
