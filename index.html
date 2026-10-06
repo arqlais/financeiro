@@ -574,14 +574,16 @@ const ICONES=[['wallet','carteira'],['piggy','porquinho'],['coins','moedas'],['d
 let icone={id:'wallet',txt:'l&i'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
 let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
-const markInner=(ic_=icone)=>ic_.id==='foto'&&foto?`<img src="${foto}" alt="">`:ic_.id==='iniciais'?esc(ic_.txt||'l&i'):ic(ic_.id==='foto'?'wallet':ic_.id,'mk');
+if(icone.id==='foto'){ icone.id='wallet'; icone.usaFoto=true; }
+const markInner=(ic_=icone)=>ic_.id==='iniciais'?esc(ic_.txt||'l&i'):ic(ic_.id==='foto'?'wallet':ic_.id,'mk');
+// the profile spot inside the app shows the photo when there is one; the app icon is always a drawing
+const markHead=()=>icone.usaFoto&&foto?`<img src="${foto}" alt="foto de perfil">`:markInner();
 function iconPng(size){
   // draws the chosen icon on the theme color; used as favicon and home-screen icon
   return new Promise(res=>{ try{
     const c=document.createElement('canvas'); c.width=c.height=size; const x=c.getContext('2d');
     const g=x.createLinearGradient(0,0,size,size); g.addColorStop(0,mixHex(tema.ink,'#ffffff',.18)); g.addColorStop(.6,tema.ink); g.addColorStop(1,mixHex(tema.ink,'#000000',.12));
     x.fillStyle=g; x.fillRect(0,0,size,size);
-    if(icone.id==='foto'&&foto){ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height); x.drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,size,size); res(c.toDataURL('image/png')); }; im.onerror=()=>res(null); im.src=foto; return; }
     const fg=mixHex(tema.acc,'#ffffff',.55);
     if(icone.id==='iniciais'){ x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle'; const t=(icone.txt||'l&i').slice(0,3); x.font=`italic 300 ${size*(t.length>2?.36:.46)}px Poppins, system-ui, sans-serif`; x.fillText(t,size/2,size/2+size*.02); return res(c.toDataURL('image/png')); }
     const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${fg}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${P[icone.id]}</svg>`;
@@ -590,7 +592,7 @@ function iconPng(size){
   }catch(e){ res(null); } });
 }
 async function applyIcone(){
-  document.querySelectorAll('[data-mark]').forEach(el=>el.innerHTML=markInner());
+  document.querySelectorAll('[data-mark]').forEach(el=>el.innerHTML=markHead());
   if(window.claude) return;
   const [a,b]=await Promise.all([iconPng(512),iconPng(192)]); if(!a) return;
   const setLink=(rel,href,sizes)=>{ let l=document.querySelector(`link[rel="${rel}"]`); if(!l){ l=document.createElement('link'); l.rel=rel; document.head.appendChild(l); } l.href=href; if(sizes) l.sizes=sizes; };
@@ -606,11 +608,11 @@ function setIcone(o){ icone={...icone,...o}; try{localStorage.setItem('fin-icone
 const perfilId=()=>userEmail?'perfil_'+slug(userEmail):null;
 let perfilT=0;
 function savePerfil(){ const id=perfilId(); if(!id||!store||mode!=='nuvem') return; clearTimeout(perfilT);
-  perfilT=setTimeout(()=>{ store.put({id,tipo:'perfil',email:userEmail,icone,foto:icone.id==='foto'?foto:null,tema}).catch(()=>{}); },400); }
+  perfilT=setTimeout(()=>{ store.put({id,tipo:'perfil',email:userEmail,icone,foto:icone.usaFoto?foto:null,tema}).catch(()=>{}); },400); }
 function loadPerfil(){ const d=perfilId()&&items.get(perfilId()); if(!d) { savePerfil(); return; }
   if(d.tema&&d.tema.ink){ applyTema(d.tema); try{localStorage.setItem('fin-tema',JSON.stringify(d.tema))}catch(e){} }
   if(d.foto){ foto=d.foto; try{localStorage.setItem('fin-foto',foto)}catch(e){} }
-  if(d.icone&&d.icone.id){ icone={...icone,...d.icone}; try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} }
+  if(d.icone&&d.icone.id){ icone={...icone,...d.icone}; if(icone.id==='foto'){ icone.id='wallet'; icone.usaFoto=true; } try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} }
   applyIcone(); }
 // photo: center-cropped square, 512px jpeg (small enough to sync)
 function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height), c=document.createElement('canvas'); c.width=c.height=512; c.getContext('2d').drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,512,512); ok(c.toDataURL('image/jpeg',.82)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
@@ -744,7 +746,7 @@ function render(){
   if(rq){cancelAnimationFrame(rq);rq=0;}
   renderNav();
   const m=$('#main');
-  queueMicrotask(()=>document.querySelectorAll('[data-mark]').forEach(el=>{ if(!el.innerHTML) el.innerHTML=markInner(); }));
+  queueMicrotask(()=>document.querySelectorAll('[data-mark]').forEach(el=>{ if(!el.innerHTML) el.innerHTML=markHead(); }));
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
   if(gate==='login'){ m.innerHTML=vLogin(); return; }
   if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
@@ -1075,9 +1077,11 @@ function pAjustes(){
   <section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="muted" style="font-size:.84rem">cada um escolhe a sua</span></div>
     <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}
       <label class="tema" aria-pressed="${tema.id==='custom'}"><span class="sw2" style="background:conic-gradient(#e0707a,#e6b85c,#7bb07a,#5c9bd6,#9b7ad0,#e0707a)"><input type="color" id="temaCor" value="${tema.acc}" aria-label="escolher qualquer cor"></span>escolher</label></div></section>
-  <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece no perfil e na tela de início</span></div>
-    <div class="temas"><label class="tema" aria-pressed="${icone.id==='foto'}" style="position:relative"><span class="mark big">${foto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span>${foto?'nossa foto':'usar foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
-    ${foto?`<div class="toolbar" style="margin-top:10px">${icone.id!=='foto'?`<button class="pill-btn" data-icone="foto">usar a foto</button>`:''}<button class="pill-btn" data-fotodel="1">remover foto</button></div>`:''}
+  <section class="card"><div class="card-h"><h2>foto de <span class="script">perfil</span></h2><span class="muted" style="font-size:.84rem">aparece só dentro do app, no topo · nunca vira o ícone</span></div>
+    <div class="opt-row" style="border:0;grid-template-columns:56px minmax(0,1fr)"><span class="mark big">${foto&&icone.usaFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${foto&&icone.usaFoto?'sua foto':'sem foto'}</b><small>${foto&&icone.usaFoto?'só você e o igor veem, dentro do app.':'escolha uma foto da galeria.'}</small></span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn" style="position:relative">${foto&&icone.usaFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${foto&&icone.usaFoto?`<button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
+  <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece na tela de início</span></div>
+    <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
     ${icone.id==='iniciais'?`<div class="toolbar" style="margin-top:12px"><label class="search" style="max-width:220px"><input id="ic-txt" maxlength="3" value="${esc(icone.txt||'l&i')}" placeholder="ex.: l&i" aria-label="iniciais"></label><span class="muted" style="font-size:.82rem">até 3 letras</span></div>`:''}
     <p class="hint" style="margin-top:12px">para trocar o ícone da tela de início: apague o atalho, abra o site no safari (ou chrome), entre na conta e adicione de novo. a escolha fica salva na sua conta, então o navegador já sabe qual usar.</p></section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
@@ -1183,9 +1187,9 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('[data-banco],[data-fotodel],[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
-  if(d.icone){ if(d.icone==='foto'&&!foto) return; setIcone({id:d.icone}); toast('ícone salvo'); return; }
+  if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
   if(d.banco!==undefined){ if(d.banco) ui.bk=d.banco; ui.page='bancos'; saveUi(); render(); window.scrollTo({top:0}); return; }
-  if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto')}catch(e){} if(icone.id==='foto') icone.id='wallet'; setIcone({}); toast('foto removida'); return; }
+  if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto')}catch(e){} setIcone({usaFoto:false}); toast('foto removida'); return; }
   if(d.mesjump){ openMesJump(); return; }
   if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
@@ -1220,7 +1224,7 @@ document.addEventListener('click',e=>{
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
   if(d.del){ const id=form.id, auto=form.auto; form=null; drawSheet(); safe(auto?store.patch(id,{removido:true}):store.del(id),'excluído'); return; }
 });
-document.addEventListener('change',async e=>{ if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ foto=await lerFoto(e.target.files[0]); try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({id:'foto'}); toast('foto salva'); }catch(_){ toast('não consegui abrir essa foto.','alert'); } return; } if(e.target.id==='ic-txt'){ setIcone({txt:e.target.value.trim()||'l&i'}); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
+document.addEventListener('change',async e=>{ if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ foto=await lerFoto(e.target.files[0]); try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); }catch(_){ toast('não consegui abrir essa foto.','alert'); } return; } if(e.target.id==='ic-txt'){ setIcone({txt:e.target.value.trim()||'l&i'}); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='qF'){e.preventDefault();quickAdd('q');} if(e.target.id==='sF'){e.preventDefault();quickAdd('s');} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
