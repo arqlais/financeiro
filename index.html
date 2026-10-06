@@ -517,6 +517,53 @@ html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:10
 body:has(.scrim){overflow:hidden}
 .toast .undo{margin-left:6px;color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .pending{font-size:.8rem;color:var(--warn);background:var(--warn-soft);padding:8px 14px;border-radius:12px;display:flex;gap:8px;align-items:center}
+
+/* ---------- planê look: light cards with a fine rose border, pill buttons, light floating bar ---------- */
+:root{--bd:color-mix(in srgb,var(--c-acc) 20%,var(--c-paper))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bd:color-mix(in srgb,var(--c-acc) 22%,#2a2d31)}}
+:root[data-theme="dark"]{--bd:color-mix(in srgb,var(--c-acc) 22%,#2a2d31)}
+.card,.lst,.sec,.qadd,.mais,.busca,.tile,.week,.ym-link{border:1px solid var(--bd);box-shadow:0 1px 2px rgba(51,65,77,.03),0 6px 20px rgba(51,65,77,.04)}
+.card,.lst,.mais,.week{border-radius:24px}
+.eyebrow{margin-bottom:-6px}
+.mhead h1{font-size:clamp(1.9rem,6vw,2.5rem)}
+.mhead .script{font-weight:300}
+.icbtn.lupa{width:44px;height:44px;border:1px solid var(--bd);background:var(--surface)}
+.btn.line,.pill-btn{border-color:var(--bd)}
+.btn.dark{box-shadow:0 10px 24px color-mix(in srgb,var(--c-ink) 28%,transparent)}
+.mp{box-shadow:none;border:1px solid var(--bd)}.mp.on{border-color:var(--ink)}.mp:disabled{border-color:transparent}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:900px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}}
+.tile{background:var(--surface);border-radius:22px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .tl{font-size:.82rem;font-weight:500;color:var(--ink-2)}
+.tile b{font-size:clamp(1.15rem,5.2vw,1.55rem);font-weight:600;letter-spacing:-.02em;line-height:1.15;white-space:nowrap;color:var(--ink)}
+.tile.neg b,.tile.acc b{color:var(--rose)}
+.tile .ts{font-size:.76rem;color:var(--muted);line-height:1.35}
+.tile .tbar{display:block;height:5px;border-radius:99px;background:var(--rose-soft);overflow:hidden;margin-top:6px}.tile .tbar i{display:block;height:100%;border-radius:99px;background:var(--rose)}
+@media (max-width:420px){.tile{padding:14px 13px 12px}.tile b .brl{font-size:.7em;font-weight:500;color:var(--muted)}}
+.seg3{background:transparent;padding:0;gap:8px}
+.seg3 button{height:44px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);color:var(--ink-2)}
+.seg3 button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink);box-shadow:0 8px 20px color-mix(in srgb,var(--c-ink) 22%,transparent)}
+.seg3 button[aria-pressed="true"] span{background:color-mix(in srgb,var(--on-ink) 18%,transparent);color:var(--on-ink)}
+.grp{color:var(--rose);letter-spacing:.1em}
+.box{border-color:var(--bd);border-width:1.5px}
+/* esta semana: light, like a planê card */
+.week{background:var(--surface);color:var(--ink);padding:18px 18px 16px}
+.week-h h2 .script{color:var(--rose)}
+.week-h span{color:var(--muted)}
+.wrow{border-top:1px solid var(--line)}
+.wck{border:1.5px solid var(--bd)}.wck:hover{background:var(--rose-soft)}
+.wrow small{color:var(--muted)}.wrow small.late-l{color:var(--bad)}
+.wmore{color:var(--muted)}
+.wfoot{border-top:1px solid var(--line);color:var(--ink-2)}.wfoot b{color:var(--rose)}
+.week .fbar{background:var(--rose-soft)}.week .fbar i{background:var(--rose)}
+/* floating bar in planê colors */
+@media (max-width:700px){
+  .dock{background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);border:1px solid var(--bd);box-shadow:0 14px 36px rgba(51,65,77,.14)}
+  .dock a{color:var(--muted)}
+  .dock a[aria-current="page"]{color:var(--rose);background:var(--rose-soft);font-weight:600}
+  .dock a .dotb{box-shadow:0 0 0 2px var(--surface)}
+  .dock .plus{background:var(--ink);color:var(--on-ink);box-shadow:0 0 0 6px var(--bg),0 10px 24px color-mix(in srgb,var(--c-ink) 40%,transparent)}
+}
 </style>
 
 <div class="glow" aria-hidden="true"></div>
@@ -914,7 +961,7 @@ function monthNav(eyebrow){
   const pills=MESES.map((n,i)=>{ const k=`${Y}-${pad(i+1)}`, ok=has.has(k)||k<=addM(cm,1);
     return `<button class="mp ${k===m?'on':''} ${k===cm?'now':''}" data-pickmes="${k}" ${ok?'':'disabled'} aria-current="${k===m}">${n.slice(0,3)}</button>`; }).join('');
   const anos=ys.length>1?`<span class="mp-anos">${ys.map(y=>`<button class="mp ano ${y===Y?'on':''}" data-anomes="${y}">${y}</button>`).join('')}</span>`:'';
-  return `${eyebrow?`<p class="greet">${eyebrow}</p>`:''}<div class="mhead"><h1>${mName(m)} <span class="script">${Y}</span></h1>${ui.page==='lanc'?`<button class="icbtn lupa" data-buscaon="1" aria-label="buscar">${ic('search')}</button>`:''}</div>
+  return `${eyebrow?`<p class="greet">${eyebrow}</p>`:ui.page==='lanc'?'<span class="eyebrow">lançamentos do mês</span>':''}<div class="mhead"><h1>${mName(m)} <span class="script">${Y}</span></h1>${ui.page==='lanc'?`<button class="icbtn lupa" data-buscaon="1" aria-label="buscar">${ic('search')}</button>`:''}</div>
     <div class="mpills" id="mpills">${anos}${pills}</div>`;
 }
 const sum3=cols=>`<div class="sum3">${cols.map(([l,v,c=''])=>`<div><span>${l}</span><b class="num ${c}">${v}</b></div>`).join('')}</div>`;
@@ -954,7 +1001,7 @@ function pInicio(){
   const m=ui.mes, t=today(), r=resumo(m);
   const hr=new Date().getHours(); const saud=hr<12?'bom dia,':hr<18?'boa tarde,':'boa noite,';
   const contas=ofMes(m,'conta').sort(byDate); const falta=sumResta(contas);
-  let h=monthNav(`<span class="script">${saud}</span> laís &amp; igor`)+sum3([['entrou',fmt(r.E)],['saiu',fmt(r.C+r.G)],[r.S<0?'faltou':'sobrou',fmt(Math.abs(r.S)),r.S<0?'neg':'pos']]);
+  let h=monthNav(`<span class="script">${saud}</span> laís &amp; igor`)+tiles(m);
   h+=`<div class="dash"><div class="col">${m===t.slice(0,7)?vSemana(contas,t,r.C,falta):''}${cardMetas(m)}
       <section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section></div>
     <div class="col">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
@@ -975,18 +1022,23 @@ function pLanc(){
   if(ui.busca) return h+vBusca(ui.busca);
   const ents=ofMes(m,'entrada').sort(byDate), contas=ofMes(m,'conta').sort(byDate), gastos=ofMes(m,'gasto');
   const falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, pg=r.C-falta;
-  // the month at a glance, in the planê ink: result, the three totals, and how the bills are going
-  h+=`<section class="resumo">
-    <div class="rs-main"><span>balanço do mês</span><b class="num ${r.S<0?'neg':''}">${r.S<0?'−':'+'}${fmt(Math.abs(r.S))}</b></div>
-    <div class="rs-3"><div><span>entrou</span><b class="num">${fmt(r.E)}</b></div><div><span>contas</span><b class="num">${fmt(r.C)}</b></div><div><span>gastos</span><b class="num">${fmt(r.G)}</b></div></div>
-    ${contas.length?`<div class="rs-p"><div class="trk"><i style="width:${r.C?pg/r.C*100:0}%"></i></div><div class="rs-pl"><span>${pagas} de ${contas.length} contas pagas</span><span>${falta?`falta <b class="num">${fmt(falta)}</b>`:'tudo pago'}</span></div></div>`:''}
-  </section>`;
+  h+=tiles(m);
   const lt=ui.lt||'gastos', ativo={entradas:'entrada',contas:'conta',gastos:'gasto'}[lt]||'gasto';
   h+=`<div class="seg3" role="tablist">${[['entradas','entradas',ents.length],['contas','contas',contas.length],['gastos','saídas',gastos.length]].map(([k,l,n])=>`<button type="button" role="tab" data-lt="${k}" aria-pressed="${lt===k}">${l}<span>${n}</span></button>`).join('')}</div>`;
   h+=`<div class="folha3" data-ativo="${ativo}">${lista('entrada',ents,r.E)}${lista('conta',contas,r.C)}${lista('gasto',gastos,r.G)}</div>`;
   return h;
 }
 // one quiet row: what it was, a small line with who / when / card, and the value
+function tiles(m){
+  const r=resumo(m), contas=ofMes(m,'conta'), falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, ne=ofMes(m,'entrada').length, ns=contas.length+ofMes(m,'gasto').length;
+  const t=(lbl,val,sub,cls='',extra='')=>`<div class="tile ${cls}"><span class="tl">${lbl}</span><b class="num">${val}</b><span class="ts">${sub}</span>${extra}</div>`;
+  return `<div class="tiles">`
+    +t('balanço do mês',`${r.S<0?'−':''}${fmt(Math.abs(r.S))}`,r.S<0?'no negativo':'no positivo',r.S<0?'neg':'')
+    +t('falta pagar',fmt(falta),contas.length?`${pagas} de ${contas.length} contas pagas`:'nenhuma conta',falta?'acc':'',contas.length?`<span class="tbar"><i style="width:${r.C?(r.C-falta)/r.C*100:0}%"></i></span>`:'')
+    +t('entrou',fmt(r.E),`${ne} entrada${ne===1?'':'s'}`)
+    +t('saiu',fmt(r.C+r.G),'contas e gastos')
+    +`</div>`;
+}
 function linha(i,tipo,meta){
   const ck=tipo==='conta', pp=ck&&!i.pago?pagoParte(i):0;
   return `<div class="rw ${ck?'ck':''} ${i.pago?'paid':''}">${ck?`<button class="box ${i.pago?'on':pp>0?'half':''}" data-pagar="${esc(i.id)}" aria-label="${i.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${i.pago?ic('check','sm'):''}</button>`:''}`
