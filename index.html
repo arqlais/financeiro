@@ -349,6 +349,16 @@ html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:10
 .mrow input{height:40px;border-radius:12px;border:1px solid var(--line);background:var(--bg);padding:0 12px;width:100%;font-weight:600;text-align:right}
 ::placeholder,.brl{text-transform:none!important}
 .parcial{color:var(--warn)}
+.cparte{display:flex;flex-direction:column;gap:5px;margin-top:5px;font-size:.78rem;color:var(--ink-2)}
+.cparte b{display:inline;font-weight:600;color:var(--good)}
+.cparte .pbar{margin-top:0;max-width:200px}.cparte .pbar i{background:var(--good)}
+.vpart{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
+.vpart>span{white-space:nowrap}
+.vpart small{display:block;white-space:nowrap;font-size:.68rem;font-weight:500;color:var(--muted)}
+.box.half{border-color:var(--good);background:linear-gradient(135deg,var(--good) 50%,transparent 50%)}
+.cbar{padding:10px 0 4px;display:flex;flex-direction:column;gap:6px}
+.cbar .trk{height:6px;border-radius:99px;background:var(--sunk);overflow:hidden}.cbar .trk i{display:block;height:100%;border-radius:99px;background:var(--good)}
+.cbar-l{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)}.cbar-l b{color:var(--ink);font-weight:600}
 .pbox{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;background:var(--sunk)}
 .pbox-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:.84rem}
 .pbox-h>span{color:var(--muted)}.pbox-h>span b{color:var(--ink)}
@@ -798,8 +808,8 @@ function pLanc(){
   if(lt==='contas'){
     const falta=sumResta(contas);
     h+=`<div class="dash wide"><section class="sec"><div class="sec-h"><h2>contas</h2><span>${contas.filter(c=>c.pago).length} de ${contas.length} pagas${falta?` · falta <b>${fmt(falta)}</b>`:''}</span></div>
-      ${contas.length?contas.map(c=>{const late=!c.pago&&c.data&&c.data<t; const b=banco(c);
-        return `<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c,(b&&b!=='boleto'?` · <span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'')+(late?' · <span class="late">atrasada</span>':'')+(!c.pago&&pagoParte(c)>0?` · <span class="parcial">pagou ${fmt(pagoParte(c))} · falta ${fmt(resta(c))}</span>`:''))}<span class="v">${fmt(c.valor)}</span></span></div>`}).join(''):'<div class="empty-ln">nenhuma conta neste mês.</div>'}
+      ${contas.length?(()=>{ const tot=sum(contas), pg=tot-falta; return `<div class="cbar"><div class="trk"><i style="width:${tot?pg/tot*100:0}%"></i></div><div class="cbar-l"><span>já pago <b>${fmt(pg)}</b></span><span>falta <b>${fmt(falta)}</b></span></div></div>`; })():''}
+      ${contas.length?contas.map(c=>contaRow(c,true)).join(''):'<div class="empty-ln">nenhuma conta neste mês.</div>'}
       ${canWrite&&contas.length?`<div class="more"><span>pagou só uma parte? toque na conta. parcelas passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir as fixas em ${mName(addM(m,1))}</button></div>`:''}</section>
       <div class="col">${cardBancosMini(contas)}</div></div>`;
   } else if(lt==='gastos'){
@@ -815,6 +825,16 @@ function pLanc(){
     h+=`<section class="sec"><div class="sec-h"><h2>entradas</h2><span><b>${fmt(r.E)}</b></span></div>${ents.length?ents.map(i=>`<div class="ln">${lineHtml(i)}<span class="v in">${fmt(i.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nenhuma entrada neste mês.</div>'}</section>`;
   }
   return h;
+}
+// one bill: with a part already paid, the right side shows what is left and the line tells what was paid and when
+function contaRow(c,comBanco){
+  const t=today(), late=!c.pago&&c.data&&c.data<t, b=comBanco?banco(c):null, pg=c.pago?0:pagoParte(c), r=resta(c);
+  const ult=(c.parciais||[]).at(-1);
+  const extra=(b&&b!=='boleto'?` · <span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:'')+(late?' · <span class="late">atrasada</span>':'');
+  const parte=pg>0?`<span class="cparte"><span>pagou <b>${fmt(pg)}</b>${ult?.d?` em ${qd({data:ult.d})}`:''}</span><span>${late?'<span class="late">ainda falta</span>':`em aberto até ${c.data?qd(c):'o vencimento'}`}</span><span class="pbar"><i style="width:${Math.min(100,pg/(+c.valor||1)*100)}%"></i></span></span>`:'';
+  return `<div class="ln ck ${c.pago?'paid':''} ${pg>0?'part':''}"><button class="box ${c.pago?'on':pg>0?'half':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>`
+    +`<span class="tap" data-edit="${esc(c.id)}"><span style="min-width:0"><b>${esc(c.desc)}</b><small><span class="dot ${c.quem}"></span>${QUEM[c.quem]||''}${c.data?' · '+qd(c):''}${extra}</small>${parte}</span>`
+    +(pg>0?`<span class="v vpart"><small>falta</small><span>${fmt(r)}</span><small>de ${fmt(c.valor)}</small></span>`:`<span class="v">${fmt(c.valor)}</span>`)+`</span></div>`;
 }
 function cardBancosMini(contas){
   const g={}; contas.forEach(c=>{const b=banco(c); if(b&&b!=='boleto') (g[b]=g[b]||[]).push(c)});
@@ -849,7 +869,7 @@ function pBancos(){
   h+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div><div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(sel)} nos últimos 12 meses">${svg}</svg></div></section>`;
   h+=`<div class="dash">`;
   h+=`<section class="sec"><div class="sec-h"><h2>parcelas em andamento</h2><span>${parcs.length}</span></div>${parcs.length?parcs.sort((a,b)=>(b.p.y-b.p.x)*b.i.valor-(a.p.y-a.p.x)*a.i.valor).map(({i,p})=>`<div class="ln"><span class="tap" data-edit="${esc(i.id)}"><span style="min-width:0"><b>${esc(p.base)}</b><small>${p.x} de ${p.y} · ${p.x<p.y?`termina em ${mName(addM(cm,p.y-p.x))}`:'última parcela'}</small><span class="pbar"><i style="width:${p.x/p.y*100}%;background:${k.c}"></i></span></span><span class="v">${fmt(i.valor)}<small style="display:block;text-align:right;font-weight:400">${p.x<p.y?`faltam ${fmt((p.y-p.x)*i.valor)}`:''}</small></span></span></div>`).join(''):'<div class="empty-ln">nenhuma compra parcelada neste cartão.</div>'}</section>`;
-  h+=`<section class="sec"><div class="sec-h"><h2>contas de ${mName(cm)}</h2><span>${abertas.length?`falta <b>${fmt(sumResta(abertas))}</b>`:atual.length?'tudo pago':''}</span></div>${atual.length?atual.sort(byDate).map(c=>`<div class="ln ck ${c.pago?'paid':''}"><button class="box ${c.pago?'on':''}" data-pagar="${esc(c.id)}" aria-label="${c.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${c.pago?ic('check','sm'):''}</button>${lineHtml(c)}<span class="v">${fmt(c.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nada neste cartão este mês.</div>'}</section>`;
+  h+=`<section class="sec"><div class="sec-h"><h2>contas de ${mName(cm)}</h2><span>${abertas.length?`falta <b>${fmt(sumResta(abertas))}</b>`:atual.length?'tudo pago':''}</span></div>${atual.length?atual.sort(byDate).map(c=>contaRow(c,false)).join(''):'<div class="empty-ln">nada neste cartão este mês.</div>'}</section>`;
   h+=`</div>`;
   return h;
 }
@@ -874,7 +894,7 @@ function cardMetas(m){
 function vSemana(contas,t,C,falta){
   const pend=contas.filter(c=>!c.pago&&c.data&&dDiff(c.data,t)<=7).sort(byDate);
   return `<section class="week"><div class="week-h"><h2>esta <span class="script">semana</span></h2><span>${pend.length?`${pend.length} para pagar`:'tudo em dia'}</span></div>
-    ${pend.slice(0,4).map(c=>{const d=dDiff(c.data,t);return `<div class="wrow">${canWrite?`<button class="wck" data-pagar="${esc(c.id)}" aria-label="marcar ${esc(c.desc)} como paga"></button>`:'<span></span>'}<span style="min-width:0"><b>${esc(c.desc)}</b><small class="${d<0?'late-l':''}">${d<0?`atrasada ${-d}d`:d===0?'hoje':`em ${d} dia${d>1?'s':''}`} · ${QUEM[c.quem]}</small></span><span class="wv">${fmt(resta(c))}</span></div>`}).join('')}
+    ${pend.slice(0,4).map(c=>{const d=dDiff(c.data,t);return `<div class="wrow">${canWrite?`<button class="wck" data-pagar="${esc(c.id)}" aria-label="marcar ${esc(c.desc)} como paga"></button>`:'<span></span>'}<span style="min-width:0"><b>${esc(c.desc)}</b><small class="${d<0?'late-l':''}">${d<0?`atrasada ${-d}d`:d===0?'hoje':`em ${d} dia${d>1?'s':''}`} · ${QUEM[c.quem]}</small></span><span class="wv">${fmt(resta(c))}${pagoParte(c)>0?`<small style="display:block;text-align:right;font-weight:400">de ${fmt(c.valor)}</small>`:''}</span></div>`}).join('')}
     ${pend.length>4?`<div class="wmore">e mais ${pend.length-4}</div>`:''}
     <div class="wfoot"><span>falta pagar no mês</span><b>${fmt(falta)}</b></div><div class="fbar"><i style="width:${C?(C-falta)/C*100:0}%"></i></div></section>`;
 }
