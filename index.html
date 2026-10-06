@@ -77,6 +77,7 @@ h1,h2,.stat .v,.brand b,.tl-d b{font-family:var(--f-display)}
 
 /* ---------- shell ---------- */
 .brand{display:flex;align-items:center;gap:10px}
+.mark img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
 .mark .ico.mk{width:55%;height:55%;stroke-width:1.7}
 .mark.big{width:52px;height:52px;font-size:1.3rem}
 .mark{width:40px;height:40px;border-radius:50%;background:var(--rose-soft);color:var(--rose);display:grid;place-items:center;font-family:var(--f-script);font-style:italic;font-size:1.3rem;flex:none}
@@ -556,7 +557,7 @@ function applyTema(t){
   const r=document.documentElement.style; r.setProperty('--c-ink',tema.ink); r.setProperty('--c-acc',tema.acc); r.setProperty('--c-paper',tema.paper);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',tema.paper);
 }
-function setTema(t){ applyTema(t); try{localStorage.setItem('fin-tema',JSON.stringify(t))}catch(e){} applyIcone(); render(); }
+function setTema(t){ applyTema(t); try{localStorage.setItem('fin-tema',JSON.stringify(t))}catch(e){} applyIcone(); render(); savePerfil(); }
 const temaCustom=acc=>({id:'custom',acc,ink:mixHex(acc,'#141414',.62),paper:mixHex(acc,'#ffffff',.93)});
 applyTema();
 
@@ -564,13 +565,15 @@ applyTema();
 const ICONES=[['wallet','carteira'],['piggy','porquinho'],['coins','moedas'],['dollar','cifrão'],['up','gráfico'],['receipt','recibo'],['iniciais','iniciais']];
 let icone={id:'wallet',txt:'l&i'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
-const markInner=(ic_=icone)=>ic_.id==='iniciais'?esc(ic_.txt||'l&i'):ic(ic_.id,'mk');
+let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
+const markInner=(ic_=icone)=>ic_.id==='foto'&&foto?`<img src="${foto}" alt="">`:ic_.id==='iniciais'?esc(ic_.txt||'l&i'):ic(ic_.id==='foto'?'wallet':ic_.id,'mk');
 function iconPng(size){
   // draws the chosen icon on the theme color; used as favicon and home-screen icon
   return new Promise(res=>{ try{
     const c=document.createElement('canvas'); c.width=c.height=size; const x=c.getContext('2d');
     const g=x.createLinearGradient(0,0,size,size); g.addColorStop(0,mixHex(tema.ink,'#ffffff',.18)); g.addColorStop(.6,tema.ink); g.addColorStop(1,mixHex(tema.ink,'#000000',.12));
     x.fillStyle=g; x.fillRect(0,0,size,size);
+    if(icone.id==='foto'&&foto){ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height); x.drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,size,size); res(c.toDataURL('image/png')); }; im.onerror=()=>res(null); im.src=foto; return; }
     const fg=mixHex(tema.acc,'#ffffff',.55);
     if(icone.id==='iniciais'){ x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle'; const t=(icone.txt||'l&i').slice(0,3); x.font=`italic 300 ${size*(t.length>2?.36:.46)}px Poppins, system-ui, sans-serif`; x.fillText(t,size/2,size/2+size*.02); return res(c.toDataURL('image/png')); }
     const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${fg}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${P[icone.id]}</svg>`;
@@ -589,7 +592,20 @@ async function applyIcone(){
     setLink('manifest',URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'})));
   }catch(e){}
 }
-function setIcone(o){ icone={...icone,...o}; try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} applyIcone(); render(); }
+function setIcone(o){ icone={...icone,...o}; try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} applyIcone(); render(); savePerfil(); }
+// each person's look (color, icon, photo) is saved on their account too, so the installed app, safari and
+// any other device they sign in on show the same thing (on iphone, safari and the home-screen app keep separate storage)
+const perfilId=()=>userEmail?'perfil_'+slug(userEmail):null;
+let perfilT=0;
+function savePerfil(){ const id=perfilId(); if(!id||!store||mode!=='nuvem') return; clearTimeout(perfilT);
+  perfilT=setTimeout(()=>{ store.put({id,tipo:'perfil',email:userEmail,icone,foto:icone.id==='foto'?foto:null,tema}).catch(()=>{}); },400); }
+function loadPerfil(){ const d=perfilId()&&items.get(perfilId()); if(!d) { savePerfil(); return; }
+  if(d.tema&&d.tema.ink){ applyTema(d.tema); try{localStorage.setItem('fin-tema',JSON.stringify(d.tema))}catch(e){} }
+  if(d.foto){ foto=d.foto; try{localStorage.setItem('fin-foto',foto)}catch(e){} }
+  if(d.icone&&d.icone.id){ icone={...icone,...d.icone}; try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} }
+  applyIcone(); }
+// photo: center-cropped square, 512px jpeg (small enough to sync)
+function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height), c=document.createElement('canvas'); c.width=c.height=512; c.getContext('2d').drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,512,512); ok(c.toDataURL('image/jpeg',.82)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
 
 // ---------- state ----------
 // every change to items bumps ver, so the per-month index is rebuilt once per change instead of on every lookup
@@ -600,7 +616,7 @@ try{const s=JSON.parse(localStorage.getItem('fin2-ui')||'{}'); if(['inicio','lan
 const saveUi=()=>{try{localStorage.setItem('fin2-ui',JSON.stringify({page:ui.page}))}catch(e){}};
 let idxVer=-1, idx={live:[],byMes:new Map(),meses:[]};
 function index(){ if(idxVer===ver) return idx; const lv=[],bm=new Map(),ms=new Set();
-  for(const i of items.values()){ if(i.removido||i.tipo==='banco') continue; lv.push(i); if(!bm.has(i.mes)) bm.set(i.mes,[]); bm.get(i.mes).push(i); ms.add(i.mes); }
+  for(const i of items.values()){ if(i.removido||(i.tipo!=='gasto'&&i.tipo!=='conta'&&i.tipo!=='entrada')) continue; lv.push(i); if(!bm.has(i.mes)) bm.set(i.mes,[]); bm.get(i.mes).push(i); ms.add(i.mes); }
   idx={live:lv,byMes:bm,meses:[...ms].sort()}; idxVer=ver; return idx; }
 const live=()=>index().live;
 // banks the couple added (or recolored) live in the same store as {tipo:'banco', nome, cor}
@@ -669,8 +685,9 @@ async function afterLogin(){
   items.clear(); all.forEach(r=>items.set(r.id,{...r.doc,id:r.id}));
   if(!all.length) await seedInicial();
   if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
-    if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); }
+    if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); if(p.new.id===perfilId()) loadPerfil(); }
     renderSoon(); }).subscribe();
+  loadPerfil();
   ready=true; render(); setTimeout(autoParcelas,400);
 }
 function toast(t,i='check'){const h=$('#toastHost');h.innerHTML=`<div class="toast">${ic(i,'sm')}${esc(t)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>h.innerHTML='',2400);}
@@ -1015,13 +1032,14 @@ function pAjustes(){
     <div class="opt-row"><span class="tico">${ic('upload','sm')}</span><span><b>importar backup</b><small>lançamentos com o mesmo código são atualizados, nada é apagado.</small></span>${canWrite?`<label class="pill-btn fileb">escolher arquivo<input type="file" id="impFile" accept=".json,application/json"></label>`:''}</div>
     ${importPend?`<div class="alert">${ic('upload')}<span>importar <b>${importPend.length}</b> lançamentos?</span><span style="margin-left:auto;display:flex;gap:8px"><button class="pill-btn" data-impcancel="1">cancelar</button><button class="pill-btn rose" data-impok="1">importar</button></span></div>`:''}
   </div></section></div>
-  <section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="muted" style="font-size:.84rem">fica salva só neste aparelho: cada um escolhe a sua</span></div>
+  <section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="muted" style="font-size:.84rem">cada um escolhe a sua</span></div>
     <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}
       <label class="tema" aria-pressed="${tema.id==='custom'}"><span class="sw2" style="background:conic-gradient(#e0707a,#e6b85c,#7bb07a,#5c9bd6,#9b7ad0,#e0707a)"><input type="color" id="temaCor" value="${tema.acc}" aria-label="escolher qualquer cor"></span>escolher</label></div></section>
-  <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">só neste aparelho · aparece no perfil e na tela de início</span></div>
-    <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
+  <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece no perfil e na tela de início</span></div>
+    <div class="temas"><label class="tema" aria-pressed="${icone.id==='foto'}" style="position:relative"><span class="mark big">${foto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span>${foto?'nossa foto':'usar foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
+    ${foto?`<div class="toolbar" style="margin-top:10px">${icone.id!=='foto'?`<button class="pill-btn" data-icone="foto">usar a foto</button>`:''}<button class="pill-btn" data-fotodel="1">remover foto</button></div>`:''}
     ${icone.id==='iniciais'?`<div class="toolbar" style="margin-top:12px"><label class="search" style="max-width:220px"><input id="ic-txt" maxlength="3" value="${esc(icone.txt||'l&i')}" placeholder="ex.: l&i" aria-label="iniciais"></label><span class="muted" style="font-size:.82rem">até 3 letras</span></div>`:''}
-    <p class="hint" style="margin-top:12px">se o app já está na tela de início, remova e adicione de novo para trocar o ícone de lá.</p></section>
+    <p class="hint" style="margin-top:12px">para trocar o ícone da tela de início: apague o atalho, abra o site no safari (ou chrome), entre na conta e adicione de novo. a escolha fica salva na sua conta, então o navegador já sabe qual usar.</p></section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
     <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${k.custom&&canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>
     ${canWrite?`<div class="toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><label class="search" style="max-width:none">${ic('bank','sm')}<input id="bk-nome" placeholder="nome do banco ou cartão (ex.: neon, will, renner)" maxlength="30" aria-label="nome do banco"></label>
@@ -1122,10 +1140,11 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-fotodel],[data-lt],[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
-  if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo neste aparelho'); return; }
+  if(d.icone){ if(d.icone==='foto'&&!foto) return; setIcone({id:d.icone}); toast('ícone salvo'); return; }
+  if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto')}catch(e){} if(icone.id==='foto') icone.id='wallet'; setIcone({}); toast('foto removida'); return; }
   if(d.mesjump){ openMesJump(); return; }
   if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
@@ -1135,7 +1154,7 @@ document.addEventListener('click',e=>{
     safe(store.put({id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value}),`${n} adicionado`); return; }
   if(d.bankdel){ const id='banco_'+slug(d.bankdel); if(items.has(id)) safe(store.del(id),'banco removido'); return; }
   if(d.setmes){ ui.mes=d.setmes; ui.bank=null; render(); return; }
-  if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva neste aparelho'); } return; }
+  if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
   if(d.sair){ sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
@@ -1160,7 +1179,7 @@ document.addEventListener('click',e=>{
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
   if(d.del){ const id=form.id, auto=form.auto; form=null; drawSheet(); safe(auto?store.patch(id,{removido:true}):store.del(id),'excluído'); return; }
 });
-document.addEventListener('change',e=>{ if(e.target.id==='ic-txt'){ setIcone({txt:e.target.value.trim()||'l&i'}); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva neste aparelho'); } });
+document.addEventListener('change',async e=>{ if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ foto=await lerFoto(e.target.files[0]); try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({id:'foto'}); toast('foto salva'); }catch(_){ toast('não consegui abrir essa foto.','alert'); } return; } if(e.target.id==='ic-txt'){ setIcone({txt:e.target.value.trim()||'l&i'}); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='qF'){e.preventDefault();quickAdd('q');} if(e.target.id==='sF'){e.preventDefault();quickAdd('s');} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
