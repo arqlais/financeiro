@@ -789,10 +789,23 @@ function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); 
 // ---------- planê font ----------
 // the seasons is for personal use, so it never goes to the public repo: the file is uploaded once in ajustes and
 // kept with the couple's data (members only), then registered here. demo files lack accents, so those fall back to cormorant.
-let fontesKey='';
+let fontesKey='', fonteCripto=false;
+function usarFonteBuf(buf){ try{ const ff=new FontFace('The Seasons',buf,{weight:'300',style:'italic'}); return ff.load().then(x=>{ document.fonts.add(x); fonteCripto=true; document.documentElement.classList.add('seasons'); }).catch(()=>{}); }catch(e){} }
+const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
+try{ const c=localStorage.getItem('fin-fonte'); if(c) usarFonteBuf(b64(c).buffer); }catch(e){}
+async function fonteInicial(){
+  if(fonteCripto||!sb||!crypto?.subtle) return;
+  try{ const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); const chave=k.data?.valor; if(!chave) return;
+    const r=await fetch('fonte.enc.json'); if(!r.ok) return; const e=await r.json();
+    const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(chave),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    const buf=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.data));
+    await usarFonteBuf(buf);
+    try{ let s=''; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=8192) s+=String.fromCharCode(...u.subarray(i,i+8192)); localStorage.setItem('fin-fonte',btoa(s)); }catch(_){}
+  }catch(err){} }
 function fontesSync(){
   const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido&&i.data); const key=fs.map(f=>f.id+':'+f.data.length).join('|'); if(key===fontesKey) return; fontesKey=key;
-  if(!fs.length){ document.documentElement.classList.remove('seasons'); return; }
+  if(!fs.length){ if(!fonteCripto) document.documentElement.classList.remove('seasons'); return; }
   Promise.all(fs.map(f=>{ try{ const ff=new FontFace('The Seasons',`url(${f.data})`,{weight:String(f.peso||400),style:f.estilo||'normal',...(f.demo?{unicodeRange:'U+0020-007E'}:{})}); return ff.load().then(x=>{ document.fonts.add(x); return 1; }).catch(()=>0); }catch(e){ return 0; } }))
     .then(r=>document.documentElement.classList.toggle('seasons',r.some(Boolean)));
 }
@@ -901,7 +914,7 @@ async function afterLogin(){
   if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
     if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); if(p.new.id===perfilId()) loadPerfil(); }
     renderSoon(); }).subscribe();
-  loadPerfil();
+  loadPerfil(); fonteInicial();
   ready=true; render(); setTimeout(autoParcelas,400);
 }
 function toast(t,i='check',o={}){const h=$('#toastHost'); toast.undo=o.undo||null; h.innerHTML=`<div class="toast">${ic(i,'sm')}${esc(t)}${o.undo?'<button class="undo" data-undo="1">desfazer</button>':''}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>{h.innerHTML='';toast.undo=null;},o.undo?5000:2400);}
@@ -1399,9 +1412,9 @@ function pAjustes(){
   <section class="card"><div class="card-h"><h2>foto de <span class="script">perfil</span></h2><span class="muted" style="font-size:.84rem">aparece só dentro do app, no topo · nunca vira o ícone</span></div>
     <div class="opt-row" style="border:0;grid-template-columns:56px minmax(0,1fr)"><span class="mark big">${foto&&icone.usaFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${foto&&icone.usaFoto?'sua foto':'sem foto'}</b><small>${foto&&icone.usaFoto?'só vocês dois veem, dentro do app.':'escolha uma foto da galeria.'}</small></span>
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn" style="position:relative">${foto&&icone.usaFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${foto&&icone.usaFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
-  <section class="card"><div class="card-h"><h2>fonte do <span class="script">planê</span></h2><span class="muted" style="font-size:.84rem">fica guardada só para vocês dois · nunca vai para o github</span></div>
+  ${fonteCripto?'':`<section class="card"><div class="card-h"><h2>fonte do <span class="script">planê</span></h2><span class="muted" style="font-size:.84rem">fica guardada só para vocês dois · nunca vai para o github</span></div>
     ${(()=>{ const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido); return `<div class="opt-row" style="border:0"><span class="tico">${ic('file','sm')}</span><span><b>${fs.length?'the seasons':'sem fonte do planê'}</b><small>${fs.length?fs.map(f=>esc(f.nome)).join(', '):'escolha os arquivos .otf da the seasons (o itálico leve é o principal).'}${fs.some(f=>f.demo)?' · versão demo: letras com acento usam uma parecida.':''}</small></span>
-      <span style="display:flex;gap:8px;flex-wrap:wrap">${canWrite?`<label class="pill-btn fileb">${fs.length?'trocar':'escolher arquivos'}<input type="file" id="fonteFile" accept=".otf,.ttf,.woff,.woff2,font/*" multiple></label>`:''}${fs.length&&canWrite?`<button class="pill-btn" data-fontedel="1">remover</button>`:''}</span></div>`; })()}</section>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">${canWrite?`<label class="pill-btn fileb">${fs.length?'trocar':'escolher arquivos'}<input type="file" id="fonteFile" accept=".otf,.ttf,.woff,.woff2,font/*" multiple></label>`:''}${fs.length&&canWrite?`<button class="pill-btn" data-fontedel="1">remover</button>`:''}</span></div>`; })()}</section>`}
   <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece na tela de início</span></div>
     <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id})}</span>${nome}</button>`).join('')}</div>
     </section>
@@ -1530,7 +1543,7 @@ document.addEventListener('click',e=>{
     return; }
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
-  if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'plane',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
+  if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'plane',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }

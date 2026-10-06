@@ -9,6 +9,7 @@ site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha
 - **sem internet**: o que for lançado fica salvo no celular e sobe sozinho quando a conexão volta. ao reabrir o app, ele busca o que o outro mudou.
 - **excluiu sem querer**: o aviso de excluído tem *desfazer* por alguns segundos.
 - **metas**: em ajustes, um limite por mês para cada categoria (ou para todos os gastos). o início mostra quanto já foi, quanto sobra e avisa quando passa de 80% ou da meta.
+- **fonte do planê**: a the seasons (uso pessoal) vai criptografada em `fonte.enc.json`, com a mesma chave do histórico, e só é destravada depois do login.
 - **planilha**: em ajustes, *baixar planilha* gera um .csv com tudo, para abrir no excel ou no google planilhas.
 
 ## publicar no github pages
