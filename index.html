@@ -379,11 +379,12 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .rs-main span{font-size:.8rem;color:rgba(255,255,255,.66)}
 .rs-main b{font-size:2rem;font-weight:600;letter-spacing:-.03em;line-height:1.1;color:#fff}
 .rs-main b.neg{color:color-mix(in srgb,var(--c-acc) 45%,#fff)}
-.rs-main .brl{font-size:.55em;font-weight:500;opacity:.7;margin-right:2px}
+.rs-main b .brl{font-size:1em;font-weight:600;color:inherit;opacity:.8}
 .rs-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid rgba(255,255,255,.14);padding-top:12px}
 .rs-3 div{display:flex;flex-direction:column;gap:1px;min-width:0}.rs-3 div+div{padding-left:12px;border-left:1px solid rgba(255,255,255,.14)}
-.rs-3 span{font-size:.72rem;color:rgba(255,255,255,.6)}.rs-3 b{font-size:.98rem;font-weight:600;white-space:nowrap;color:#fff}
-.rs-3 .brl{display:none}
+.rs-3 span{font-size:.72rem;color:rgba(255,255,255,.6)}.rs-3 b{font-size:.94rem;font-weight:600;white-space:nowrap;color:#fff}
+.rs-3 b .brl{font-size:.78em;font-weight:500;color:rgba(255,255,255,.62)}
+@media (max-width:380px){.rs-3 b{font-size:.86rem}.rs-3 div+div{padding-left:9px}.resumo{padding-left:16px;padding-right:16px}}
 .rs-p .trk{height:5px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}.rs-p .trk i{display:block;height:100%;border-radius:99px;background:var(--c-acc)}
 .rs-pl{display:flex;justify-content:space-between;margin-top:7px;font-size:.76rem;color:rgba(255,255,255,.66)}.rs-pl b{color:#fff;font-weight:600}
 .seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:16px;background:var(--sunk)}
@@ -416,7 +417,7 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
   .folha3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
   .resumo{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,.9fr);align-items:center;gap:28px;padding:22px 26px}
   .rs-3{border-top:0;padding-top:0;border-left:1px solid rgba(255,255,255,.14);padding-left:24px}
-  .rs-3 b{font-size:1.15rem}.rs-3 .brl{display:inline}
+  .rs-3 b{font-size:1.15rem}
 }
 .mpills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-6px -16px 0;padding:4px 16px;overscroll-behavior-x:contain}
 .mp{transition:background .2s,color .2s,border-color .2s}
@@ -664,7 +665,7 @@ const $=(s,e=document)=>e.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const brl=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const fmtT=v=>brl.format(v||0);
-const fmt=v=>fmtT(v).replace('R$','<span class="brl">R$</span>');
+const fmt=v=>fmtT(v).replace(/R\$\s?/,m=>`<span class="brl">${m}</span>`);
 const kfmt=v=>v>=1000?(Math.round(v/100)/10).toLocaleString('pt-BR')+'k':String(Math.round(v));
 const pad=n=>String(n).padStart(2,'0');
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
