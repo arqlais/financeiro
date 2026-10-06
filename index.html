@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap">
 <style>
 /* Floating pill nav on top for wide screens, dark floating dock on phones. Poppins only.
    Each person picks a color on their own device: three inputs (--c-ink, --c-acc, --c-paper) drive every token.
@@ -569,17 +569,9 @@ body:has(.scrim){overflow:hidden}
   @keyframes mesIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
   @keyframes mesInL{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 }
-/* summary card: soft blush of the planê palette, ink numbers */
-.resumo{background:linear-gradient(140deg,color-mix(in srgb,var(--c-acc) 17%,var(--surface)) 0%,color-mix(in srgb,var(--c-acc) 7%,var(--surface)) 100%);color:var(--ink);border:1px solid var(--bd);box-shadow:0 1px 2px rgba(51,65,77,.03),0 8px 24px color-mix(in srgb,var(--c-acc) 10%,transparent)}
-.rs-main span,.rs-3 span,.rs-pl{color:var(--ink-2)}
-.rs-main b,.rs-3 b,.rs-pl b{color:var(--ink)}
-.rs-main b.neg{color:var(--rose)}
-.rs-main .brl{opacity:.55}
-.rs-3{border-top-color:color-mix(in srgb,var(--c-acc) 22%,transparent)}
-.rs-3 div+div{border-left-color:color-mix(in srgb,var(--c-acc) 22%,transparent)}
-.rs-p .trk{background:color-mix(in srgb,var(--c-acc) 18%,var(--surface))}.rs-p .trk i{background:var(--rose)}
-.seg3{background:color-mix(in srgb,var(--c-acc) 9%,var(--sunk));border:1px solid var(--bd)}
-@media (min-width:1100px){.rs-3{border-left-color:color-mix(in srgb,var(--c-acc) 22%,transparent)}}
+/* planê font (the seasons), when the couple uploaded it in ajustes */
+.seasons .script{font-family:"The Seasons","Cormorant Garamond",serif;font-weight:300;font-size:1.14em;letter-spacing:0;line-height:1}
+.seasons .greet .script{font-size:1.2em}
 </style>
 
 <div class="glow" aria-hidden="true"></div>
@@ -794,6 +786,24 @@ function cropSalvar(){ const c=crop, s=cropFix(), f=512/CW, w=c.im.width*s, h=c.
 function lerOriginal(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,1400/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); ok(c.toDataURL('image/jpeg',.86)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
 function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height), c=document.createElement('canvas'); c.width=c.height=512; c.getContext('2d').drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,512,512); ok(c.toDataURL('image/jpeg',.82)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
 
+// ---------- planê font ----------
+// the seasons is for personal use, so it never goes to the public repo: the file is uploaded once in ajustes and
+// kept with the couple's data (members only), then registered here. demo files lack accents, so those fall back to cormorant.
+let fontesKey='';
+function fontesSync(){
+  const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido&&i.data); const key=fs.map(f=>f.id+':'+f.data.length).join('|'); if(key===fontesKey) return; fontesKey=key;
+  if(!fs.length){ document.documentElement.classList.remove('seasons'); return; }
+  Promise.all(fs.map(f=>{ try{ const ff=new FontFace('The Seasons',`url(${f.data})`,{weight:String(f.peso||400),style:f.estilo||'normal',...(f.demo?{unicodeRange:'U+0020-007E'}:{})}); return ff.load().then(x=>{ document.fonts.add(x); return 1; }).catch(()=>0); }catch(e){ return 0; } }))
+    .then(r=>document.documentElement.classList.toggle('seasons',r.some(Boolean)));
+}
+const varFonte=n=>{ n=n.toLowerCase(); const it=/it(alic)?\b|ital|-it\.|ltit|bdit/.test(n);
+  const peso=/bold|-bd/.test(n)?700:/light|-lt/.test(n)?300:400; return {peso,estilo:it?'italic':'normal'}; };
+async function lerFontes(files){ let n=0;
+  for(const f of files){ if(f.size>800000){ toast('arquivo grande demais para fonte.','alert'); continue; }
+    const data=await new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.onerror=no; r.readAsDataURL(f); });
+    const v=varFonte(f.name); await safe(store.put({id:`fonte_${v.peso}_${v.estilo}`,tipo:'fonte',nome:f.name,...v,demo:/demo/i.test(f.name),data})); n++; }
+  if(n) toast(n>1?`${n} arquivos da fonte salvos`:'fonte salva'); }
+
 // ---------- state ----------
 // every change to items bumps ver, so the per-month index is rebuilt once per change instead of on every lookup
 let ver=0; class Store extends Map{ set(k,v){ver++;return super.set(k,v)} delete(k){ver++;return super.delete(k)} clear(){ver++;return super.clear()} }
@@ -953,7 +963,7 @@ function renderNav(){
 let rq=0; const renderSoon=()=>{ if(!rq) rq=requestAnimationFrame(()=>{rq=0;render();}); };
 function render(){
   if(rq){cancelAnimationFrame(rq);rq=0;}
-  renderNav();
+  renderNav(); fontesSync();
   const m=$('#main');
   queueMicrotask(()=>document.querySelectorAll('[data-mark]').forEach(el=>{ if(!el.innerHTML) el.innerHTML=markHead(); }));
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
@@ -1389,6 +1399,9 @@ function pAjustes(){
   <section class="card"><div class="card-h"><h2>foto de <span class="script">perfil</span></h2><span class="muted" style="font-size:.84rem">aparece só dentro do app, no topo · nunca vira o ícone</span></div>
     <div class="opt-row" style="border:0;grid-template-columns:56px minmax(0,1fr)"><span class="mark big">${foto&&icone.usaFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${foto&&icone.usaFoto?'sua foto':'sem foto'}</b><small>${foto&&icone.usaFoto?'só vocês dois veem, dentro do app.':'escolha uma foto da galeria.'}</small></span>
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn" style="position:relative">${foto&&icone.usaFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${foto&&icone.usaFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
+  <section class="card"><div class="card-h"><h2>fonte do <span class="script">planê</span></h2><span class="muted" style="font-size:.84rem">fica guardada só para vocês dois · nunca vai para o github</span></div>
+    ${(()=>{ const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido); return `<div class="opt-row" style="border:0"><span class="tico">${ic('file','sm')}</span><span><b>${fs.length?'the seasons':'sem fonte do planê'}</b><small>${fs.length?fs.map(f=>esc(f.nome)).join(', '):'escolha os arquivos .otf da the seasons (o itálico leve é o principal).'}${fs.some(f=>f.demo)?' · versão demo: letras com acento usam uma parecida.':''}</small></span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">${canWrite?`<label class="pill-btn fileb">${fs.length?'trocar':'escolher arquivos'}<input type="file" id="fonteFile" accept=".otf,.ttf,.woff,.woff2,font/*" multiple></label>`:''}${fs.length&&canWrite?`<button class="pill-btn" data-fontedel="1">remover</button>`:''}</span></div>`; })()}</section>
   <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece na tela de início</span></div>
     <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id})}</span>${nome}</button>`).join('')}</div>
     </section>
@@ -1490,12 +1503,13 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-addrow],[data-jump],[data-anomes],[data-buscaon],[data-buscax],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-addrow],[data-jump],[data-anomes],[data-buscaon],[data-buscax],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
   if(d.banco!==undefined){ if(d.banco) ui.bk=d.banco; ui.page='bancos'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto');localStorage.removeItem('fin-foto-orig')}catch(e){} setIcone({usaFoto:false}); toast('foto removida'); return; }
+  if(d.fontedel){ for(const f of [...items.values()].filter(i=>i.tipo==='fonte')) safe(store.del(f.id)); toast('fonte removida'); return; }
   if(d.fotoaj){ let o=null; try{o=localStorage.getItem('fin-foto-orig')}catch(_){} abrirFoto(o||foto); return; }
   if(d.cropok){ foto=cropSalvar(); crop=null; $('#sheetHost').innerHTML=''; try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); return; }
   if(d.cropclose){ if(e.target===t||t.tagName==='BUTTON'){ crop=null; $('#sheetHost').innerHTML=''; } return; }
@@ -1543,7 +1557,7 @@ document.addEventListener('click',e=>{
     safe(soft?store.patch(id,{removido:true}):store.del(id)).then(()=>toast('excluído','trash',{undo:()=>{ const {removido,...back}=old; return safe(store.put(back),'voltou'); }})); return; }
   if(d.undo){ const f=toast.undo; toast.undo=null; $('#toastHost').innerHTML=''; f?.(); return; }
 });
-document.addEventListener('change',async e=>{ if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
+document.addEventListener('change',async e=>{ if(e.target.id==='fonteFile'&&e.target.files.length){ await lerFontes([...e.target.files]); e.target.value=''; return; } if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
     if(!raw||!(v>0)){ if(items.has(id)) safe(store.del(id),`meta de ${c} tirada`); return; }
     safe(store.put({id,tipo:'meta',cat:c,valor:v}),`meta de ${c}: ${fmtT(v)} por mês`); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} const qm=/^(q|s|ae|ac|ag)F$/.exec(e.target.id); if(qm){e.preventDefault();quickAdd(qm[1]);} });
