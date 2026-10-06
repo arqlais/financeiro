@@ -2,11 +2,10 @@
 
 site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha. funciona no celular, no tablet e no computador, e pode ser instalado na tela inicial como app.
 
-- **início**: resumo do mês, contas para pagar com "marcar pago", próximos 14 dias, gráfico e categorias.
-- **contas**: banco ou cartão de cada conta, parcela, vencimento e situação, com o painel "por banco" ao lado.
-- **parcelas automáticas**: "notebook 7/10" vira "notebook 8/10" no mês seguinte sozinha e para na última.
-- **gastos**, **entradas**, **ano** (balanço de 2025 e 2026) e **ajustes** (backup, login e cor).
-- **cada um com sua cor**: em ajustes, cada pessoa escolhe a cor no próprio celular (padrão: paleta do planê).
+- **mês**: resumo (entrou, saiu, sobrou), uma linha para lançar gasto, conta ou entrada, e as listas do mês, como na planilha.
+- **contas**: marcar como paga com um toque; parcelas (como 3/10) passam sozinhas para o mês seguinte e param na última.
+- **ano**: balanço de 2025 e 2026.
+- **ajustes**: cor de cada um, bancos, backup.
 
 ## publicar no github pages
 
