@@ -25,6 +25,8 @@
   --ink:var(--c-ink); --ink-2:color-mix(in srgb,var(--c-ink) 80%,var(--c-paper)); --muted:color-mix(in srgb,var(--c-ink) 52%,var(--c-paper)); --on-ink:#fffdfb;
   --rose:var(--c-acc); --rose-soft:color-mix(in srgb,var(--c-acc) 13%,var(--surface)); --rose-mid:color-mix(in srgb,var(--c-acc) 55%,var(--surface));
   --hero:var(--c-ink); --glow:color-mix(in srgb,var(--c-acc) 22%,transparent);
+  /* chart series, validated for color-blind separation on this surface */
+  --s1:#d0643b; --s2:#1f9a8a; --s3:#3a78c9; --s4:#d49a1a; --s5:#c9497a; --s6:#4f9a3c; --s7:#7056c2; --s8:#b8433f; --s0:#a39a94;
   --lais:#b5677e; --igor:#4d6b85; --juntos:#a68b55;
   --good:#4c7a5c; --good-soft:#e3efe6; --bad:#b4533f; --bad-soft:#f8e1da; --warn:#a2702c; --warn-soft:#f6ead6;
   --shadow:0 1px 2px rgba(30,30,30,.04),0 8px 28px rgba(30,30,30,.06);
@@ -40,6 +42,7 @@
   --ink:#efe9e5; --ink-2:#cfc7c2; --muted:#a59c97; --on-ink:#16181a;
   --rose:color-mix(in srgb,var(--c-acc) 62%,#fff); --rose-soft:color-mix(in srgb,var(--c-acc) 22%,var(--surface)); --rose-mid:color-mix(in srgb,var(--c-acc) 70%,var(--surface));
   --hero:color-mix(in srgb,var(--c-ink) 70%,#0e0f10); --glow:color-mix(in srgb,var(--c-acc) 18%,transparent);
+  --s1:#d4683f; --s2:#1fa08a; --s3:#4f80dd; --s4:#b8871c; --s5:#d0558a; --s6:#58a043; --s7:#8a74dc; --s8:#d85e58; --s0:#7d7570;
   --lais:#e59ab0; --igor:#8fb0cf; --juntos:#d4b67c;
   --good:#8cc29f; --good-soft:#203229; --bad:#f09a86; --bad-soft:#3d2420; --warn:#e3b86c; --warn-soft:#382d1b;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
@@ -49,6 +52,7 @@
   --ink:#efe9e5; --ink-2:#cfc7c2; --muted:#a59c97; --on-ink:#16181a;
   --rose:color-mix(in srgb,var(--c-acc) 62%,#fff); --rose-soft:color-mix(in srgb,var(--c-acc) 22%,var(--surface)); --rose-mid:color-mix(in srgb,var(--c-acc) 70%,var(--surface));
   --hero:color-mix(in srgb,var(--c-ink) 70%,#0e0f10); --glow:color-mix(in srgb,var(--c-acc) 18%,transparent);
+  --s1:#d4683f; --s2:#1fa08a; --s3:#4f80dd; --s4:#b8871c; --s5:#d0558a; --s6:#58a043; --s7:#8a74dc; --s8:#d85e58; --s0:#7d7570;
   --lais:#e59ab0; --igor:#8fb0cf; --juntos:#d4b67c;
   --good:#8cc29f; --good-soft:#203229; --bad:#f09a86; --bad-soft:#3d2420; --warn:#e3b86c; --warn-soft:#382d1b;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
@@ -196,6 +200,32 @@ button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
 .empty-ln{padding:14px 0;color:var(--muted);font-size:.88rem}
 .greet{margin:0 0 -6px;font-size:1.05rem;color:var(--ink-2)}
 .greet .script{font-size:1em}
+.tip{position:fixed;z-index:70;pointer-events:none;background:var(--ink);color:var(--on-ink);padding:8px 11px;border-radius:10px;font-size:.78rem;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:220px;transform:translate(-50%,calc(-100% - 12px))}
+.tip b{font-weight:600}
+[data-tip]{cursor:pointer}
+.viz text{fill:var(--muted);font-family:var(--f-ui);font-size:11px}
+.viz .hit .guide{opacity:0}.viz .hit:hover .guide,.viz .hit.on .guide{opacity:1}
+.viz .bar-m{transition:opacity .15s}.viz:hover .bar-m{opacity:.55}.viz .bar-m:hover{opacity:1}
+.donut{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center}
+@media (max-width:560px){.donut{grid-template-columns:minmax(0,1fr);gap:12px}.donut svg{max-width:170px;margin:0 auto}}
+.donut svg{width:100%;height:auto;display:block}
+.dleg{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dleg button{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:8px;align-items:center;text-align:left;padding:6px;border-radius:10px;font-size:.84rem}
+.dleg button:hover{background:var(--sunk)}
+.dleg i{width:10px;height:10px;border-radius:3px}
+.dleg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dleg small{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.headline{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:-4px 0 10px;font-size:.86rem;color:var(--muted)}
+.headline b{font-size:1.1rem;color:var(--ink);font-weight:600;letter-spacing:-.02em}
+.pill-delta{font-size:.76rem;font-weight:600;padding:2px 9px;border-radius:99px}
+.pill-delta.up{background:var(--bad-soft);color:var(--bad)}.pill-delta.down{background:var(--good-soft);color:var(--good)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;max-width:400px;margin:0 auto}
+.cal .wd{font-size:.68rem;color:var(--muted);text-align:center;padding-bottom:2px}
+.cal .d{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;font-size:.7rem;color:var(--ink-2);max-width:100%}
+.cal .d.hot{color:#fff}
+.cal .d.today{outline:1.5px solid var(--ink);outline-offset:1px}
+.scale{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:10px;font-size:.72rem;color:var(--muted)}
+.scale i{width:14px;height:10px;border-radius:3px}
 .dash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
 .dash.wide{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
 @media (max-width:899px){.dash,.dash.wide{grid-template-columns:minmax(0,1fr)}}
@@ -393,6 +423,7 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 <nav class="dock" id="dock" aria-label="seções"></nav>
 <div id="sheetHost"></div>
 <div id="toastHost" aria-live="polite"></div>
+<div class="tip" id="tip" hidden></div>
 
 <script>
 (() => {
@@ -448,18 +479,18 @@ const BANKS={
 const BANK_RULES=[[/\bnu\b|nubank|fatura p[fj]\b/,'nubank'],[/\binter\b/,'inter'],[/m\.\s?pago|mercado\s?pago/,'mercado pago'],[/ita[uú]/,'itaú'],[/\bc6\b/,'c6 bank'],[/riachuelo/,'riachuelo'],[/santander/,'santander'],[/bradesco/,'bradesco'],[/\bcaixa\b/,'caixa'],[/\bbb\b|banco do brasil/,'banco do brasil'],[/picpay/,'picpay']];
 const BOLETO=/claro|vivo|\btim\b|mrv|obra|mensalidade|rematr|acordo|\bcasa\b|assinatura|serasa|anual|aluguel|condom|\bluz\b|internet|tia dani/;
 const CATS=[
-  ['comida fora','#c4733b',['almoço','almoco','lanche','pizza','açaí','acai','japonês','japones','mcdonald','mc donald','burger','salgado','marmita','café','cafe','doce','sorvete','cachorro','churros','milk','paçoca','pacoca','pão de queijo','chiclete','besteira','cookie','ifood','restaurante','bar','caldocana','lanchonete','chocolate','comida','salgadinho','adega','bebida','coca','kfc','popeyes','churras','chorão','cerveja','feijoada','snickers','guloseima','gin','refri','bolo']],
-  ['mercado','#4c7a5c',['mercado','coop','pão','pao','padaria','feira','hortifruti','banana','água','agua','refrigerante','biscoito','carolina','kyomoto','atacad','assai','assaí','carrefour','extra','compre bem','carne','rosélia','roselia','aguá']],
-  ['transporte','#4d6b85',['uber','99','gasolina','sptrans','transporte','estacionamento','pedágio','recarga','metrô','metro','ônibus','onibus','estudante','bilhete','passagem','trem']],
-  ['casa','#a68b55',['casa','mrv','obra','colchão','colchao','cama','edredom','leroy','móveis','moveis','aluguel','condomínio','luz','internet','manta','pilha']],
-  ['estudo e trabalho','#6a6fb0',['maquete','monitor','teclado','xeque-mate','mensalidade','rematrícula','rematricula','faculdade','curso','kalunga','papelaria','livro','impressão','impressao','agenda','placas','frete','adesivo','caderno','arquivo','elo7','lápis','tabela']],
-  ['lazer e viagem','#2e8f8c',['viagem','airbnb','cinema','ingresso','praia','show','megafest','narguilé','narguile','rifa','passeio','chácara','chacara','pula-pula','liberdade']],
-  ['beleza e saúde','#b5677e',['cabelo','cosmético','cosmetico','esmalte','shampoo','creatina','farmácia','farmacia','perfume','natação','natacao','academia','médico','medico','mucilon','whey','zelo','desodorante','rímel','rimel','remédio','remedio','perfumaria']],
-  ['roupas e compras','#8a7a3a',['tenis','tênis','blusa','shein','camiseta','roupa','crocs','adidas','boné','bone','pijama','shopee','iphone','celular','fone','notebook','guarda-chuva','presente','flores','rihappy','chip','caixa','capinha']],
-  ['cartões','#7a5a8a',['fatura','nubank','itaú','itau','c6','riachuelo','inter','m. pago']],
-  ['contas e telefone','#5e6a72',['claro','vivo','tim','assinatura','netflix','spotify','serasa']],
+  ['comida fora','var(--s1)',['almoço','almoco','lanche','pizza','açaí','acai','japonês','japones','mcdonald','mc donald','burger','salgado','marmita','café','cafe','doce','sorvete','cachorro','churros','milk','paçoca','pacoca','pão de queijo','chiclete','besteira','cookie','ifood','restaurante','bar','caldocana','lanchonete','chocolate','comida','salgadinho','adega','bebida','coca','kfc','popeyes','churras','chorão','cerveja','feijoada','snickers','guloseima','gin','refri','bolo']],
+  ['mercado','var(--s6)',['mercado','coop','pão','pao','padaria','feira','hortifruti','banana','água','agua','refrigerante','biscoito','carolina','kyomoto','atacad','assai','assaí','carrefour','extra','compre bem','carne','rosélia','roselia','aguá']],
+  ['transporte','var(--s3)',['uber','99','gasolina','sptrans','transporte','estacionamento','pedágio','recarga','metrô','metro','ônibus','onibus','estudante','bilhete','passagem','trem']],
+  ['casa','var(--s4)',['casa','mrv','obra','colchão','colchao','cama','edredom','leroy','móveis','moveis','aluguel','condomínio','luz','internet','manta','pilha']],
+  ['estudo e trabalho','var(--s7)',['maquete','monitor','teclado','xeque-mate','mensalidade','rematrícula','rematricula','faculdade','curso','kalunga','papelaria','livro','impressão','impressao','agenda','placas','frete','adesivo','caderno','arquivo','elo7','lápis','tabela']],
+  ['lazer e viagem','var(--s2)',['viagem','airbnb','cinema','ingresso','praia','show','megafest','narguilé','narguile','rifa','passeio','chácara','chacara','pula-pula','liberdade']],
+  ['beleza e saúde','var(--s5)',['cabelo','cosmético','cosmetico','esmalte','shampoo','creatina','farmácia','farmacia','perfume','natação','natacao','academia','médico','medico','mucilon','whey','zelo','desodorante','rímel','rimel','remédio','remedio','perfumaria']],
+  ['roupas e compras','var(--s8)',['tenis','tênis','blusa','shein','camiseta','roupa','crocs','adidas','boné','bone','pijama','shopee','iphone','celular','fone','notebook','guarda-chuva','presente','flores','rihappy','chip','caixa','capinha']],
+  ['cartões','var(--s0)',['fatura','nubank','itaú','itau','c6','riachuelo','inter','m. pago']],
+  ['contas e telefone','var(--s0)',['claro','vivo','tim','assinatura','netflix','spotify','serasa']],
 ];
-const CATN=CATS.map(c=>c[0]).concat('outros'); const CATC=Object.fromEntries(CATS.map(c=>[c[0],c[1]]).concat([['outros','#9a918c']]));
+const CATN=CATS.map(c=>c[0]).concat('outros'); const CATC=Object.fromEntries(CATS.map(c=>[c[0],c[1]]).concat([['outros','var(--s0)']]));
 
 // ---------- helpers ----------
 const $=(s,e=document)=>e.querySelector(s);
@@ -732,8 +763,8 @@ function pInicio(){
   const contas=ofMes(m,'conta').sort(byDate); const falta=sum(contas.filter(c=>!c.pago));
   let h=monthNav(`<span class="script">${saud}</span> laís &amp; igor`)+sum3([['entrou',fmt(r.E)],['saiu',fmt(r.C+r.G)],['sobrou',fmt(r.S),r.S<0?'neg':'pos']]);
   h+=`<div class="dash"><div class="col">${m===t.slice(0,7)?vSemana(contas,t,r.C,falta):''}
-      <section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section></div>
-    <div class="col">${cardCats(ofMes(m,'gasto'),'para onde foi')}${cardQuem(m)}</div></div>`;
+      ${chartRitmo(m)}<section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section></div>
+    <div class="col">${cardCats(ofMes(m,'gasto'),'para onde foi')}${cardCalendario(m)}${cardQuem(m)}</div></div>`;
   return h;
 }
 function pLanc(){
@@ -779,17 +810,73 @@ function vSemana(contas,t,C,falta){
     <div class="wfoot"><span>falta pagar no mês</span><b>${fmt(falta)}</b></div><div class="fbar"><i style="width:${C?(C-falta)/C*100:0}%"></i></div></section>`;
 }
 const nice=x=>{const p=Math.pow(10,Math.floor(Math.log10(x||1)));const f=x/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p};
+// rounded top, square base: data-end rounded 4px and anchored on the baseline
+const barPath=(x,y,w,h,r=4)=>{ if(h<=0) return ''; r=Math.min(r,w/2,h); return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`; };
 function chartN(endM,N){
   const ms=[]; for(let i=N-1;i>=0;i--) ms.push(addM(endM,-i));
-  const data=ms.map(m=>{const r=resumo(m);return {m,E:r.E,O:r.C+r.G}});
-  const W=N>6?760:420,H=200,L=36,R=6,T=10,B=24; const mx=Math.max(...data.map(d=>Math.max(d.E,d.O)),1); const st=nice(mx/3); const top=Math.ceil(mx/st)*st;
+  const data=ms.map(m=>{const r=resumo(m);return {m,E:r.E,O:r.C+r.G,S:r.S}});
+  const W=N>6?760:440,H=230,L=38,R=6,T=12,B=46; const mx=Math.max(...data.map(d=>Math.max(d.E,d.O)),1); const st=nice(mx/3); const top=Math.ceil(mx/st)*st;
   const y=v=>T+(H-T-B)*(1-v/top), bw=(W-L-R)/N; let s='';
   for(let v=0;v<=top+1e-6;v+=st) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${kfmt(v)}</text>`;
-  data.forEach((d,i)=>{const x=L+i*bw, w=Math.min(16,bw*.28);
-    if(d.E) s+=`<rect x="${x+bw/2-w-2}" y="${y(d.E)}" width="${w}" height="${y(0)-y(d.E)}" rx="3" fill="var(--ink)"><title>${mName(d.m)}: entrou ${fmtT(d.E)}</title></rect>`;
-    if(d.O) s+=`<rect x="${x+bw/2+2}" y="${y(d.O)}" width="${w}" height="${y(0)-y(d.O)}" rx="3" fill="var(--rose-mid)"><title>${mName(d.m)}: saiu ${fmtT(d.O)}</title></rect>`;
-    s+=`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle" ${i===N-1?'style="fill:var(--ink);font-weight:600"':''}>${mName(d.m).slice(0,3)}</text>`;});
-  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="entrou e saiu nos últimos ${N} meses">${s}</svg></div><div class="legend"><span><i class="sw" style="background:var(--ink)"></i>entrou</span><span><i class="sw" style="background:var(--rose-mid)"></i>saiu</span></div>`;
+  data.forEach((d,i)=>{const x=L+i*bw, w=Math.min(18,bw*.3), cur=i===N-1;
+    const tip=`<b>${mName(d.m)} ${d.m.slice(0,4)}</b>|entrou ${fmtT(d.E)}|saiu ${fmtT(d.O)}|${d.S<0?'faltou':'sobrou'} ${fmtT(Math.abs(d.S))}`;
+    s+=`<g class="bar-m" data-tip="${esc(tip)}"><rect x="${x}" y="${T}" width="${bw}" height="${H-T-B}" fill="transparent"/>`;
+    s+=`<path d="${barPath(x+bw/2-w-1,y(d.E),w,y(0)-y(d.E))}" fill="var(--ink)"/>`;
+    s+=`<path d="${barPath(x+bw/2+1,y(d.O),w,y(0)-y(d.O))}" fill="var(--rose-mid)"/></g>`;
+    s+=`<text x="${x+bw/2}" y="${H-B+16}" text-anchor="middle" ${cur?'style="fill:var(--ink);font-weight:600"':''}>${mName(d.m).slice(0,3)}</text>`;
+    if(d.E||d.O) s+=`<text x="${x+bw/2}" y="${H-B+32}" text-anchor="middle" style="fill:var(--${d.S<0?'bad':'good'});font-size:${N>6?9.5:10.5}px;font-weight:600">${d.S<0?'−':'+'}${kfmt(Math.abs(d.S))}</text>`;});
+  return `<div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="entrou e saiu nos últimos ${N} meses">${s}</svg></div>
+    <div class="legend"><span><i class="sw" style="background:var(--ink)"></i>entrou</span><span><i class="sw" style="background:var(--rose-mid)"></i>saiu</span><span style="color:var(--muted)">embaixo: quanto sobrou</span></div>`;
+}
+// spending pace: this month's day-to-day spending, accumulated by day, against the average of the 3 months before
+function chartRitmo(m){
+  const t=today(), dim=new Date(+m.slice(0,4),+m.slice(5),0).getDate(), lastDay=m===t.slice(0,7)?+t.slice(8):dim;
+  const cum=mm=>{ const n=new Date(+mm.slice(0,4),+mm.slice(5),0).getDate(); const a=Array(32).fill(0); ofMes(mm,'gasto').forEach(g=>{ const d=g.data?+g.data.slice(8):1; a[Math.min(d,n)]+=+g.valor||0; }); for(let d=1;d<=31;d++) a[d]+=a[d-1]; return a; };
+  const cur=cum(m); const prev=[1,2,3].map(k=>addM(m,-k)).filter(mm=>ofMes(mm,'gasto').length); if(!ofMes(m,'gasto').length&&!prev.length) return '';
+  const avg=Array(32).fill(0); prev.forEach(mm=>{const c=cum(mm); for(let d=1;d<=31;d++) avg[d]+=c[d]/prev.length;});
+  const W=440,H=200,L=38,R=8,T=12,B=26; const mx=Math.max(cur[lastDay],avg[dim],1); const st=nice(mx/3), top=Math.ceil(mx/st)*st;
+  const x=d=>L+(W-L-R)*(d-1)/(dim-1), y=v=>T+(H-T-B)*(1-v/top);
+  let s=''; for(let v=0;v<=top+1e-6;v+=st) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${kfmt(v)}</text>`;
+  [1,8,15,22,dim].forEach(d=>s+=`<text x="${x(d)}" y="${H-6}" text-anchor="middle">${d}</text>`);
+  if(prev.length) s+=`<path d="${Array.from({length:dim},(_,i)=>`${i?'L':'M'}${x(i+1).toFixed(1)},${y(avg[i+1]).toFixed(1)}`).join('')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/>`;
+  const pts=Array.from({length:lastDay},(_,i)=>[x(i+1),y(cur[i+1])]);
+  s+=`<path d="M${x(1)},${y(0)}${pts.map(p=>`L${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('')}L${x(lastDay)},${y(0)}Z" fill="color-mix(in srgb,var(--c-acc) 14%,transparent)"/>`;
+  s+=`<path d="${pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('')}" fill="none" stroke="var(--c-acc)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s+=`<circle cx="${x(lastDay)}" cy="${y(cur[lastDay])}" r="5" fill="var(--c-acc)" stroke="var(--surface)" stroke-width="2"/>`;
+  const cw=(W-L-R)/(dim-1);
+  for(let d=1;d<=dim;d++) s+=`<g class="hit" data-tip="${esc(`<b>dia ${d}</b>|${d<=lastDay?`este mês ${fmtT(cur[d])}`:'ainda não chegou'}${prev.length?`|normal ${fmtT(avg[d])}`:''}`)}"><rect x="${x(d)-cw/2}" y="${T}" width="${cw}" height="${H-T-B}" fill="transparent"/><line class="guide" x1="${x(d)}" x2="${x(d)}" y1="${T}" y2="${H-B}" stroke="var(--ink-2)" stroke-width="1"/></g>`;
+  const diff=cur[lastDay]-avg[lastDay]; const pct=avg[lastDay]?Math.round(diff/avg[lastDay]*100):0;
+  return `<section class="card"><div class="card-h"><h2>ritmo dos gastos</h2></div>
+    <div class="headline"><span>até o dia ${lastDay}: <b>${fmt(cur[lastDay])}</b></span>${prev.length&&avg[lastDay]?`<span class="pill-delta ${diff>0?'up':'down'}">${diff>0?'+':'−'}${Math.abs(pct)}% que o normal</span>`:''}</div>
+    <div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="gastos acumulados no mês comparados com a média">${s}</svg></div>
+    <div class="legend"><span><i class="sw" style="background:var(--c-acc)"></i>${mName(m)}</span>${prev.length?`<span><i class="sw" style="background:var(--muted)"></i>média dos ${prev.length} meses anteriores</span>`:''}</div></section>`;
+}
+// calendar heatmap: one hue, light to dark
+function cardCalendario(m){
+  const g=ofMes(m,'gasto'); if(!g.length) return '';
+  const dim=new Date(+m.slice(0,4),+m.slice(5),0).getDate(), first=new Date(+m.slice(0,4),+m.slice(5)-1,1).getDay(), t=today();
+  const day=Array(dim+1).fill(0); g.forEach(x=>{ if(x.data) day[+x.data.slice(8)]+=+x.valor||0; });
+  const mx=Math.max(...day,1); const lv=v=>v<=0?0:Math.min(4,Math.ceil(v/mx*4));
+  const bg=l=>l?`color-mix(in srgb,var(--c-acc) ${[0,22,45,70,100][l]}%,var(--sunk))`:'var(--sunk)';
+  const top=day.map((v,d)=>[d,v]).slice(1).sort((a,b)=>b[1]-a[1])[0];
+  let c=['d','s','t','q','q','s','s'].map(w=>`<span class="wd">${w}</span>`).join('')+Array(first).fill('<span></span>').join('');
+  for(let d=1;d<=dim;d++){ const iso=`${m}-${pad(d)}`; const l=lv(day[d]); c+=`<span class="d ${l>=3?'hot':''} ${iso===t?'today':''}" style="background:${bg(l)}" data-tip="${esc(`<b>${d} de ${mName(m)}</b>|${day[d]?fmtT(day[d]):'sem gastos'}`)}">${d}</span>`; }
+  return `<section class="card"><div class="card-h"><h2>dias do mês</h2></div>
+    ${top&&top[1]?`<div class="headline"><span>dia que mais gastaram: <b>${top[0]} de ${mName(m).slice(0,3)}</b> · ${fmt(top[1])}</span></div>`:''}
+    <div class="cal">${c}</div><div class="scale">menos${[0,1,2,3,4].map(l=>`<i style="background:${bg(l)}"></i>`).join('')}mais</div></section>`;
+}
+// running balance across the year
+function chartAcumulado(Y){
+  const rows=MESES.map((n,i)=>{const m=`${Y}-${pad(i+1)}`;return {m,n,S:resumo(m).S,any:(index().byMes.get(m)||[]).length>0}}).filter(r=>r.any&&r.m<=today().slice(0,7)); if(rows.length<2) return '';
+  let acc=0; rows.forEach(r=>{acc+=r.S;r.A=acc;});
+  const W=760,H=200,L=44,R=10,T=14,B=24; const mn=Math.min(0,...rows.map(r=>r.A)), mx=Math.max(0,...rows.map(r=>r.A)); const st=nice((mx-mn)/3||1); const lo=Math.floor(mn/st)*st, hi=Math.ceil(mx/st)*st||st;
+  const x=i=>L+(W-L-R)*i/(rows.length-1), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  let s=''; for(let v=lo;v<=hi+1e-6;v+=st) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-6?'var(--ink-2)':'var(--line)'}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v<0?'−':''}${kfmt(Math.abs(v))}</text>`;
+  const line=rows.map((r,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(r.A).toFixed(1)}`).join('');
+  s+=`<path d="${line}L${x(rows.length-1)},${y(0)}L${x(0)},${y(0)}Z" fill="color-mix(in srgb,var(--${acc<0?'bad':'good'}) 12%,transparent)"/><path d="${line}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  rows.forEach((r,i)=>{ s+=`<g data-tip="${esc(`<b>${r.n}</b>|no mês ${r.S<0?'−':'+'}${fmtT(Math.abs(r.S))}|acumulado ${r.A<0?'−':''}${fmtT(Math.abs(r.A))}`)}"><circle cx="${x(i)}" cy="${y(r.A)}" r="12" fill="transparent"/><circle cx="${x(i)}" cy="${y(r.A)}" r="4" fill="var(--${r.S<0?'bad':'good'})" stroke="var(--surface)" stroke-width="2"/></g><text x="${x(i)}" y="${H-6}" text-anchor="middle">${r.n.slice(0,3)}</text>`; });
+  return `<section class="card"><div class="card-h"><h2>saldo acumulado</h2></div><div class="headline"><span>no fim de ${rows.at(-1).n}: <b style="color:var(--${acc<0?'bad':'good'})">${acc<0?'−':'+'}${fmt(Math.abs(acc))}</b></span><span>cada ponto soma o saldo até aquele mês</span></div>
+    <div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="saldo acumulado no ano">${s}</svg></div></section>`;
 }
 const sugCache={}; function sugestoes(t){ const c=sugCache[t]; if(c&&c.v===ver) return c.h; const h=[...new Set(live().filter(x=>x.tipo===t).map(x=>parc(x.desc)?.base||x.desc))].slice(0,150).map(x=>`<option value="${esc(x)}">`).join(''); sugCache[t]={v:ver,h}; return h; }
 function vBusca(q){
@@ -831,11 +918,17 @@ function cardQuem(m, list){
     ${list?'':`<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:center;justify-items:end;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:.86rem"><span class="lbl" style="justify-self:start">quem trouxe</span><span><span class="dot lais"></span> <span class="num">${fmt(e.lais)}</span></span><span><span class="dot igor"></span> <span class="num">${fmt(e.igor)}</span></span></div>`}</section>`;
 }
 function cardCats(gastos,title){
-  const c={}; gastos.forEach(g=>{const k=cat(g);c[k]=(c[k]||0)+(+g.valor||0)}); const a=Object.entries(c).sort((x,y)=>y[1]-x[1]); const mx=a[0]?.[1]||1; const T=sum(gastos)||1;
-  return `<section class="card"><div class="card-h"><h2>${title}</h2>${ic('pie','sm')}</div>${a.length?`<div class="bars">${a.slice(0,7).map(([n,v])=>`<button class="bar" data-cat="${esc(n)}"><span>${esc(n)} <span class="muted" style="font-size:.78rem">${Math.round(v/T*100)}%</span></span><span class="num">${fmt(v)}</span><div class="trk"><i style="width:${v/mx*100}%;background:${CATC[n]}"></i></div></button>`).join('')}</div>`:`<div class="empty">${ic('bag')}<div>nenhum gasto lançado.</div></div>`}</section>`;
+  const c={}; gastos.forEach(g=>{let k=cat(g); if(CATC[k]==='var(--s0)') k='outros'; c[k]=(c[k]||0)+(+g.valor||0)});
+  let a=Object.entries(c).filter(([,v])=>v>0).sort((x,y)=>y[1]-x[1]); const T=a.reduce((s,[,v])=>s+v,0);
+  if(!a.length) return `<section class="card"><div class="card-h"><h2>${title}</h2></div><div class="empty">${ic('bag')}<div>nenhum gasto neste mês.</div></div></section>`;
+  if(a.length>7){ const keep=a.filter(([n])=>n!=='outros').slice(0,6); const rest=T-keep.reduce((s,[,v])=>s+v,0); a=[...keep,['outros',rest]]; }
+  const R=52, C=2*Math.PI*R; let off=0; const gap=a.length>1?2.2:0;
+  const segs=a.map(([n,v])=>{ const len=v/T*C; const sg=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${CATC[n]}" stroke-width="20" stroke-dasharray="${Math.max(len-gap,0.1)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" data-tip="${esc(`<b>${n}</b>|${fmtT(v)} · ${Math.round(v/T*100)}%`)}"/>`; off+=len; return sg; }).join('');
+  return `<section class="card"><div class="card-h"><h2>${title}</h2></div><div class="donut">
+    <svg viewBox="0 0 140 140" class="viz" role="img" aria-label="gastos por categoria">${segs}<text x="70" y="66" text-anchor="middle" style="fill:var(--muted);font-size:10px">gastos</text><text x="70" y="82" text-anchor="middle" style="fill:var(--ink);font-size:${T>=10000?13:15}px;font-weight:600">${kfmt(T)}</text></svg>
+    <div class="dleg">${a.map(([n,v])=>`<button data-cat="${esc(n)}"><i style="background:${CATC[n]}"></i><span>${esc(n)}</span><small>${Math.round(v/T*100)}% · ${fmt(v)}</small></button>`).join('')}</div></div></section>`;
 }
 
-// ---------- ano ----------
 function pAno(){
   const years=[...new Set(meses().map(m=>m.slice(0,4)))]; const Y=years.includes(ui.ano)?ui.ano:years.at(-1);
   const rows=MESES.map((n,i)=>{const m=`${Y}-${pad(i+1)}`;const r=resumo(m);return {m,n,...r,any:live().some(x=>x.mes===m)}}).filter(r=>r.any);
@@ -845,7 +938,7 @@ function pAno(){
   let html=`<div class="ph"><div class="ph-l"><div class="mnav"><h1>balanço de <span class="script">${Y}</span></h1></div></div>
     <div class="ph-r"><div class="seg">${years.map(y=>`<button data-ano="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div></div></div>`;
   html+=`<div class="stats">${stat('entrou',fmt(E),`em ${rows.length} meses`)}${stat('contas',fmt(C),`${fmt(C/(rows.length||1))} por mês`)}${stat('gastos',fmt(G),`${fmt(G/(rows.length||1))} por mês`)}${stat('saldo',`<span style="color:var(--${E-C-G<0?'bad':'good'})">${fmt(E-C-G)}</span>`,'entrou menos saiu')}</div>`;
-  html+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div>${chartN(today().slice(0,7),12)}</section>`;
+  html+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div>${chartN(today().slice(0,7),12)}</section>`+chartAcumulado(Y);
   html+=`<section class="card"><div class="card-h"><h2>mês a mês</h2><span class="muted" style="font-size:.84rem">toque num mês para abrir as contas</span></div><div class="chart"><table class="yr num"><thead><tr><th>mês</th><th>entrou</th><th>contas</th><th>gastos</th><th>sobrou</th></tr></thead><tbody>
     ${rows.map(r=>`<tr class="${r.m===today().slice(0,7)?'cur':''}"><td><button class="link" style="color:var(--ink)" data-goto="${r.m}">${r.n}</button></td><td>${fmt(r.E)}</td><td>${fmt(r.C)}</td><td>${fmt(r.G)}</td><td style="font-weight:600;color:var(--${r.S<0?'bad':'good'})">${fmt(r.S)}</td></tr>`).join('')}
     <tr class="tot"><td>total</td><td>${fmt(E)}</td><td>${fmt(C)}</td><td>${fmt(G)}</td><td style="color:var(--${E-C-G<0?'bad':'good'})">${fmt(E-C-G)}</td></tr></tbody></table></div></section>`;
@@ -1060,6 +1153,11 @@ document.addEventListener('input',e=>{
   if(e.target.id==='f-desc'){ if($('#f-cat')) $('#f-cat').value=cat({desc:e.target.value}); if($('#f-bank')&&form&&form.bankSel===undefined&&form.banco===undefined){ const b=banco({tipo:'conta',desc:e.target.value}); $('#f-bank').value=b||''; } }
 });
 let rz; let lastW=window.innerWidth; window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if((lastW<700)!==(window.innerWidth<700)){lastW=window.innerWidth;render();}},200)});
+const tipEl=()=>$('#tip');
+function showTip(el,x,y){ const t=tipEl(); t.innerHTML=el.dataset.tip.split('|').join('<br>'); t.hidden=false; const w=t.offsetWidth; t.style.left=Math.min(Math.max(x,w/2+8),innerWidth-w/2-8)+'px'; t.style.top=Math.max(y,t.offsetHeight+20)+'px'; }
+document.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse') return; const el=e.target.closest?.('[data-tip]'); if(el) showTip(el,e.clientX,e.clientY); else if(!tipEl().hidden) tipEl().hidden=true; });
+document.addEventListener('pointerdown',e=>{ if(e.pointerType==='mouse') return; const el=e.target.closest?.('[data-tip]'); document.querySelectorAll('.hit.on').forEach(h=>h.classList.remove('on')); if(el){ showTip(el,e.clientX,e.clientY); el.classList.add('on'); } else tipEl().hidden=true; });
+addEventListener('scroll',()=>{ if(!tipEl().hidden) tipEl().hidden=true; },{passive:true});
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(form){form=null;drawSheet();} else $('#sheetHost').innerHTML=''; } });
 
 applyIcone();
