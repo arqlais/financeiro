@@ -204,6 +204,8 @@ button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
 .tip b{font-weight:600}
 [data-tip]{cursor:pointer}
 .viz text{fill:var(--muted);font-family:var(--f-ui);font-size:11px}
+@media (max-width:699px){.viz text{font-size:12px}}
+.chart .viz,.chart svg{max-width:100%}
 .viz .hit .guide{opacity:0}.viz .hit:hover .guide,.viz .hit.on .guide{opacity:1}
 .viz .bar-m{transition:opacity .15s}.viz:hover .bar-m{opacity:.55}.viz .bar-m:hover{opacity:1}
 .donut{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center}
@@ -226,6 +228,14 @@ button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
 .cal .d.today{outline:1.5px solid var(--ink);outline-offset:1px}
 .scale{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:10px;font-size:.72rem;color:var(--muted)}
 .scale i{width:14px;height:10px;border-radius:3px}
+.ym{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:12px 0;border-bottom:1px solid var(--line);text-align:left}
+.ym:last-of-type{border-bottom:0}
+.ym:hover{background:var(--sunk)}
+.ym-n{font-weight:500}
+.ym-b{display:flex;flex-direction:column;gap:3px}
+.ym-b i{display:block;height:6px;border-radius:0 4px 4px 0;min-width:2px}
+.ym-v{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ym-v.neg{color:var(--bad)}.ym-v.pos{color:var(--good)}
 .dash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
 .dash.wide{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
 @media (max-width:899px){.dash,.dash.wide{grid-template-columns:minmax(0,1fr)}}
@@ -810,12 +820,14 @@ function vSemana(contas,t,C,falta){
     <div class="wfoot"><span>falta pagar no mês</span><b>${fmt(falta)}</b></div><div class="fbar"><i style="width:${C?(C-falta)/C*100:0}%"></i></div></section>`;
 }
 const nice=x=>{const p=Math.pow(10,Math.floor(Math.log10(x||1)));const f=x/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p};
+// on phones the svg is drawn at the screen's own width, so 12px text stays 12px
+const vizW=def=>innerWidth<700?Math.max(300,Math.min(def,innerWidth-64)):def;
 // rounded top, square base: data-end rounded 4px and anchored on the baseline
 const barPath=(x,y,w,h,r=4)=>{ if(h<=0) return ''; r=Math.min(r,w/2,h); return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`; };
-function chartN(endM,N){
-  const ms=[]; for(let i=N-1;i>=0;i--) ms.push(addM(endM,-i));
+function chartN(endM,N,list){
+  const ms=list||[]; if(!list) for(let i=N-1;i>=0;i--) ms.push(addM(endM,-i)); N=ms.length;
   const data=ms.map(m=>{const r=resumo(m);return {m,E:r.E,O:r.C+r.G,S:r.S}});
-  const W=N>6?760:440,H=230,L=38,R=6,T=12,B=46; const mx=Math.max(...data.map(d=>Math.max(d.E,d.O)),1); const st=nice(mx/3); const top=Math.ceil(mx/st)*st;
+  const W=vizW(N>6?760:440),H=innerWidth<700?250:230,L=34,R=4,T=12,B=46; const mx=Math.max(...data.map(d=>Math.max(d.E,d.O)),1); const st=nice(mx/3); const top=Math.ceil(mx/st)*st;
   const y=v=>T+(H-T-B)*(1-v/top), bw=(W-L-R)/N; let s='';
   for(let v=0;v<=top+1e-6;v+=st) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${kfmt(v)}</text>`;
   data.forEach((d,i)=>{const x=L+i*bw, w=Math.min(18,bw*.3), cur=i===N-1;
@@ -823,8 +835,8 @@ function chartN(endM,N){
     s+=`<g class="bar-m" data-tip="${esc(tip)}"><rect x="${x}" y="${T}" width="${bw}" height="${H-T-B}" fill="transparent"/>`;
     s+=`<path d="${barPath(x+bw/2-w-1,y(d.E),w,y(0)-y(d.E))}" fill="var(--ink)"/>`;
     s+=`<path d="${barPath(x+bw/2+1,y(d.O),w,y(0)-y(d.O))}" fill="var(--rose-mid)"/></g>`;
-    s+=`<text x="${x+bw/2}" y="${H-B+16}" text-anchor="middle" ${cur?'style="fill:var(--ink);font-weight:600"':''}>${mName(d.m).slice(0,3)}</text>`;
-    if(d.E||d.O) s+=`<text x="${x+bw/2}" y="${H-B+32}" text-anchor="middle" style="fill:var(--${d.S<0?'bad':'good'});font-size:${N>6?9.5:10.5}px;font-weight:600">${d.S<0?'−':'+'}${kfmt(Math.abs(d.S))}</text>`;});
+    s+=`<text x="${x+bw/2}" y="${H-B+16}" text-anchor="middle" ${cur?'style="fill:var(--ink);font-weight:600"':''}>${N>8&&innerWidth<700?mName(d.m).slice(0,1):mName(d.m).slice(0,3)}</text>`;
+    if((d.E||d.O)&&!(N>8&&innerWidth<700)) s+=`<text x="${x+bw/2}" y="${H-B+32}" text-anchor="middle" style="fill:var(--${d.S<0?'bad':'good'});font-weight:600">${d.S<0?'−':'+'}${kfmt(Math.abs(d.S))}</text>`;});
   return `<div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="entrou e saiu nos últimos ${N} meses">${s}</svg></div>
     <div class="legend"><span><i class="sw" style="background:var(--ink)"></i>entrou</span><span><i class="sw" style="background:var(--rose-mid)"></i>saiu</span><span style="color:var(--muted)">embaixo: quanto sobrou</span></div>`;
 }
@@ -834,7 +846,7 @@ function chartRitmo(m){
   const cum=mm=>{ const n=new Date(+mm.slice(0,4),+mm.slice(5),0).getDate(); const a=Array(32).fill(0); ofMes(mm,'gasto').forEach(g=>{ const d=g.data?+g.data.slice(8):1; a[Math.min(d,n)]+=+g.valor||0; }); for(let d=1;d<=31;d++) a[d]+=a[d-1]; return a; };
   const cur=cum(m); const prev=[1,2,3].map(k=>addM(m,-k)).filter(mm=>ofMes(mm,'gasto').length); if(!ofMes(m,'gasto').length&&!prev.length) return '';
   const avg=Array(32).fill(0); prev.forEach(mm=>{const c=cum(mm); for(let d=1;d<=31;d++) avg[d]+=c[d]/prev.length;});
-  const W=440,H=200,L=38,R=8,T=12,B=26; const mx=Math.max(cur[lastDay],avg[dim],1); const st=nice(mx/3), top=Math.ceil(mx/st)*st;
+  const W=vizW(440),H=210,L=34,R=8,T=12,B=26; const mx=Math.max(cur[lastDay],avg[dim],1); const st=nice(mx/3), top=Math.ceil(mx/st)*st;
   const x=d=>L+(W-L-R)*(d-1)/(dim-1), y=v=>T+(H-T-B)*(1-v/top);
   let s=''; for(let v=0;v<=top+1e-6;v+=st) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${kfmt(v)}</text>`;
   [1,8,15,22,dim].forEach(d=>s+=`<text x="${x(d)}" y="${H-6}" text-anchor="middle">${d}</text>`);
@@ -869,12 +881,12 @@ function cardCalendario(m){
 function chartAcumulado(Y){
   const rows=MESES.map((n,i)=>{const m=`${Y}-${pad(i+1)}`;return {m,n,S:resumo(m).S,any:(index().byMes.get(m)||[]).length>0}}).filter(r=>r.any&&r.m<=today().slice(0,7)); if(rows.length<2) return '';
   let acc=0; rows.forEach(r=>{acc+=r.S;r.A=acc;});
-  const W=760,H=200,L=44,R=10,T=14,B=24; const mn=Math.min(0,...rows.map(r=>r.A)), mx=Math.max(0,...rows.map(r=>r.A)); const st=nice((mx-mn)/3||1); const lo=Math.floor(mn/st)*st, hi=Math.ceil(mx/st)*st||st;
+  const W=vizW(760),H=210,L=40,R=10,T=14,B=24; const mn=Math.min(0,...rows.map(r=>r.A)), mx=Math.max(0,...rows.map(r=>r.A)); const st=nice((mx-mn)/3||1); const lo=Math.floor(mn/st)*st, hi=Math.ceil(mx/st)*st||st;
   const x=i=>L+(W-L-R)*i/(rows.length-1), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
   let s=''; for(let v=lo;v<=hi+1e-6;v+=st) s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${Math.abs(v)<1e-6?'var(--ink-2)':'var(--line)'}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v<0?'−':''}${kfmt(Math.abs(v))}</text>`;
   const line=rows.map((r,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(r.A).toFixed(1)}`).join('');
   s+=`<path d="${line}L${x(rows.length-1)},${y(0)}L${x(0)},${y(0)}Z" fill="color-mix(in srgb,var(--${acc<0?'bad':'good'}) 12%,transparent)"/><path d="${line}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
-  rows.forEach((r,i)=>{ s+=`<g data-tip="${esc(`<b>${r.n}</b>|no mês ${r.S<0?'−':'+'}${fmtT(Math.abs(r.S))}|acumulado ${r.A<0?'−':''}${fmtT(Math.abs(r.A))}`)}"><circle cx="${x(i)}" cy="${y(r.A)}" r="12" fill="transparent"/><circle cx="${x(i)}" cy="${y(r.A)}" r="4" fill="var(--${r.S<0?'bad':'good'})" stroke="var(--surface)" stroke-width="2"/></g><text x="${x(i)}" y="${H-6}" text-anchor="middle">${r.n.slice(0,3)}</text>`; });
+  rows.forEach((r,i)=>{ s+=`<g data-tip="${esc(`<b>${r.n}</b>|no mês ${r.S<0?'−':'+'}${fmtT(Math.abs(r.S))}|acumulado ${r.A<0?'−':''}${fmtT(Math.abs(r.A))}`)}"><circle cx="${x(i)}" cy="${y(r.A)}" r="12" fill="transparent"/><circle cx="${x(i)}" cy="${y(r.A)}" r="4" fill="var(--${r.S<0?'bad':'good'})" stroke="var(--surface)" stroke-width="2"/></g>${rows.length>8&&innerWidth<700&&i%2?'':`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${r.n.slice(0,3)}</text>`}`; });
   return `<section class="card"><div class="card-h"><h2>saldo acumulado</h2></div><div class="headline"><span>no fim de ${rows.at(-1).n}: <b style="color:var(--${acc<0?'bad':'good'})">${acc<0?'−':'+'}${fmt(Math.abs(acc))}</b></span><span>cada ponto soma o saldo até aquele mês</span></div>
     <div class="chart viz"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="saldo acumulado no ano">${s}</svg></div></section>`;
 }
@@ -930,21 +942,23 @@ function cardCats(gastos,title){
 }
 
 function pAno(){
-  const years=[...new Set(meses().map(m=>m.slice(0,4)))]; const Y=years.includes(ui.ano)?ui.ano:years.at(-1);
-  const rows=MESES.map((n,i)=>{const m=`${Y}-${pad(i+1)}`;const r=resumo(m);return {m,n,...r,any:live().some(x=>x.mes===m)}}).filter(r=>r.any);
-  const E=rows.reduce((s,r)=>s+r.E,0),C=rows.reduce((s,r)=>s+r.C,0),G=rows.reduce((s,r)=>s+r.G,0);
-  const yr=live().filter(i=>i.mes.startsWith(Y));
-  const bk={}; yr.filter(i=>i.tipo==='conta').forEach(c=>{const b=banco(c); if(b&&b!=='boleto') bk[b]=(bk[b]||0)+c.valor}); const ba=Object.entries(bk).sort((a,b)=>b[1]-a[1]); const bmx=ba[0]?.[1]||1;
-  let html=`<div class="ph"><div class="ph-l"><div class="mnav"><h1>balanço de <span class="script">${Y}</span></h1></div></div>
-    <div class="ph-r"><div class="seg">${years.map(y=>`<button data-ano="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div></div></div>`;
-  html+=`<div class="stats">${stat('entrou',fmt(E),`em ${rows.length} meses`)}${stat('contas',fmt(C),`${fmt(C/(rows.length||1))} por mês`)}${stat('gastos',fmt(G),`${fmt(G/(rows.length||1))} por mês`)}${stat('saldo',`<span style="color:var(--${E-C-G<0?'bad':'good'})">${fmt(E-C-G)}</span>`,'entrou menos saiu')}</div>`;
-  html+=`<section class="card"><div class="card-h"><h2>últimos 12 meses</h2></div>${chartN(today().slice(0,7),12)}</section>`+chartAcumulado(Y);
-  html+=`<section class="card"><div class="card-h"><h2>mês a mês</h2><span class="muted" style="font-size:.84rem">toque num mês para abrir as contas</span></div><div class="chart"><table class="yr num"><thead><tr><th>mês</th><th>entrou</th><th>contas</th><th>gastos</th><th>sobrou</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr class="${r.m===today().slice(0,7)?'cur':''}"><td><button class="link" style="color:var(--ink)" data-goto="${r.m}">${r.n}</button></td><td>${fmt(r.E)}</td><td>${fmt(r.C)}</td><td>${fmt(r.G)}</td><td style="font-weight:600;color:var(--${r.S<0?'bad':'good'})">${fmt(r.S)}</td></tr>`).join('')}
-    <tr class="tot"><td>total</td><td>${fmt(E)}</td><td>${fmt(C)}</td><td>${fmt(G)}</td><td style="color:var(--${E-C-G<0?'bad':'good'})">${fmt(E-C-G)}</td></tr></tbody></table></div></section>`;
-  html+=`<div class="grid-2e">${cardQuem(null,yr.filter(i=>i.tipo!=='entrada'))}${cardCats(yr.filter(i=>i.tipo==='gasto'),'dia a dia por categoria')}</div>`;
-  html+=`<section class="card"><div class="card-h"><h2>cartões no ano</h2>${ic('card','sm')}</div>${ba.length?`<div class="bars">${ba.map(([b,v])=>`<div class="bar"><span>${bankMark(b)}${esc(b)}</span><span class="num">${fmt(v)}</span><div class="trk"><i style="width:${v/bmx*100}%;background:${(BK()[b]||BANKS['outro cartão']).c}"></i></div></div>`).join('')}</div>`:'<div class="empty">nenhuma fatura de cartão no ano.</div>'}</section>`;
-  return html;
+  const years=[...new Set(meses().map(m=>m.slice(0,4)))]; const Y=years.includes(ui.ano)?ui.ano:years.at(-1); const cm=today().slice(0,7);
+  const rows=MESES.map((n,i)=>{const m=`${Y}-${pad(i+1)}`;const r=resumo(m);return {m,n,...r,any:(index().byMes.get(m)||[]).length>0}}).filter(r=>r.any&&r.m<=cm);
+  const E=rows.reduce((s,r)=>s+r.E,0),C=rows.reduce((s,r)=>s+r.C,0),G=rows.reduce((s,r)=>s+r.G,0), S=E-C-G;
+  const yr=live().filter(i=>i.mes.startsWith(Y)&&i.mes<=cm);
+  let h=`<div class="mhead" style="justify-content:space-between;margin-left:0"><h1 style="margin:0;font-size:clamp(1.7rem,4vw,2.3rem);font-weight:700;letter-spacing:-.035em">${Y}</h1>
+    <div class="chipset">${years.map(y=>`<button data-ano="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div></div>`;
+  h+=sum3([['entrou',fmt(E)],['saiu',fmt(C+G)],[S<0?'faltou':'sobrou',fmt(Math.abs(S)),S<0?'neg':'pos']]);
+  h+=`<section class="card"><div class="card-h"><h2>entrou e saiu</h2></div>${chartN(null,0,rows.map(r=>r.m))}</section>`;
+  const mx=Math.max(...rows.map(r=>Math.max(r.E,r.C+r.G)),1);
+  h+=`<section class="sec"><div class="sec-h"><h2>mês a mês</h2><span>toque para abrir</span></div>${rows.slice().reverse().map(r=>`<button class="ym" data-goto="${r.m}">
+      <span class="ym-n">${r.n}</span>
+      <span class="ym-b"><i style="width:${r.E/mx*100}%;background:var(--ink)"></i><i style="width:${(r.C+r.G)/mx*100}%;background:var(--rose-mid)"></i></span>
+      <span class="ym-v ${r.S<0?'neg':'pos'}">${r.S<0?'−':'+'}${fmt(Math.abs(r.S))}</span></button>`).join('')}
+    <div class="legend" style="margin-top:12px"><span><i class="sw" style="background:var(--ink)"></i>entrou</span><span><i class="sw" style="background:var(--rose-mid)"></i>saiu</span><span>à direita: quanto sobrou</span></div></section>`;
+  h+=chartAcumulado(Y);
+  h+=`<div class="dash">${cardCats(yr.filter(i=>i.tipo==='gasto'),'para onde foi no ano')}${cardQuem(null,yr.filter(i=>i.tipo!=='entrada'))}</div>`;
+  return h;
 }
 
 // The couple's history ships encrypted (dados.enc.json, AES-GCM). The key lives in the 'segredos' table, readable
@@ -1152,7 +1166,7 @@ document.addEventListener('input',e=>{
   if(e.target.id==='busca'){ ui.q=e.target.value; const p=e.target.selectionStart; render(); const b=$('#busca'); b.focus(); try{b.setSelectionRange(p,p)}catch(_){} }
   if(e.target.id==='f-desc'){ if($('#f-cat')) $('#f-cat').value=cat({desc:e.target.value}); if($('#f-bank')&&form&&form.bankSel===undefined&&form.banco===undefined){ const b=banco({tipo:'conta',desc:e.target.value}); $('#f-bank').value=b||''; } }
 });
-let rz; let lastW=window.innerWidth; window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if((lastW<700)!==(window.innerWidth<700)){lastW=window.innerWidth;render();}},200)});
+let rz; let lastW=window.innerWidth; window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(Math.abs(lastW-window.innerWidth)>40){lastW=window.innerWidth;render();}},200)});
 const tipEl=()=>$('#tip');
 function showTip(el,x,y){ const t=tipEl(); t.innerHTML=el.dataset.tip.split('|').join('<br>'); t.hidden=false; const w=t.offsetWidth; t.style.left=Math.min(Math.max(x,w/2+8),innerWidth-w/2-8)+'px'; t.style.top=Math.max(y,t.offsetHeight+20)+'px'; }
 document.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse') return; const el=e.target.closest?.('[data-tip]'); if(el) showTip(el,e.clientX,e.clientY); else if(!tipEl().hidden) tipEl().hidden=true; });
