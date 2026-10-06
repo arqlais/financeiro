@@ -20,7 +20,7 @@ o repositório é público, então os dados **não** ficam aqui. eles ficam num 
 
 1. crie uma conta em supabase.com e um projeto novo (região: south america - são paulo).
 2. abra **sql editor → new query**, cole o arquivo `supabase/setup.sql`, troque os dois emails do final pelos de vocês e clique em **run**.
-3. em **authentication → sign in / providers → email**, desligue **confirm email** (assim a senha funciona na hora).
+3. em **authentication → url configuration**, coloque o endereço do site em **site url** (`https://arqlais.github.io/financeiro/`). deixe **confirm email** ligado: assim só quem tem acesso ao email consegue criar a senha.
 4. em **project settings → api**, copie a **project url** e a **anon public key** e cole em `config.js`.
 5. abra o site, toque em **primeira vez aqui? criar senha**, e depois em **ajustes → importar backup** escolha o arquivo de backup.
 

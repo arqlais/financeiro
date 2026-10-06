@@ -844,7 +844,7 @@ async function doLogin(){
   if(!email||!pass) return err('preencha email e senha.');
   if(signup&&pass.length<6) return err('a senha precisa ter pelo menos 6 caracteres.');
   const btn=$('#loginF button[type=submit]'); btn.disabled=true;
-  const r=signup? await sb.auth.signUp({email,password:pass}) : await sb.auth.signInWithPassword({email,password:pass});
+  const r=signup? await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:location.origin+location.pathname}}) : await sb.auth.signInWithPassword({email,password:pass});
   btn.disabled=false;
   if(r.error){ const m=r.error.message||''; return err(/invalid login/i.test(m)?'email ou senha incorretos.':/not confirmed/i.test(m)?'confirme o email que enviamos e depois entre aqui.':/already registered/i.test(m)?'esse email já tem senha. toque em entrar.':'não deu certo: '+m.toLowerCase()); }
   if(signup&&!r.data.session){ signup=false; render(); toast('enviamos um email de confirmação. depois é só entrar.','alert'); }
