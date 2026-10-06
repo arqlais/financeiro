@@ -73,6 +73,8 @@ h1,h2,.stat .v,.brand b,.tl-d b{font-family:var(--f-display)}
 
 /* ---------- shell ---------- */
 .brand{display:flex;align-items:center;gap:10px}
+.mark .ico.mk{width:55%;height:55%;stroke-width:1.7}
+.mark.big{width:52px;height:52px;font-size:1.3rem}
 .mark{width:40px;height:40px;border-radius:50%;background:var(--rose-soft);color:var(--rose);display:grid;place-items:center;font-family:var(--f-script);font-style:italic;font-size:1.3rem;flex:none}
 .brand b{display:block;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-family:var(--f-ui)}
 .brand b i{font-style:normal;color:var(--rose)}
@@ -379,7 +381,7 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 
 <div class="glow" aria-hidden="true"></div>
 <header class="topnav">
-  <button class="brand" data-page="inicio" aria-label="início"><span class="mark">l&amp;i</span><div><small>laís &amp; igor</small><b>financeiro<i>.</i></b></div></button>
+  <button class="brand" data-page="inicio" aria-label="início"><span class="mark" data-mark></span><div><small>laís &amp; igor</small><b>financeiro<i>.</i></b></div></button>
   <nav class="nav" id="nav" aria-label="seções"></nav>
   <div class="nav-r" id="navR"></div>
 </header>
@@ -417,6 +419,10 @@ const P = {
   repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
   arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   chev:'<path d="m6 9 6 6 6-6"/>',
+  piggy:'<path d="M11 17h3v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a3.16 3.16 0 0 0 2-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-1a5 5 0 0 0-2-4V3a4 4 0 0 0-3.2 1.6l-.3.4H11a6 6 0 0 0-6 6v1a5 5 0 0 0 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1z"/><path d="M16 10h.01"/><path d="M2 8v1a2 2 0 0 0 2 2h1"/>',
+  coins:'<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+  dollar:'<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>',
+  receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
   gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
   logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
@@ -501,9 +507,40 @@ function applyTema(t){
   const r=document.documentElement.style; r.setProperty('--c-ink',tema.ink); r.setProperty('--c-acc',tema.acc); r.setProperty('--c-paper',tema.paper);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',tema.paper);
 }
-function setTema(t){ applyTema(t); try{localStorage.setItem('fin-tema',JSON.stringify(t))}catch(e){} render(); }
+function setTema(t){ applyTema(t); try{localStorage.setItem('fin-tema',JSON.stringify(t))}catch(e){} applyIcone(); render(); }
 const temaCustom=acc=>({id:'custom',acc,ink:mixHex(acc,'#141414',.62),paper:mixHex(acc,'#ffffff',.93)});
 applyTema();
+
+// ---------- app icon per device ----------
+const ICONES=[['wallet','carteira'],['piggy','porquinho'],['coins','moedas'],['dollar','cifrão'],['up','gráfico'],['receipt','recibo'],['iniciais','iniciais']];
+let icone={id:'wallet',txt:'l&i'};
+try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
+const markInner=(ic_=icone)=>ic_.id==='iniciais'?esc(ic_.txt||'l&i'):ic(ic_.id,'mk');
+function iconPng(size){
+  // draws the chosen icon on the theme color; used as favicon and home-screen icon
+  return new Promise(res=>{ try{
+    const c=document.createElement('canvas'); c.width=c.height=size; const x=c.getContext('2d');
+    const g=x.createLinearGradient(0,0,size,size); g.addColorStop(0,mixHex(tema.ink,'#ffffff',.18)); g.addColorStop(.6,tema.ink); g.addColorStop(1,mixHex(tema.ink,'#000000',.12));
+    x.fillStyle=g; x.fillRect(0,0,size,size);
+    const fg=mixHex(tema.acc,'#ffffff',.55);
+    if(icone.id==='iniciais'){ x.fillStyle=fg; x.textAlign='center'; x.textBaseline='middle'; const t=(icone.txt||'l&i').slice(0,3); x.font=`italic 300 ${size*(t.length>2?.36:.46)}px Poppins, system-ui, sans-serif`; x.fillText(t,size/2,size/2+size*.02); return res(c.toDataURL('image/png')); }
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${fg}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${P[icone.id]}</svg>`;
+    const im=new Image(); im.onload=()=>{ const s=size*.52; x.drawImage(im,(size-s)/2,(size-s)/2,s,s); res(c.toDataURL('image/png')); }; im.onerror=()=>res(null);
+    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  }catch(e){ res(null); } });
+}
+async function applyIcone(){
+  document.querySelectorAll('[data-mark]').forEach(el=>el.innerHTML=markInner());
+  if(window.claude) return;
+  const [a,b]=await Promise.all([iconPng(512),iconPng(192)]); if(!a) return;
+  const setLink=(rel,href,sizes)=>{ let l=document.querySelector(`link[rel="${rel}"]`); if(!l){ l=document.createElement('link'); l.rel=rel; document.head.appendChild(l); } l.href=href; if(sizes) l.sizes=sizes; };
+  setLink('icon',b,'192x192'); setLink('apple-touch-icon',a);
+  try{ const base=location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'');
+    const man={name:'financeiro laís & igor',short_name:'financeiro',lang:'pt-BR',start_url:base,scope:base,display:'standalone',background_color:tema.paper,theme_color:tema.paper,icons:[{src:b,sizes:'192x192',type:'image/png'},{src:a,sizes:'512x512',type:'image/png'},{src:a,sizes:'512x512',type:'image/png',purpose:'maskable'}]};
+    setLink('manifest',URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'})));
+  }catch(e){}
+}
+function setIcone(o){ icone={...icone,...o}; try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} applyIcone(); render(); }
 
 // ---------- state ----------
 // every change to items bumps ver, so the per-month index is rebuilt once per change instead of on every lookup
@@ -633,6 +670,7 @@ function render(){
   if(rq){cancelAnimationFrame(rq);rq=0;}
   renderNav();
   const m=$('#main');
+  queueMicrotask(()=>document.querySelectorAll('[data-mark]').forEach(el=>{ if(!el.innerHTML) el.innerHTML=markInner(); }));
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
   if(gate==='login'){ m.innerHTML=vLogin(); return; }
   if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
@@ -824,7 +862,7 @@ async function seedInicial(){
 // ---------- login / ajustes ----------
 let importPend=null;
 function vLogin(){
-  return `<section class="card login"><span class="mark">l&amp;i</span>
+  return `<section class="card login"><span class="mark" data-mark></span>
     <div><span class="eyebrow">financeiro</span><h1>entrar <span class="script">no nosso</span></h1></div>
     <p class="muted" style="margin:0">entre com o seu email e senha. na primeira vez, é só escolher a senha aqui mesmo.</p>
     <form id="loginF" class="opt" novalidate>
@@ -835,7 +873,7 @@ function vLogin(){
     </form></section>`;
 }
 function vSemAcesso(){
-  return `<section class="card login"><span class="mark">l&amp;i</span><h1>ainda <span class="script">sem acesso</span></h1>
+  return `<section class="card login"><span class="mark" data-mark></span><h1>ainda <span class="script">sem acesso</span></h1>
     <p class="muted" style="margin:0">o email <b>${esc(userEmail)}</b> entrou, mas ainda não foi liberado para ver os dados. adicione esse email na tabela <b>membros</b> do supabase e entre de novo.</p>
     <button class="btn line" data-sair="1">${ic('logout','sm')} sair</button></section>`;
 }
@@ -858,6 +896,10 @@ function pAjustes(){
   <section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="muted" style="font-size:.84rem">fica salva só neste aparelho: cada um escolhe a sua</span></div>
     <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}
       <label class="tema" aria-pressed="${tema.id==='custom'}"><span class="sw2" style="background:conic-gradient(#e0707a,#e6b85c,#7bb07a,#5c9bd6,#9b7ad0,#e0707a)"><input type="color" id="temaCor" value="${tema.acc}" aria-label="escolher qualquer cor"></span>escolher</label></div></section>
+  <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">só neste aparelho · aparece no perfil e na tela de início</span></div>
+    <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
+    ${icone.id==='iniciais'?`<div class="toolbar" style="margin-top:12px"><label class="search" style="max-width:220px"><input id="ic-txt" maxlength="3" value="${esc(icone.txt||'l&i')}" placeholder="ex.: l&i" aria-label="iniciais"></label><span class="muted" style="font-size:.82rem">até 3 letras</span></div>`:''}
+    <p class="hint" style="margin-top:12px">se o app já está na tela de início, remova e adicione de novo para trocar o ícone de lá.</p></section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
     <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${k.custom&&canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>
     ${canWrite?`<div class="toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px"><label class="search" style="max-width:none">${ic('bank','sm')}<input id="bk-nome" placeholder="nome do banco ou cartão (ex.: neon, will, renner)" maxlength="30" aria-label="nome do banco"></label>
@@ -958,9 +1000,10 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-icone],[data-tab],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
+  if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo neste aparelho'); return; }
   if(d.mesjump){ openMesJump(); return; }
   if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
   if(d.qt){ openQuick(d.qt); return; }
@@ -994,7 +1037,7 @@ document.addEventListener('click',e=>{
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
   if(d.del){ const id=form.id, auto=form.auto; form=null; drawSheet(); safe(auto?store.patch(id,{removido:true}):store.del(id),'excluído'); return; }
 });
-document.addEventListener('change',e=>{ if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva neste aparelho'); } });
+document.addEventListener('change',e=>{ if(e.target.id==='ic-txt'){ setIcone({txt:e.target.value.trim()||'l&i'}); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='selQuem'){ui.quem=e.target.value;render();} if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva neste aparelho'); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='qF'){e.preventDefault();quickAdd('q');} if(e.target.id==='sF'){e.preventDefault();quickAdd('s');} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
@@ -1006,6 +1049,7 @@ document.addEventListener('input',e=>{
 let rz; let lastW=window.innerWidth; window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if((lastW<700)!==(window.innerWidth<700)){lastW=window.innerWidth;render();}},200)});
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(form){form=null;drawSheet();} else $('#sheetHost').innerHTML=''; } });
 
+applyIcone();
 boot();
 if('serviceWorker' in navigator && location.protocol==='https:' && !window.claude && /github\.io$|localhost/.test(location.hostname)){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 })();
