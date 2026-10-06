@@ -192,6 +192,15 @@ button.stat:hover{box-shadow:0 0 0 1px var(--rose-mid),var(--shadow)}
 .late{color:var(--bad)!important}
 .more{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;font-size:.84rem;color:var(--muted);flex-wrap:wrap}
 .empty-ln{padding:14px 0;color:var(--muted);font-size:.88rem}
+.mtitle{display:flex;align-items:center;gap:6px;color:var(--ink);padding:4px 6px;border-radius:12px}
+.mtitle:hover{background:var(--sunk)}
+.busca{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow);color:var(--muted)}
+.busca input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);height:100%}
+.mgroup{display:flex;justify-content:space-between;align-items:center;padding:14px 0 4px;font-size:.84rem;color:var(--muted);border-bottom:1px solid var(--line)}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.mcell{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--sunk);text-align:left}
+.mcell b{font-weight:600}.mcell small{font-size:.72rem;color:var(--muted)}
+.mcell[aria-current="true"]{background:var(--ink);color:var(--on-ink)}.mcell[aria-current="true"] small{color:inherit;opacity:.75}
 
 /* todo list */
 .todo{display:flex;flex-direction:column}
@@ -380,6 +389,7 @@ const P = {
   layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
   repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
   arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
   gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
   logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
@@ -469,16 +479,22 @@ const temaCustom=acc=>({id:'custom',acc,ink:mixHex(acc,'#141414',.62),paper:mixH
 applyTema();
 
 // ---------- state ----------
-let items=new Map(), store=null, canWrite=true, ready=false, autoDone=false, bannerMsg='';
+// every change to items bumps ver, so the per-month index is rebuilt once per change instead of on every lookup
+let ver=0; class Store extends Map{ set(k,v){ver++;return super.set(k,v)} delete(k){ver++;return super.delete(k)} clear(){ver++;return super.clear()} }
+let items=new Store(), store=null, canWrite=true, ready=false, autoDone=false, bannerMsg='';
 const ui={page:'mes', mes:today().slice(0,7), filtro:'aberto', bank:null, quem:'todos', q:'', cat:null, ano:today().slice(0,4)};
 try{const s=JSON.parse(localStorage.getItem('fin2-ui')||'{}'); if(['mes','ano','ajustes'].includes(s.page)) ui.page=s.page;}catch(e){}
 const saveUi=()=>{try{localStorage.setItem('fin2-ui',JSON.stringify({page:ui.page}))}catch(e){}};
-const live=()=>[...items.values()].filter(i=>!i.removido&&i.tipo!=='banco');
+let idxVer=-1, idx={live:[],byMes:new Map(),meses:[]};
+function index(){ if(idxVer===ver) return idx; const lv=[],bm=new Map(),ms=new Set();
+  for(const i of items.values()){ if(i.removido||i.tipo==='banco') continue; lv.push(i); if(!bm.has(i.mes)) bm.set(i.mes,[]); bm.get(i.mes).push(i); ms.add(i.mes); }
+  idx={live:lv,byMes:bm,meses:[...ms].sort()}; idxVer=ver; return idx; }
+const live=()=>index().live;
 // banks the couple added (or recolored) live in the same store as {tipo:'banco', nome, cor}
 const bankDocs=()=>[...items.values()].filter(i=>i.tipo==='banco'&&!i.removido);
 function BK(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(n) o[n]={m:(b.sigla||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||'#8e8580',custom:!BANKS[n]}; }); return o; }
-const ofMes=(m,t)=>live().filter(i=>i.mes===m&&(!t||i.tipo===t));
-const meses=()=>{const s=new Set(live().map(i=>i.mes)); s.add(today().slice(0,7)); return [...s].sort();};
+const ofMes=(m,t)=>{const a=index().byMes.get(m)||[]; return t?a.filter(i=>i.tipo===t):a.slice();};
+const meses=()=>{const a=index().meses, c=today().slice(0,7); return a.includes(c)?a:[...a,c].sort();};
 
 // ---------- storage ----------
 // Three places the data can live: the claude.ai artifact store, a supabase project (github pages + config.js), or this browser only.
@@ -495,7 +511,7 @@ async function boot(){
     col.onSnapshot(snap=>{
       for(const ch of snap.docChanges()){ if(ch.type==='removed') items.delete(ch.doc.id); else items.set(ch.doc.id,{...ch.doc.data(),id:ch.doc.id}); }
       if(!ready){ ready=true; setTimeout(autoParcelas,400); }
-      render();
+      renderSoon();
     }, ()=>{ bannerMsg='não consegui carregar os lançamentos agora. recarregue a página.'; render(); });
     return;
   }
@@ -504,9 +520,9 @@ async function boot(){
   let arr=null; try{arr=JSON.parse(localStorage.getItem('fin2-itens')||'null')}catch(e){}
   if(!arr){ arr=[]; for(const f of ['dados-2025.json','dados.json']){ try{const r=await fetch(f); if(r.ok) arr=arr.concat(await r.json());}catch(e){} } }
   arr.forEach(i=>items.set(i.id,i));
-  const persist=()=>{try{localStorage.setItem('fin2-itens',JSON.stringify([...items.values()]))}catch(e){}};
-  store={put:async it=>{items.set(it.id,it);persist();render()}, del:async id=>{items.delete(id);persist();render()}, patch:async(id,o)=>{items.set(id,{...items.get(id),...o});persist();render()},
-    bulk:async arr=>{arr.forEach(it=>items.set(it.id,it));persist();render()}};
+  let pt=0; const persist=()=>{clearTimeout(pt); pt=setTimeout(()=>{try{localStorage.setItem('fin2-itens',JSON.stringify([...items.values()]))}catch(e){}},300);};
+  store={put:async it=>{items.set(it.id,it);persist();renderSoon()}, del:async id=>{items.delete(id);persist();renderSoon()}, patch:async(id,o)=>{items.set(id,{...items.get(id),...o});persist();renderSoon()},
+    bulk:async arr=>{arr.forEach(it=>items.set(it.id,it));persist();renderSoon()}};
   bannerMsg='modo local: os lançamentos ficam salvos só neste aparelho. veja ajustes para sincronizar.';
   ready=true; render(); autoParcelas();
 }
@@ -519,10 +535,10 @@ async function bootNuvem(cfg){
   const T=()=>sb.from('lancamentos');
   const chk=({error})=>{ if(error) throw error; };
   store={
-    put:async it=>{items.set(it.id,it);render();chk(await T().upsert(row(it)));},
-    del:async id=>{items.delete(id);render();chk(await T().delete().eq('id',id));},
-    patch:async(id,o)=>{const it={...items.get(id),...o};items.set(id,it);render();chk(await T().upsert(row(it)));},
-    bulk:async arr=>{for(let i=0;i<arr.length;i+=500) chk(await T().upsert(arr.slice(i,i+500).map(row))); arr.forEach(it=>items.set(it.id,it)); render();},
+    put:async it=>{items.set(it.id,it);renderSoon();chk(await T().upsert(row(it)));},
+    del:async id=>{items.delete(id);renderSoon();chk(await T().delete().eq('id',id));},
+    patch:async(id,o)=>{const it={...items.get(id),...o};items.set(id,it);renderSoon();chk(await T().upsert(row(it)));},
+    bulk:async arr=>{for(let i=0;i<arr.length;i+=500) chk(await T().upsert(arr.slice(i,i+500).map(row))); arr.forEach(it=>items.set(it.id,it)); renderSoon();},
   };
   const {data}=await sb.auth.getSession(); session=data.session;
   sb.auth.onAuthStateChange((ev,s)=>{ const had=!!session; session=s;
@@ -541,7 +557,7 @@ async function afterLogin(){
   if(!all.length) await seedInicial();
   if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
     if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); }
-    render(); }).subscribe();
+    renderSoon(); }).subscribe();
   ready=true; render(); setTimeout(autoParcelas,400);
 }
 function toast(t,i='check'){const h=$('#toastHost');h.innerHTML=`<div class="toast">${ic(i,'sm')}${esc(t)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>h.innerHTML='',2400);}
@@ -580,7 +596,9 @@ function renderNav(){
 }
 
 // ---------- render ----------
+let rq=0; const renderSoon=()=>{ if(!rq) rq=requestAnimationFrame(()=>{rq=0;render();}); };
 function render(){
+  if(rq){cancelAnimationFrame(rq);rq=0;}
   renderNav();
   const m=$('#main');
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
@@ -604,14 +622,16 @@ function pMes(){
   const falta=sum(contas.filter(c=>!c.pago));
   const qt=ui.qtipo||'gasto', qq=ui.qquem||'juntos';
   const dDef=m===t.slice(0,7)?t:`${m}-${qt==='conta'?'10':'01'}`;
-  let h=`<div class="mhead"><button class="icbtn" data-mstep="-1" aria-label="mês anterior" ${i===0?'disabled':''}>${ic('left')}</button><h1>${mName(m)} <span class="script">${m.slice(0,4)}</span></h1><button class="icbtn" data-mstep="1" aria-label="próximo mês" ${m>=addM(t.slice(0,7),1)&&i>=ms.length-1?'disabled':''}>${ic('right')}</button></div>
-  <div class="sum3"><div><span>entrou</span><b class="num">${fmt(r.E)}</b></div><div><span>saiu</span><b class="num">${fmt(r.C+r.G)}</b></div><div><span>sobrou</span><b class="num ${r.S<0?'neg':'pos'}">${fmt(r.S)}</b></div></div>`;
+  let h=`<div class="mhead"><button class="icbtn" data-mstep="-1" aria-label="mês anterior" ${i===0?'disabled':''}>${ic('left')}</button><button class="mtitle" data-mesjump="1" aria-label="escolher mês"><h1>${mName(m)} <span class="script">${m.slice(0,4)}</span></h1>${ic('chev','sm')}</button><button class="icbtn" data-mstep="1" aria-label="próximo mês" ${m>=addM(t.slice(0,7),1)&&i>=ms.length-1?'disabled':''}>${ic('right')}</button></div>
+  <label class="busca">${ic('search','sm')}<input id="q-busca" data-keep type="search" placeholder="buscar em todos os meses (ex.: mercado)" value="${esc(ui.busca||'')}" enterkeyhint="search" aria-label="buscar em todos os meses"></label>`;
+  if(ui.busca) return h+vBusca(ui.busca);
+  h+=`<div class="sum3"><div><span>entrou</span><b class="num">${fmt(r.E)}</b></div><div><span>saiu</span><b class="num">${fmt(r.C+r.G)}</b></div><div><span>sobrou</span><b class="num ${r.S<0?'neg':'pos'}">${fmt(r.S)}</b></div></div>`;
   if(canWrite) h+=`<form class="qadd" id="quickF" novalidate>
     <div class="qrow"><div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${qt===k}">${l}</button>`).join('')}</div>
       <div class="chipset">${Object.entries(QUEM).filter(([k])=>qt!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${(qt==='entrada'&&qq==='juntos'?'lais':qq)===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
-    <div class="qrow"><input id="q-desc" data-keep list="qdl" autocomplete="off" placeholder="${qt==='conta'?'o que é (ex.: claro, notebook 1/10)':qt==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
-      <datalist id="qdl">${[...new Set(live().filter(x=>x.tipo===qt).map(x=>parc(x.desc)?.base||x.desc))].slice(0,150).map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
-      <input id="q-valor" data-keep inputmode="decimal" placeholder="R$ 0,00" aria-label="valor">
+    <div class="qrow"><input id="q-desc" data-keep list="qdl" autocomplete="off" enterkeyhint="next" placeholder="${qt==='conta'?'o que é (ex.: claro, notebook 1/10)':qt==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
+      <datalist id="qdl">${sugestoes(qt)}</datalist>
+      <input id="q-valor" data-keep inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
       <input id="q-data" data-keep type="date" value="${dDef}" aria-label="${qt==='conta'?'vencimento':'data'}">
       <button class="btn dark" type="submit">${ic('plus','sm')} adicionar</button></div>
     <p class="err" id="q-err" hidden></p></form>`;
@@ -625,6 +645,23 @@ function pMes(){
   h+=`<section class="sec"><div class="sec-h"><h2>gastos do dia a dia</h2><span><b>${fmt(r.G)}</b></span></div>
     ${gastos.length?gastos.map(g=>`<div class="ln">${line(g,' · '+esc(cat(g)))}<span class="v">${fmt(g.valor)}</span></span></div>`).join(''):'<div class="empty-ln">nada ainda.</div>'}</section>`;
   return h;
+}
+const sugCache={}; function sugestoes(t){ const c=sugCache[t]; if(c&&c.v===ver) return c.h; const h=[...new Set(live().filter(x=>x.tipo===t).map(x=>parc(x.desc)?.base||x.desc))].slice(0,150).map(x=>`<option value="${esc(x)}">`).join(''); sugCache[t]={v:ver,h}; return h; }
+function vBusca(q){
+  const n=q.trim().toLowerCase(); const hits=live().filter(i=>(i.desc||'').toLowerCase().includes(n)||cat(i).includes(n)).sort((a,b)=>(b.data||b.mes).localeCompare(a.data||a.mes));
+  if(!hits.length) return `<section class="sec"><div class="empty-ln">nada encontrado para "${esc(q)}".</div></section>`;
+  const tot=hits.reduce((s,i)=>s+(i.tipo==='entrada'?0:+i.valor||0),0); const byM=new Map(); hits.forEach(i=>{ if(!byM.has(i.mes)) byM.set(i.mes,[]); byM.get(i.mes).push(i); });
+  let h=`<section class="sec"><div class="sec-h"><h2>${hits.length} resultado${hits.length>1?'s':''}</h2><span>saídas <b>${fmt(tot)}</b> em ${byM.size} mês(es)</span></div>`;
+  for(const [m,a] of byM){ h+=`<div class="mgroup"><button class="link" data-goto="${m}">${mName(m)} ${m.slice(0,4)}</button><span>${fmt(a.reduce((s,i)=>s+(+i.valor||0),0))}</span></div>`
+    +a.slice(0,60).map(i=>`<div class="ln"><span class="tap" data-edit="${esc(i.id)}"><span style="min-width:0"><b>${esc(i.desc)}</b><small><span class="dot ${i.quem}"></span>${QUEM[i.quem]||''} · ${i.tipo}${i.data?' · '+qd(i):''}</small></span><span class="v ${i.tipo==='entrada'?'in':''}">${fmt(i.valor)}</span></span></div>`).join(''); }
+  return h+'</section>';
+}
+function openMesJump(){
+  const ms=meses(); const ys=[...new Set(ms.map(m=>m.slice(0,4)))].reverse();
+  $('#sheetHost').innerHTML=`<div class="scrim" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="escolher mês">
+    <div class="card-h" style="margin:0"><h2>escolher <span class="script">mês</span></h2><button type="button" class="icbtn" data-close="1" aria-label="fechar">${ic('x')}</button></div>
+    ${ys.map(y=>`<div><div class="lbl" style="margin-bottom:8px">${y}</div><div class="mgrid">${ms.filter(m=>m.startsWith(y)).reverse().map(m=>{const r=resumo(m);return `<button class="mcell" data-pickmes="${m}" aria-current="${m===ui.mes}"><b>${mName(m).slice(0,3)}</b><small>saiu ${fmt(r.C+r.G)}</small></button>`}).join('')}</div></div>`).join('')}
+  </div></div>`;
 }
 async function quickAdd(){
   const err=t=>{const e=$('#q-err');e.textContent=t;e.hidden=false};
@@ -819,9 +856,11 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-filtro],[data-bank],[data-quem],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
+  if(d.mesjump){ openMesJump(); return; }
+  if(d.pickmes){ ui.mes=d.pickmes; $('#sheetHost').innerHTML=''; render(); window.scrollTo({top:0}); return; }
   if(d.qt){ ui.qtipo=d.qt; render(); $('#q-desc')?.focus(); return; }
   if(d.qq){ ui.qquem=d.qq; render(); return; }
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
@@ -834,6 +873,7 @@ document.addEventListener('click',e=>{
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }
   if(d.close!==undefined){ if(e.target===t||t.tagName==='BUTTON'){form=null;drawSheet();} return; }
+  if(d.goto&&ui.busca){ ui.busca=''; }
   if(d.page){ ui.page=d.page; ui.cat=null; ui.bank=null; ui.q=''; ui.quem='todos'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.mstep){ ui.mes=addM(ui.mes,+d.mstep); ui.bank=null; render(); return; }
   if(d.goto){ ui.mes=d.goto; ui.page='mes'; saveUi(); render(); window.scrollTo({top:0}); return; }
@@ -857,12 +897,14 @@ document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefau
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
   if(e.target.id==='bk-cor'){ $('#bk-sw').style.background=e.target.value; return; }
+  if(e.target.id==='q-busca'){ ui.busca=e.target.value; clearTimeout(window._bq); window._bq=setTimeout(render,120); return; }
   if(e.target.id==='busca'){ ui.q=e.target.value; const p=e.target.selectionStart; render(); const b=$('#busca'); b.focus(); try{b.setSelectionRange(p,p)}catch(_){} }
   if(e.target.id==='f-desc'){ if($('#f-cat')) $('#f-cat').value=cat({desc:e.target.value}); if($('#f-bank')&&form&&form.bankSel===undefined&&form.banco===undefined){ const b=banco({tipo:'conta',desc:e.target.value}); $('#f-bank').value=b||''; } }
 });
 let rz; let lastW=window.innerWidth; window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if((lastW<700)!==(window.innerWidth<700)){lastW=window.innerWidth;render();}},200)});
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&form){form=null;drawSheet();} });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(form){form=null;drawSheet();} else $('#sheetHost').innerHTML=''; } });
 
 boot();
+if('serviceWorker' in navigator && location.protocol==='https:' && !window.claude && /github\.io$|localhost/.test(location.hostname)){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 })();
 </script>
