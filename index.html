@@ -589,6 +589,14 @@ body:has(.scrim){overflow:hidden}
 .g-form label{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:center;gap:10px;font-size:.9rem;color:var(--ink-2)}
 .g-form input{height:44px;border:1px solid var(--line);background:var(--bg);padding:0 18px;border-radius:999px;font-weight:600;text-align:right;width:100%}
 .g-act{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+/* duplicate check */
+#dupHost .scrim{z-index:55}
+.dupbox{gap:12px}
+.duplist{border:1px solid var(--bd);border-radius:16px;padding:0 14px;background:var(--bg)}
+.duplist .rw:last-child{border-bottom:0}
+.dupact{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.dupact .btn{justify-content:center;width:100%}
+.btn.danger{color:var(--bad)}
 /* pills are always fully round */
 .seg3,.seg3 button,.chipset,.chipset button,.ltabs2,.ltabs2 button,.segf,.segf button,.busca,.chip,.mp,.jump button,.pill-btn,.btn,.tag,.pill-delta{border-radius:999px!important}
 .seg3{padding:4px}.segf{padding:4px}
@@ -604,6 +612,7 @@ body:has(.scrim){overflow:hidden}
 <main class="main" id="main"></main>
 <nav class="dock" id="dock" aria-label="seções"></nav>
 <div id="sheetHost"></div>
+<div id="dupHost"></div>
 <div id="toastHost" aria-live="polite"></div>
 <div id="updHost" aria-live="polite"></div>
 <div class="tip" id="tip" hidden></div>
@@ -1351,7 +1360,28 @@ function openMesJump(){
     ${ys.map(y=>`<div><div class="lbl" style="margin-bottom:8px">${y}</div><div class="mgrid">${ms.filter(m=>m.startsWith(y)).reverse().map(m=>{const r=resumo(m);return `<button class="mcell" data-pickmes="${m}" aria-current="${m===ui.mes}"><b>${mName(m).slice(0,3)}</b><small>saiu ${fmt(r.C+r.G)}</small></button>`}).join('')}</div></div>`).join('')}
   </div></div>`;
 }
-async function quickAdd(p){
+// ---------- duplicates ----------
+// a new entry with the same value as an existing one of the same type, on the same day or with a similar title
+// (within a week), asks before saving: keep both, discard the new one, or delete the old one.
+const normDesc=d=>(parc(d)?.base||d||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+function lev(a,b){ if(Math.abs(a.length-b.length)>3) return 9; const m=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){ let prev=m[0]; m[0]=i; for(let j=1;j<=b.length;j++){ const t=m[j]; m[j]=Math.min(m[j]+1,m[j-1]+1,prev+(a[i-1]===b[j-1]?0:1)); prev=t; } } return m[b.length]; }
+function parecido(a,b){ a=normDesc(a); b=normDesc(b); if(!a||!b) return false; if(a===b) return true;
+  if(Math.min(a.length,b.length)>=3&&(a.includes(b)||b.includes(a))) return true; return lev(a,b)<=(Math.max(a.length,b.length)>=6?2:1); }
+function acharDup(b){ if(!(b.valor>0)) return [];
+  return live().filter(i=>i.tipo===b.tipo&&Math.abs((+i.valor||0)-b.valor)<.005&&(
+    (b.data&&i.data===b.data)||(parecido(i.desc,b.desc)&&(!b.data||!i.data||Math.abs(dDiff(i.data,b.data))<=7)))).slice(0,3); }
+let dupPend=null;
+function abrirDup(){ const {base,dups}=dupPend;
+  $('#dupHost').innerHTML=`<div class="scrim" data-dup="voltar"><div class="sheet dupbox" role="alertdialog" aria-modal="true" aria-label="parece repetido">
+    <div class="card-h" style="margin:0"><h2>parece <span class="script">repetido</span></h2><button type="button" class="icbtn" data-dup="voltar" aria-label="voltar">${ic('x')}</button></div>
+    <p class="muted" style="margin:0">${dups.length>1?'já existem lançamentos parecidos':'já existe um lançamento parecido'} com <b>${fmt(base.valor)}</b>:</p>
+    <div class="duplist">${dups.map(i=>`<div class="rw"><span class="rw-d"><b>${esc(i.desc)}</b><small>${quemTxt(i)}${i.data?' · '+qd(i):''}${i.tipo==='conta'&&i.pago?' · paga':''}</small></span><span class="rw-v num">${fmt(i.valor)}</span></div>`).join('')}</div>
+    <p class="muted" style="margin:0">novo: <b>${esc(base.desc)}</b>${base.data?' · '+qd(base):''} · ${QUEM[base.quem]||''}</p>
+    <div class="dupact"><button type="button" class="btn dark" data-dup="salvar">${ic('check','sm')} salvar mesmo assim</button>
+      <button type="button" class="btn line" data-dup="descartar">descartar o novo</button>
+      <button type="button" class="btn line danger" data-dup="excluir">${ic('trash','sm')} excluir o anterior</button></div></div></div>`; }
+async function quickAdd(p,force){
   const f=$('#'+p+'F'); const err=t=>{const e=$('#'+p+'-err');e.textContent=t;e.hidden=false};
   const desc=$('#'+p+'-desc').value.trim(), raw=$('#'+p+'-valor').value, v=parseV(raw), data=$('#'+p+'-data').value||null;
   if(!desc) return err('escreva o que foi.'); if(raw===''||!(v>=0)) return err('digite o valor, por exemplo 45,90.');
@@ -1359,6 +1389,7 @@ async function quickAdd(p){
   const base={tipo,quem,desc,valor:v,data,mes:(data||ui.mes).slice(0,7)};
   if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc})||''; if(b!==auto) base.banco=b==='boleto'?'':b; }
   const n=tipo==='conta'?+($('#'+p+'-parc')?.value||1):1;
+  if(!force){ const dups=acharDup({...base,desc:n>1?`${desc} 1/${n}`:desc}); if(dups.length){ dupPend={p,base,dups}; abrirDup(); return; } }
   if(p==='s') $('#sheetHost').innerHTML=''; else { ['desc','valor'].forEach(x=>$('#'+p+'-'+x).value=''); if($('#'+p+'-parc')) $('#'+p+'-parc').value='1'; if($('#'+p+'-bank')) $('#'+p+'-bank').value=''; const ch=$('#'+p+'-cathint'); if(ch) ch.textContent='a categoria é identificada sozinha pelo que você escrever.'; }
   const onde=base.mes!==ui.mes?` em ${mName(base.mes)}`:'';
   if(n>1){ const d0=data||base.mes+'-10'; for(let i=0;i<n;i++){ const dt=addMd(d0,i); await safe(store.put({...base,id:uid(),desc:`${desc} ${i+1}/${n}`,data:dt,mes:dt.slice(0,7)})); } toast(`${n} parcelas lançadas`,'layers'); }
@@ -1572,7 +1603,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-addrow],[data-jump],[data-anomes],[data-buscaon],[data-buscax],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-addrow],[data-jump],[data-anomes],[data-buscaon],[data-buscax],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1580,6 +1611,12 @@ document.addEventListener('click',e=>{
   if(d.fotodel){ foto=null; try{localStorage.removeItem('fin-foto');localStorage.removeItem('fin-foto-orig')}catch(e){} setIcone({usaFoto:false}); toast('foto removida'); return; }
   if(d.saldoedit){ ui.editSaldo=true; render(); setTimeout(()=>{ $('#guard')?.scrollIntoView({block:'center'}); $('#g-debito')?.focus(); },30); return; }
   if(d.saldocancel){ ui.editSaldo=false; render(); return; }
+  if(d.dup){ if(d.dup==='voltar'&&e.target!==t&&t.classList.contains('scrim')) return;
+    const pend=dupPend; $('#dupHost').innerHTML=''; dupPend=null; if(!pend) return;
+    if(d.dup==='salvar') quickAdd(pend.p,true);
+    else if(d.dup==='excluir'){ const old=pend.dups[0]; const soft=old.auto||(old.tipo==='conta'&&parc(old.desc)); safe(soft?store.patch(old.id,{removido:true}):store.del(old.id)); quickAdd(pend.p,true); }
+    else if(d.dup==='descartar'){ if(pend.p==='s') $('#sheetHost').innerHTML=''; else ['desc','valor'].forEach(x=>{ const el=$('#'+pend.p+'-'+x); if(el) el.value=''; }); toast('não salvo','x'); }
+    return; }
   if(d.fontedel){ for(const f of [...items.values()].filter(i=>i.tipo==='fonte')) safe(store.del(f.id)); toast('fonte removida'); return; }
   if(d.fotoaj){ let o=null; try{o=localStorage.getItem('fin-foto-orig')}catch(_){} abrirFoto(o||foto); return; }
   if(d.cropok){ foto=cropSalvar(); crop=null; $('#sheetHost').innerHTML=''; try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); return; }
@@ -1646,7 +1683,7 @@ function showTip(el,x,y){ const t=tipEl(); t.innerHTML=el.dataset.tip.split('|')
 document.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse') return; const el=e.target.closest?.('[data-tip]'); if(el) showTip(el,e.clientX,e.clientY); else if(!tipEl().hidden) tipEl().hidden=true; });
 document.addEventListener('pointerdown',e=>{ if(e.pointerType==='mouse') return; const el=e.target.closest?.('[data-tip]'); document.querySelectorAll('.hit.on').forEach(h=>h.classList.remove('on')); if(el){ showTip(el,e.clientX,e.clientY); el.classList.add('on'); } else tipEl().hidden=true; });
 addEventListener('scroll',()=>{ if(!tipEl().hidden) tipEl().hidden=true; },{passive:true});
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='f-pv'){ e.preventDefault(); $('[data-addparc]')?.click(); return; } if(e.key==='Enter'&&/^(q|s|ae|ac|ag)-desc$/.test(e.target.id)&&!$('#'+e.target.id.split('-')[0]+'-valor').value){ e.preventDefault(); $('#'+e.target.id.split('-')[0]+'-valor').focus(); return; } if(e.key==='Escape'){ if(form){form=null;drawSheet();} else { crop=null; $('#sheetHost').innerHTML=''; } } });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='f-pv'){ e.preventDefault(); $('[data-addparc]')?.click(); return; } if(e.key==='Enter'&&/^(q|s|ae|ac|ag)-desc$/.test(e.target.id)&&!$('#'+e.target.id.split('-')[0]+'-valor').value){ e.preventDefault(); $('#'+e.target.id.split('-')[0]+'-valor').focus(); return; } if(e.key==='Escape'&&$('#dupHost').innerHTML){ $('#dupHost').innerHTML=''; dupPend=null; return; } if(e.key==='Escape'){ if(form){form=null;drawSheet();} else { crop=null; $('#sheetHost').innerHTML=''; } } });
 
 // phones keep the app suspended for hours: when it comes back, catch up with what the other one changed
 // and, if the month turned meanwhile, move to the new month and carry the installments
