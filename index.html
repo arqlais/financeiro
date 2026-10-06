@@ -332,6 +332,9 @@ body.gated .nav,body.gated .dock,body.gated .nav-r{display:none!important}
 .fileb input{position:absolute;inset:0;opacity:0;cursor:pointer}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(18px);opacity:.5}}}
 .tip{text-transform:none}
+.upd{position:fixed;left:50%;transform:translateX(-50%);top:calc(84px + env(safe-area-inset-top,0px));z-index:45;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--ink);color:var(--on-ink);font-size:.86rem;font-weight:500;box-shadow:0 12px 32px rgba(0,0,0,.2);white-space:nowrap}
+.upd button{background:var(--c-acc);color:#fff;font-weight:600;padding:7px 14px;border-radius:999px}
+.upd button:disabled{opacity:.7}
 /* no zoom: double-tap does nothing, and fields at 16px keep the iphone from zooming in when tapped */
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (max-width:899px){input,select,textarea{font-size:16px!important}}
@@ -374,6 +377,7 @@ body:has(.scrim){overflow:hidden}
 <nav class="dock" id="dock" aria-label="seções"></nav>
 <div id="sheetHost"></div>
 <div id="toastHost" aria-live="polite"></div>
+<div id="updHost" aria-live="polite"></div>
 <div class="tip" id="tip" hidden></div>
 
 <script>
@@ -1271,6 +1275,18 @@ document.addEventListener('touchmove',e=>{ if(e.touches.length>1) e.preventDefau
 
 applyIcone();
 boot();
-if('serviceWorker' in navigator && location.protocol==='https:' && !window.claude && /github\.io$|localhost/.test(location.hostname)){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+// new version: a bar with "atualizar" shows up; one tap switches to it and reloads
+if('serviceWorker' in navigator && location.protocol==='https:' && !window.claude && /github\.io$|localhost/.test(location.hostname)){
+  const avisar=w=>{ if(!w||!navigator.serviceWorker.controller) return; $('#updHost').innerHTML=`<div class="upd">${ic('repeat','sm')}<span>nova versão do app</span><button data-atualizar="1">atualizar</button></div>`; avisar.w=w; };
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    avisar(reg.waiting);
+    reg.addEventListener('updatefound',()=>{ const w=reg.installing; w?.addEventListener('statechange',()=>{ if(w.state==='installed') avisar(w); }); });
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') reg.update().catch(()=>{}); });
+    setInterval(()=>reg.update().catch(()=>{}),30*60*1000);
+  }).catch(()=>{});
+  let recarregou=false; navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(recarregou) return; recarregou=true; location.reload(); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('[data-atualizar]')) return; const b=e.target.closest('[data-atualizar]'); b.textContent='atualizando…'; b.disabled=true;
+    if(avisar.w) avisar.w.postMessage('atualizar'); else location.reload(); setTimeout(()=>location.reload(),4000); });
+}
 })();
 </script>

@@ -1,8 +1,10 @@
 // keeps the app shell on the phone so it opens instantly; always tries the network first for the page itself,
 // so a new version shows up on the next open. data (supabase) is never cached here.
-const CACHE='financeiro-v22';
+const CACHE='financeiro-v23';
 const SHELL=['./','index.html','config.js','manifest.webmanifest','icons/icon-192.png','icons/apple-touch-icon.png'];
-self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())); });
+// a new version waits until someone taps "atualizar" in the app (or the app is closed and opened again)
+self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL))); });
+self.addEventListener('message',e=>{ if(e.data==='atualizar') self.skipWaiting(); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
