@@ -537,14 +537,14 @@ function loadPerfil(){ const d=perfilId()&&items.get(perfilId()); if(!d) { saveP
 let crop=null;
 function abrirFoto(src){ const im=new Image(); im.onload=()=>{ crop={im,src,z:1,x:0,y:0}; drawCrop(); }; im.onerror=()=>toast('não consegui abrir essa foto.','alert'); im.src=src; }
 const CW=260;
-function cropFix(){ const c=crop, s=CW/Math.min(c.im.width,c.im.height)*c.z, mx=Math.max((c.im.width*s-CW)/2,CW*.35), my=Math.max((c.im.height*s-CW)/2,CW*.35); c.x=Math.max(-mx,Math.min(mx,c.x)); c.y=Math.max(-my,Math.min(my,c.y)); return s; }
+function cropFix(){ const c=crop, s=CW/Math.min(c.im.width,c.im.height)*c.z, mx=(c.im.width*s+CW)/2-30, my=(c.im.height*s+CW)/2-30; c.x=Math.max(-mx,Math.min(mx,c.x)); c.y=Math.max(-my,Math.min(my,c.y)); return s; }
 function cropPaint(){ const el=$('#cropImg'); if(!el) return; const s=cropFix(); el.style.width=crop.im.width*s+'px'; el.style.height=crop.im.height*s+'px'; el.style.transform=`translate(calc(-50% + ${crop.x}px),calc(-50% + ${crop.y}px))`; }
 function drawCrop(){
   $('#sheetHost').innerHTML=`<div class="scrim" data-cropclose="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="enquadrar foto">
     <div class="card-h" style="margin:0"><h2>enquadrar <span class="script">foto</span></h2><button type="button" class="icbtn" data-cropclose="1" aria-label="fechar">${ic('x')}</button></div>
-    <p class="hint" style="text-align:center">arraste para cima, para baixo ou para os lados e use a barra para aproximar.</p>
+    <p class="hint" style="text-align:center">arraste para onde quiser e use a barra para aproximar ou afastar.</p>
     <div class="crop" id="cropBox"><img id="cropImg" src="${crop.src}" alt="" draggable="false"></div>
-    <label class="zoom">${ic('search','sm')}<input type="range" id="cropZ" min="1" max="4" step="0.01" value="${crop.z}" aria-label="aproximar"></label>
+    <label class="zoom">${ic('search','sm')}<input type="range" id="cropZ" min="0.4" max="4" step="0.01" value="${crop.z}" aria-label="aproximar"></label>
     <div class="sheet-foot"><button type="button" class="btn line" data-cropclose="1">cancelar</button><button type="button" class="btn dark" data-cropok="1">${ic('check','sm')} usar foto</button></div></div></div>`;
   cropPaint();
 }
