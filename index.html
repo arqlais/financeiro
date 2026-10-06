@@ -570,7 +570,7 @@ const temaCustom=acc=>({id:'custom',acc,ink:mixHex(acc,'#141414',.62),paper:mixH
 applyTema();
 
 // ---------- app icon per device ----------
-const ICONES=[['wallet','carteira'],['piggy','porquinho'],['iniciais','iniciais']];
+const ICONES=[['wallet','carteira'],['piggy','porquinho'],['dollar','cifrão']];
 let icone={id:'wallet',txt:'l&i'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
 let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
@@ -1083,7 +1083,6 @@ function pAjustes(){
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn" style="position:relative">${foto&&icone.usaFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" aria-label="escolher foto"></label>${foto&&icone.usaFoto?`<button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
   <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="muted" style="font-size:.84rem">de cada um · aparece na tela de início</span></div>
     <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id,txt:icone.txt})}</span>${nome}</button>`).join('')}</div>
-    ${icone.id==='iniciais'?`<div class="toolbar" style="margin-top:12px"><label class="search" style="max-width:220px"><input id="ic-txt" maxlength="3" value="${esc(icone.txt||'l&i')}" placeholder="ex.: l&i" aria-label="iniciais"></label><span class="muted" style="font-size:.82rem">até 3 letras</span></div>`:''}
     </section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="muted" style="font-size:.84rem">toque na cor para trocar · vale para os dois</span></div>
     <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${Object.entries(BK()).filter(([n])=>n!=='outro cartão').map(([n,k])=>`<div class="tema" style="position:relative"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>${bankDocs().some(b=>b.oculto)&&canWrite?`<button class="link" style="margin-top:8px" data-bankrestore="1">mostrar os bancos removidos (${bankDocs().filter(b=>b.oculto).length})</button>`:''}
