@@ -25,7 +25,7 @@
   --ink:var(--c-ink); --ink-2:color-mix(in srgb,var(--c-ink) 78%,#fff); --muted:color-mix(in srgb,var(--c-ink) 52%,#fff); --on-ink:#fff;
   --rose:var(--c-acc); --rose-soft:color-mix(in srgb,var(--c-acc) 12%,#fff); --rose-mid:color-mix(in srgb,var(--c-acc) 45%,#fff);
   --hero:var(--c-ink);
-  --lilac:color-mix(in srgb,var(--c-acc) 30%,#fff); --lime:#dcef7c; --pink:#f6bfd8; --sky:#cfe0f5; --t-txt:#1e1a2b;
+  --lilac:#cdbdf5; --lime:#dcef7c; --pink:#f6bfd8; --sky:#cfe0f5; --t-txt:color-mix(in srgb,var(--c-ink) 88%,#000);
   --s1:#d0643b; --s2:#1f9a8a; --s3:#3a78c9; --s4:#d49a1a; --s5:#c9497a; --s6:#4f9a3c; --s7:#7056c2; --s8:#b8433f; --s0:#a39fae;
   --lais:#c7588a; --igor:#4d6fa3; --juntos:#a58a3e;
   --good:#3f8a5a; --good-soft:#e2f2e7; --bad:#c2454f; --bad-soft:#fbe4e6; --warn:#a2702c; --warn-soft:#f6ead6;
@@ -440,7 +440,7 @@ body:has(.scrim){overflow:hidden}
 .tile h2{font-size:1.08rem;font-weight:700}
 .tile .t-big{font-weight:800;letter-spacing:-.04em}
 .tile .t-ico{background:rgba(255,255,255,.6);color:var(--t-txt)}
-.tile .t-go{background:var(--t-txt);color:#fff}
+.tile .t-go{background:var(--c-ink);color:#fff}
 .t-ink .t-go{background:var(--lime);color:var(--t-txt)}
 .t-ink .t-ico{background:rgba(255,255,255,.12);color:#fff}
 .t-white .t-go{background:var(--ink);color:var(--on-ink)}
@@ -529,7 +529,10 @@ body:has(.scrim){overflow:hidden}
   .appbar .who small{font-size:.8rem;color:var(--ink-2);font-weight:500}
   .appbar .who b{font-size:1.02rem;font-weight:700;color:var(--ink)}
 }
-.mark img{image-rendering:auto;transform:translateZ(0)}
+.mark img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:700px){.appbar .who b{line-height:1.35;padding-bottom:1px}.appbar .who small{line-height:1.35}}
+.opt-row.foto{grid-template-columns:56px minmax(0,1fr)}
+.opt-row.foto>span:last-child{grid-column:2;justify-self:start}
 /* the month card (lançamentos) */
 .resumo{background:var(--hero);color:#fff;border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
 .rs-main>span{display:block;font-size:.8rem;opacity:.7}
@@ -664,10 +667,10 @@ const uid=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 // ---------- color per device ----------
 // each phone keeps its own pick in localStorage; the default is the planê palette.
 const TEMAS=[
-  ['nova','ameixa',{ink:'#241b35',acc:'#7b5ce0',paper:'#f4f2ee'}],
-  ['oceano','oceano',{ink:'#132a42',acc:'#3478d4',paper:'#f1f4f7'}],
-  ['floresta','floresta',{ink:'#18302a',acc:'#2c9a6c',paper:'#f2f4ef'}],
-  ['vinho','vinho',{ink:'#3a1424',acc:'#d0457b',paper:'#f6f1f2'}],
+  ['nova','ameixa',{ink:'#241b35',acc:'#7b5ce0',paper:'#f4f2ee',c:'#cdbdf5',e:'#dcef7c',s:'#f6bfd8',g:'#cfe0f5'}],
+  ['oceano','oceano',{ink:'#132a42',acc:'#2f6fcc',paper:'#f1f4f7',c:'#bcd5f7',e:'#b8ead6',s:'#ffcfb3',g:'#dbe5ee'}],
+  ['floresta','floresta',{ink:'#18302a',acc:'#23845b',paper:'#f2f4ef',c:'#c3e2cf',e:'#e2eb9f',s:'#f3ccb4',g:'#e7e1cc'}],
+  ['vinho','vinho',{ink:'#3a1424',acc:'#c23d72',paper:'#f6f1f2',c:'#f2c4d6',e:'#f5dc9d',s:'#f6b8ad',g:'#e2d6ef'}],
 ]
 const hx=h=>{h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))};
 const mixHex=(a,b,t)=>'#'+hx(a).map((v,i)=>Math.round(v*(1-t)+hx(b)[i]*t).toString(16).padStart(2,'0')).join('');
@@ -679,6 +682,7 @@ const temaOk=t=>!!t;
 function applyTema(t){
   if(t) tema=temaDe(t); else { try{ const s=JSON.parse(localStorage.getItem('fin-tema')||'null'); if(s) tema=temaDe(s); }catch(e){} }
   const r=document.documentElement.style; r.setProperty('--c-ink',tema.ink); r.setProperty('--c-acc',tema.acc); r.setProperty('--c-paper',tema.paper);
+  r.setProperty('--lilac',tema.c); r.setProperty('--lime',tema.e); r.setProperty('--pink',tema.s); r.setProperty('--sky',tema.g);
   const dark=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',dark?mixHex(tema.ink,'#121416',.7):tema.paper);
 }
@@ -689,7 +693,7 @@ applyTema();
 
 // ---------- app icon per device ----------
 const ICONES=[['marca','símbolo']];
-const marcaSvg=(bg)=>`<svg class="marca" viewBox="0 0 100 100" aria-hidden="true">${bg?`<rect width="100" height="100" rx="${bg==='sq'?0:30}" fill="${tema.ink}"/>`:''}<rect x="22" y="52" width="15" height="24" rx="7.5" fill="#f6bfd8"/><rect x="42.5" y="38" width="15" height="38" rx="7.5" fill="#cdbdf5"/><rect x="63" y="24" width="15" height="52" rx="7.5" fill="#dcef7c"/></svg>`;
+const marcaSvg=(bg)=>`<svg class="marca" viewBox="0 0 100 100" aria-hidden="true">${bg?`<rect width="100" height="100" rx="${bg==='sq'?0:30}" fill="${tema.ink}"/>`:''}<rect x="22" y="52" width="15" height="24" rx="7.5" fill="${tema.s}"/><rect x="42.5" y="38" width="15" height="38" rx="7.5" fill="${tema.c}"/><rect x="63" y="24" width="15" height="52" rx="7.5" fill="${tema.e}"/></svg>`;
 let icone={id:'wallet'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
 let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
@@ -750,9 +754,9 @@ function fundoDesfocado(im,size){ const k=Math.max(size/im.width,size/im.height)
   if('filter' in tx){ tx.filter='blur(22px)'; tx.drawImage(im,(size-w)/2,(size-h)/2,w,h); tx.filter='none'; return t; }
   const a=document.createElement('canvas'); a.width=a.height=20; a.getContext('2d').drawImage(im,(20-w*20/size)/2,(20-h*20/size)/2,w*20/size,h*20/size);
   let src=a; for(const n of [48,120,260]){ const b=document.createElement('canvas'); b.width=b.height=n; const bx=b.getContext('2d'); bx.imageSmoothingQuality='high'; bx.drawImage(src,0,0,n,n); src=b; } return src; }
-function cropSalvar(){ const c=crop, s=cropFix(), f=512/CW, w=c.im.width*s, h=c.im.height*s;
-  const cv=document.createElement('canvas'); cv.width=cv.height=512; const x=cv.getContext('2d'); x.imageSmoothingQuality='high'; x.fillStyle=tema.paper; x.fillRect(0,0,512,512);
-  if(w<CW||h<CW){ x.imageSmoothingQuality='high'; x.drawImage(fundoDesfocado(c.im,512),-20,-20,552,552); }
+function cropSalvar(){ const c=crop, s=cropFix(), f=768/CW, w=c.im.width*s, h=c.im.height*s;
+  const cv=document.createElement('canvas'); cv.width=cv.height=768; const x=cv.getContext('2d'); x.imageSmoothingQuality='high'; x.fillStyle=tema.paper; x.fillRect(0,0,768,768);
+  if(w<CW||h<CW){ x.imageSmoothingQuality='high'; x.drawImage(fundoDesfocado(c.im,768),-30,-30,828,828); }
   x.drawImage(c.im,(CW/2+c.x-w/2)*f,(CW/2+c.y-h/2)*f,w*f,h*f); return cv.toDataURL('image/jpeg',.92); }
 // keeps a reduced copy of the original on this phone, so "ajustar" can reframe without losing quality
 function lerOriginal(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,1400/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); ok(c.toDataURL('image/jpeg',.86)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
@@ -1406,11 +1410,11 @@ function pAjustes(){
   let h=`<h1 class="big">ajustes <span class="script">e backup</span></h1>`;
   h+=`<p class="sec-t">vocês</p><div class="cols"><div class="col">
   <section class="card"><div class="card-h"><h2>foto de <span class="script">perfil</span></h2><span class="sub">só dentro do app</span></div>
-    <div class="opt-row"><span class="mark big">${temFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${temFoto?'sua foto':'sem foto'}</b><small>${temFoto?'só vocês dois veem, dentro do app. nunca vira o ícone.':'escolha uma foto da galeria.'}</small></span>
+    <div class="opt-row foto"><span class="mark big">${temFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${temFoto?'sua foto':'sem foto'}</b><small>${temFoto?'só vocês dois veem, dentro do app. nunca vira o ícone.':'escolha uma foto da galeria.'}</small></span>
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn fileb">${temFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" aria-label="escolher foto"></label>${temFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
 </div>
   <div class="col"><section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="sub">cada um escolhe a sua</span></div>
-    <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}</div></section></div></div>`;
+    <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:conic-gradient(${c.ink} 0 25%,${c.e} 0 50%,${c.c} 0 75%,${c.s} 0)"></span>${nome}</button>`).join('')}</div></section></div></div>`;
   h+=`<p class="sec-t">dinheiro</p>
   <section class="card" id="metas"><div class="card-h"><h2>metas <span class="script">por mês</span></h2><span class="sub">vazio = sem meta</span></div>
     <div class="metas">${METACATS.map(c=>{ const v=metas()[c], md=media3(today().slice(0,7),c); return `<label class="mrow"><span><span class="dot" style="background:${c===TOTAL?'var(--ink)':CATC[c]}"></span><b>${esc(c)}</b><small>${md?`média recente ${fmt(md)}`:'sem gastos recentes'}</small></span><input data-meta="${esc(c)}" inputmode="decimal" placeholder="sem meta" value="${v?String(v).replace('.',','):''}" ${canWrite?'':'disabled'} aria-label="meta de ${esc(c)}"></label>`; }).join('')}</div></section>
