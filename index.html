@@ -512,6 +512,39 @@ body:has(.scrim){overflow:hidden}
 .btn.dark{background:var(--ink);color:var(--on-ink);box-shadow:none}
 .link{color:var(--rose)}
 .legend .sw,.dleg i{border-radius:50%}
+
+/* ---------- v6: calmer sizes, one rhythm ---------- */
+.big{font-size:clamp(1.65rem,7.2vw,2.2rem);letter-spacing:-.04em;line-height:1.08;margin:2px 0 0}
+.tile .t-big{font-size:clamp(1.2rem,5.4vw,1.55rem)}
+.tile h2,.card-h h2,.sec-h h2{font-size:1rem}
+.cap{width:50px;height:60px;font-size:.82rem}.cap.ano{height:60px}
+.qk{padding:12px;gap:10px}.qk .t-ico{width:34px;height:34px}
+.ring,.ring svg{width:104px;height:104px}.prog{grid-template-columns:104px minmax(0,1fr)}
+.ring .rc b{font-size:1.4rem}
+.pl3 b{font-size:.95rem}
+.main{gap:14px}
+@media (max-width:700px){
+  .appbar{gap:12px}
+  .appbar .mark{width:44px;height:44px;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--bd)}
+  .appbar .who small{font-size:.8rem;color:var(--ink-2);font-weight:500}
+  .appbar .who b{font-size:1.02rem;font-weight:700;color:var(--ink)}
+}
+.mark img{image-rendering:auto;transform:translateZ(0)}
+/* the month card (lançamentos) */
+.resumo{background:var(--hero);color:#fff;border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.rs-main>span{display:block;font-size:.8rem;opacity:.7}
+.rs-main b{display:block;font-size:1.8rem;font-weight:800;letter-spacing:-.04em;line-height:1.15;white-space:nowrap}
+.rs-main b.neg{color:var(--pink)}
+.rs-main b .brl{opacity:.85}
+.resumo .kv{border-top:1px solid rgba(255,255,255,.14);padding-top:12px}
+.resumo .kv>div+div{border-left-color:rgba(255,255,255,.14)}
+.resumo .bar2{height:5px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}.resumo .bar2 i{display:block;height:100%;border-radius:99px;background:var(--lime)}
+.resumo .barl{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-size:.76rem;opacity:.8}.resumo .barl b{font-weight:700}
+@media (min-width:900px){.resumo{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,.9fr);align-items:center;gap:28px;padding:22px 26px}.resumo .kv{border-top:0;padding-top:0;border-left:1px solid rgba(255,255,255,.14);padding-left:24px}}
+.seg3 button{min-height:46px}
+.tema .sw2{width:40px;height:40px}
+@media (min-width:1100px){.seg.lanc-sp{display:none}}
+.temas:has([data-tema]){grid-template-columns:repeat(4,minmax(0,1fr))}
 </style>
 
 <header class="topnav">
@@ -632,22 +665,19 @@ const uid=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 // each phone keeps its own pick in localStorage; the default is the planê palette.
 const TEMAS=[
   ['nova','ameixa',{ink:'#241b35',acc:'#7b5ce0',paper:'#f4f2ee'}],
-  ['plane','planê',{ink:'#33414d',acc:'#ad7466',paper:'#f5f0ed'}],
-  ['cafe','café',{ink:'#4a2a26',acc:'#a65a40',paper:'#f6f1ea'}],
-  ['salvia','sálvia',{ink:'#2f4a3f',acc:'#7b9a68',paper:'#f1f2ea'}],
-  ['oceano','oceano',{ink:'#1f3b57',acc:'#3d7fb8',paper:'#eef2f5'}],
-  ['lavanda','lavanda',{ink:'#3d3552',acc:'#8a6fb8',paper:'#f4f1f7'}],
-  ['terracota','terracota',{ink:'#5a2f22',acc:'#c4643c',paper:'#f7efe8'}],
-  ['rosa','rosa',{ink:'#4d2a3a',acc:'#cf6390',paper:'#f8eff2'}],
-  ['ouro','noite e ouro',{ink:'#1f2024',acc:'#b8954f',paper:'#f3f1ec'}],
-];
+  ['oceano','oceano',{ink:'#132a42',acc:'#3478d4',paper:'#f1f4f7'}],
+  ['floresta','floresta',{ink:'#18302a',acc:'#2c9a6c',paper:'#f2f4ef'}],
+  ['vinho','vinho',{ink:'#3a1424',acc:'#d0457b',paper:'#f6f1f2'}],
+]
 const hx=h=>{h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))};
 const mixHex=(a,b,t)=>'#'+hx(a).map((v,i)=>Math.round(v*(1-t)+hx(b)[i]*t).toString(16).padStart(2,'0')).join('');
 let tema={id:'nova',...TEMAS[0][2]};
 // the old default (planê, never picked by hand) moves to the new look; a color someone chose stays
-const temaOk=t=>t&&t.ink&&t.acc&&t.paper&&!(t.id==='plane'&&!t.escolhido);
+// only the four palettes exist; anything else saved before (planê, custom, older ones) becomes ameixa
+const temaDe=t=>{ const f=TEMAS.find(x=>x[0]===t?.id)||TEMAS[0]; return {id:f[0],...f[2]}; };
+const temaOk=t=>!!t;
 function applyTema(t){
-  if(t){ if(temaOk(t)) tema=t; } else { try{ const s=JSON.parse(localStorage.getItem('fin-tema')||'null'); if(temaOk(s)) tema=s; }catch(e){} }
+  if(t) tema=temaDe(t); else { try{ const s=JSON.parse(localStorage.getItem('fin-tema')||'null'); if(s) tema=temaDe(s); }catch(e){} }
   const r=document.documentElement.style; r.setProperty('--c-ink',tema.ink); r.setProperty('--c-acc',tema.acc); r.setProperty('--c-paper',tema.paper);
   const dark=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',dark?mixHex(tema.ink,'#121416',.7):tema.paper);
@@ -659,7 +689,7 @@ applyTema();
 
 // ---------- app icon per device ----------
 const ICONES=[['marca','símbolo']];
-const marcaSvg=(bg)=>`<svg class="marca" viewBox="0 0 100 100" aria-hidden="true">${bg?`<rect width="100" height="100" rx="${bg==='sq'?0:30}" fill="${tema.ink}"/>`:''}<circle cx="40" cy="50" r="22" fill="#cdbdf5"/><circle cx="60" cy="50" r="22" fill="#dcef7c"/><path d="M50 30.4A22 22 0 0 1 50 69.6A22 22 0 0 1 50 30.4Z" fill="#fff"/></svg>`;
+const marcaSvg=(bg)=>`<svg class="marca" viewBox="0 0 100 100" aria-hidden="true">${bg?`<rect width="100" height="100" rx="${bg==='sq'?0:30}" fill="${tema.ink}"/>`:''}<rect x="22" y="52" width="15" height="24" rx="7.5" fill="#f6bfd8"/><rect x="42.5" y="38" width="15" height="38" rx="7.5" fill="#cdbdf5"/><rect x="63" y="24" width="15" height="52" rx="7.5" fill="#dcef7c"/></svg>`;
 let icone={id:'wallet'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
 let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
@@ -721,9 +751,9 @@ function fundoDesfocado(im,size){ const k=Math.max(size/im.width,size/im.height)
   const a=document.createElement('canvas'); a.width=a.height=20; a.getContext('2d').drawImage(im,(20-w*20/size)/2,(20-h*20/size)/2,w*20/size,h*20/size);
   let src=a; for(const n of [48,120,260]){ const b=document.createElement('canvas'); b.width=b.height=n; const bx=b.getContext('2d'); bx.imageSmoothingQuality='high'; bx.drawImage(src,0,0,n,n); src=b; } return src; }
 function cropSalvar(){ const c=crop, s=cropFix(), f=512/CW, w=c.im.width*s, h=c.im.height*s;
-  const cv=document.createElement('canvas'); cv.width=cv.height=512; const x=cv.getContext('2d'); x.fillStyle=tema.paper; x.fillRect(0,0,512,512);
+  const cv=document.createElement('canvas'); cv.width=cv.height=512; const x=cv.getContext('2d'); x.imageSmoothingQuality='high'; x.fillStyle=tema.paper; x.fillRect(0,0,512,512);
   if(w<CW||h<CW){ x.imageSmoothingQuality='high'; x.drawImage(fundoDesfocado(c.im,512),-20,-20,552,552); }
-  x.drawImage(c.im,(CW/2+c.x-w/2)*f,(CW/2+c.y-h/2)*f,w*f,h*f); return cv.toDataURL('image/jpeg',.85); }
+  x.drawImage(c.im,(CW/2+c.x-w/2)*f,(CW/2+c.y-h/2)*f,w*f,h*f); return cv.toDataURL('image/jpeg',.92); }
 // keeps a reduced copy of the original on this phone, so "ajustar" can reframe without losing quality
 function lerOriginal(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,1400/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); ok(c.toDataURL('image/jpeg',.86)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
 function lerFoto(file){ return new Promise((ok,no)=>{ const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(im.width,im.height), c=document.createElement('canvas'); c.width=c.height=512; c.getContext('2d').drawImage(im,(im.width-k)/2,(im.height-k)/2,k,k,0,0,512,512); ok(c.toDataURL('image/jpeg',.82)); }; im.onerror=no; im.src=r.result; }; r.onerror=no; r.readAsDataURL(file); }); }
@@ -1013,6 +1043,15 @@ function pInicio(){
 }
 // a ring for "how much is done": pct 0..1
 const ring=(pct,label)=>{ const R=48,C=2*Math.PI*R; return `<div class="ring"><svg viewBox="0 0 118 118" aria-hidden="true"><circle cx="59" cy="59" r="${R}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="11"/><circle cx="59" cy="59" r="${R}" fill="none" stroke="var(--c-acc)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(Math.max(.001,pct)*C).toFixed(1)} ${C.toFixed(1)}"/></svg><span class="rc"><b>${Math.round(pct*100)}<small>%</small></b><em>${label}</em></span></div>`; };
+// the month in one card: balance, the three totals, how the bills are going
+function resumoCard(m){
+  const r=resumo(m), contas=ofMes(m,'conta'), falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, pg=r.C-falta;
+  return `<section class="resumo">
+    <div class="rs-main"><span>balanço do mês</span><b class="num ${r.S<0?'neg':''}">${r.S<0?'−':'+'}${fmt(Math.abs(r.S))}</b></div>
+    <div class="kv"><div><span>entrou</span><b class="num">${fmt(r.E)}</b></div><div><span>contas</span><b class="num">${fmt(r.C)}</b></div><div><span>gastos</span><b class="num">${fmt(r.G)}</b></div></div>
+    ${contas.length?`<div><div class="bar2"><i style="width:${r.C?pg/r.C*100:0}%"></i></div><div class="barl"><span>${pagas} de ${contas.length} contas pagas</span><span>${falta?`falta <b class="num">${fmt(falta)}</b>`:'tudo pago'}</span></div></div>`:''}
+  </section>`;
+}
 function progTile(m){
   const r=resumo(m), contas=ofMes(m,'conta'), falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, pct=r.C?(r.C-falta)/r.C:0;
   return `<section class="tile t-lilac span2"><div class="t-top"><h2>contas do <span class="script">mês</span></h2><button class="t-go" data-vercontas="1" aria-label="ver contas">${ic('ne','sm')}</button></div>
@@ -1032,12 +1071,13 @@ const SEC={entrada:['entradas','entrada'],conta:['contas','conta'],gasto:['saíd
 const PFX={entrada:'ae',conta:'ac',gasto:'ag'};
 function pLanc(){
   const m=ui.mes, r=resumo(m);
-  let h=ui.busca?`<h1 class="big">buscar <span class="script">em tudo</span></h1>`:`<h1 class="big">seus <span class="script">lançamentos</span></h1>`+monthNav();
+  let h=ui.busca?`<h1 class="big">buscar <span class="script">em tudo</span></h1>`:`<h1 class="big">${mName(m)} <span class="script">${m.slice(0,4)}</span></h1>`+monthNav();
   if(ui.buscaOn||ui.busca) h+=`<label class="busca">${ic('search','sm')}<input id="q-busca" data-keep type="search" placeholder="buscar em todos os meses" value="${esc(ui.busca||'')}" enterkeyhint="search" aria-label="buscar em todos os meses"><button class="icbtn" data-buscax="1" aria-label="fechar busca">${ic('x','sm')}</button></label>`;
   if(ui.busca) return h+vBusca(ui.busca);
   const L={entrada:ofMes(m,'entrada').sort(byDate),conta:ofMes(m,'conta').sort(byDate),gasto:ofMes(m,'gasto')}, T={entrada:r.E,conta:r.C,gasto:r.G};
+  h+=resumoCard(m);
   const lt=ui.lt||'gastos', ativo={entradas:'entrada',contas:'conta',gastos:'gasto'}[lt]||'gasto';
-  h+=`<div class="seg seg3 lanc-sp" role="tablist">${[['gastos','saídas','gasto'],['contas','contas','conta'],['entradas','entradas','entrada']].map(([k,l,t])=>`<button type="button" role="tab" data-lt="${k}" aria-pressed="${lt===k}"><span>${l} <i>${L[t].length}</i></span><small class="num">${fmt(T[t])}</small></button>`).join('')}</div>`;
+  h+=`<div class="seg seg3 lanc-sp" role="tablist">${[['gastos','saídas','gasto'],['contas','contas','conta'],['entradas','entradas','entrada']].map(([k,l,t])=>`<button type="button" role="tab" data-lt="${k}" aria-pressed="${lt===k}"><span>${l} <i>${L[t].length}</i></span></button>`).join('')}</div>`;
   const todas=innerWidth>=1100;
   h+=`<div class="folha3">${['entrada','conta','gasto'].filter(k=>todas||k===ativo).map(k=>lista(k,L[k],T[k])).join('')}</div>`;
   return h;
@@ -1370,8 +1410,7 @@ function pAjustes(){
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn fileb">${temFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" aria-label="escolher foto"></label>${temFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
 </div>
   <div class="col"><section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="sub">cada um escolhe a sua</span></div>
-    <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}
-      <label class="tema" aria-pressed="${tema.id==='custom'}"><span class="sw2" style="background:conic-gradient(#e0707a,#e6b85c,#7bb07a,#5c9bd6,#9b7ad0,#e0707a)"><input type="color" id="temaCor" value="${tema.acc}" aria-label="escolher qualquer cor"></span>escolher</label></div></section></div></div>`;
+    <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}</div></section></div></div>`;
   h+=`<p class="sec-t">dinheiro</p>
   <section class="card" id="metas"><div class="card-h"><h2>metas <span class="script">por mês</span></h2><span class="sub">vazio = sem meta</span></div>
     <div class="metas">${METACATS.map(c=>{ const v=metas()[c], md=media3(today().slice(0,7),c); return `<label class="mrow"><span><span class="dot" style="background:${c===TOTAL?'var(--ink)':CATC[c]}"></span><b>${esc(c)}</b><small>${md?`média recente ${fmt(md)}`:'sem gastos recentes'}</small></span><input data-meta="${esc(c)}" inputmode="decimal" placeholder="sem meta" value="${v?String(v).replace('.',','):''}" ${canWrite?'':'disabled'} aria-label="meta de ${esc(c)}"></label>`; }).join('')}</div></section>
