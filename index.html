@@ -548,6 +548,40 @@ body:has(.scrim){overflow:hidden}
 .tema .sw2{width:40px;height:40px}
 @media (min-width:1100px){.seg.lanc-sp{display:none}}
 .temas:has([data-tema]){grid-template-columns:repeat(4,minmax(0,1fr))}
+
+/* ---------- v7 ---------- */
+@media (min-width:900px){.bento{align-items:stretch}.bento>*{height:100%}.bento .span2>.card{height:100%}}
+.cont{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:20px;background:var(--sunk);cursor:pointer}
+.cont input{position:absolute;opacity:0;pointer-events:none}
+.cont .sw-t{flex:none;width:44px;height:26px;border-radius:99px;background:var(--bd);position:relative;transition:background .2s}
+.cont .sw-t::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.cont input:checked+.sw-t{background:var(--ink)}.cont input:checked+.sw-t::after{transform:translateX(18px)}
+.cont b{display:block;font-weight:600;font-size:.9rem}.cont small{display:block;font-size:.74rem;color:var(--muted)}
+.cont-n{margin-left:auto;margin-right:6px;font-size:.78rem;font-weight:600;color:var(--rose)}
+.online{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--good)!important}
+.online i{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 25%,transparent)}
+.nav-r .online{font-size:.8rem;margin-right:6px}
+.bkg{border-left:3px solid var(--bk);padding-left:12px;margin:6px 0}
+.bkg-h{display:flex;align-items:center;gap:7px;width:100%;padding:8px 0 2px;font-size:.8rem;font-weight:700;color:var(--ink)}
+.bkg-h small{font-weight:500;color:var(--muted)}.bkg-h .num{margin-left:auto;font-weight:600;color:var(--ink-2)}
+.bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
+.bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bkit .bm{width:30px;height:30px;border-radius:50%;font-size:.66rem}
+.bkit.novo{border-style:dashed;color:var(--rose)}.bkit.novo .bm{background:var(--rose-soft);color:var(--rose)}
+.bk-prev{display:flex;align-items:center;gap:12px}
+.bk-prev input{flex:1;min-width:0;height:50px;border-radius:999px;border:1px solid var(--bd);background:var(--bg);padding:0 18px;font-weight:600}
+.bk-prev .bm.big{border-radius:50%;font-size:.95rem}
+.pal{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.pal-c{aspect-ratio:1;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.sl{display:flex;flex-direction:column;gap:10px}
+.sl label{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:10px;font-size:.8rem;color:var(--ink-2)}
+.sl input[type=range]{-webkit-appearance:none;appearance:none;height:14px;border-radius:99px;outline:0;width:100%}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.sl input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--ink)}
+.cfields{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px}
+.cfields label{display:flex;flex-direction:column;gap:4px;font-size:.7rem;font-weight:600;color:var(--muted)}
+.cfields input{height:44px;border-radius:14px;border:1px solid var(--bd);background:var(--bg);padding:0 10px;font-weight:600;width:100%;min-width:0;text-transform:none}
 </style>
 
 <header class="topnav">
@@ -611,12 +645,12 @@ const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" aria-hidden="true"
 const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const QUEM={lais:'laís',igor:'igor',juntos:'juntos'};
 const BANKS={
-  'nubank':{m:'nu',c:'#820AD1'}, 'inter':{m:'in',c:'#FF7A00'}, 'mercado pago':{m:'mp',c:'#009EE3'},
+  'nubank pf':{m:'nu',c:'#820AD1'}, 'nubank pj':{m:'pj',c:'#4E0A82'}, 'inter':{m:'in',c:'#FF7A00'}, 'mercado pago':{m:'mp',c:'#009EE3'},
   'itaú':{m:'it',c:'#EC7000'}, 'c6 bank':{m:'c6',c:'#2B2B2B'}, 'riachuelo':{m:'ri',c:'#D7192F'},
   'santander':{m:'sa',c:'#EC0000'}, 'bradesco':{m:'br',c:'#CC092F'}, 'caixa':{m:'cx',c:'#005CA9'},
   'banco do brasil':{m:'bb',c:'#3B5BA5'}, 'picpay':{m:'pp',c:'#11A85F'}, 'outro cartão':{m:'··',c:'#8e8580'},
 };
-const BANK_RULES=[[/\bnu\b|nubank|fatura p[fj]\b/,'nubank'],[/\binter\b/,'inter'],[/m\.\s?pago|mercado\s?pago/,'mercado pago'],[/ita[uú]/,'itaú'],[/\bc6\b/,'c6 bank'],[/riachuelo/,'riachuelo'],[/santander/,'santander'],[/bradesco/,'bradesco'],[/\bcaixa\b/,'caixa'],[/\bbb\b|banco do brasil/,'banco do brasil'],[/picpay/,'picpay']];
+const BANK_RULES=[[/fatura pj\b|nubank pj|\bnu pj\b|cart[aã]o pj\b/,'nubank pj'],[/\bnu\b|nubank|fatura pf\b|cart[aã]o pf\b/,'nubank pf'],[/\binter\b/,'inter'],[/m\.\s?pago|mercado\s?pago/,'mercado pago'],[/ita[uú]/,'itaú'],[/\bc6\b/,'c6 bank'],[/riachuelo/,'riachuelo'],[/santander/,'santander'],[/bradesco/,'bradesco'],[/\bcaixa\b/,'caixa'],[/\bbb\b|banco do brasil/,'banco do brasil'],[/picpay/,'picpay']];
 const BOLETO=/claro|vivo|\btim\b|mrv|obra|mensalidade|rematr|acordo|\bcasa\b|assinatura|serasa|anual|aluguel|condom|\bluz\b|internet|tia dani/;
 const CATS=[
   ['comida fora','var(--s1)',['almoço','almoco','lanche','pizza','açaí','acai','japonês','japones','mcdonald','mc donald','burger','salgado','marmita','café','cafe','doce','sorvete','cachorro','churros','milk','paçoca','pacoca','pão de queijo','chiclete','besteira','cookie','ifood','restaurante','bar','caldocana','lanchonete','chocolate','comida','salgadinho','adega','bebida','coca','kfc','popeyes','churras','chorão','cerveja','feijoada','snickers','guloseima','gin','refri','bolo','ifood','rappi','delivery','hamburguer','hambúrguer','pastel','sushi','esfiha','padoca','boteco','sorveteria','cafeteria','starbucks','subway','burger king','bk','outback','coxinha','tapioca','espetinho','yakisoba','temaki','poke','brigadeiro','bombom','suco','energético','energetico','guaraná','guarana','gatorade','ice','bala','pipoca','casquinha','pastéis','pasteis','espeto','canelinha','kariri','goya','mel']],
@@ -660,7 +694,8 @@ function catGuess(desc){ const d=' '+(desc||'').toLowerCase().normalize('NFC')+'
   for(const [n,,ks] of CATS) if(ks.some(k=>d.includes(k.length<=3?' '+k+' ':k))) return n; return 'outros'; }
 function cat(it){ if(it.cat){const c=String(it.cat).toLowerCase(); if(CATN.includes(c)) return c;} const lc=learnedCat(it.desc); if(lc&&CATN.includes(lc)) return lc; return catGuess(it.desc); }
 function banco(it){ if(it.banco!==undefined) return it.banco?String(it.banco).toLowerCase():'boleto'; if(it.tipo!=='conta') return null;
-  const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) return b; return BOLETO.test(d)?'boleto':null; }
+  const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) return apelido(b); return BOLETO.test(d)?'boleto':null; }
+const apelido=b=>{ const a=bankDocs().find(x=>x.de===b&&!x.oculto); return a?String(a.nome).toLowerCase():b; };
 const slug=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'x';
 const uid=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
@@ -679,6 +714,9 @@ let tema={id:'nova',...TEMAS[0][2]};
 // only the four palettes exist; anything else saved before (planê, custom, older ones) becomes ameixa
 const temaDe=t=>{ const f=TEMAS.find(x=>x[0]===t?.id)||TEMAS[0]; return {id:f[0],...f[2]}; };
 const temaOk=t=>!!t;
+let modo='auto'; try{ modo=localStorage.getItem('fin-modo')||'auto'; }catch(e){}
+function applyModo(){ const h=document.documentElement; if(modo==='claro') h.dataset.theme='light'; else if(modo==='escuro') h.dataset.theme='dark'; else delete h.dataset.theme; }
+applyModo();
 function applyTema(t){
   if(t) tema=temaDe(t); else { try{ const s=JSON.parse(localStorage.getItem('fin-tema')||'null'); if(s) tema=temaDe(s); }catch(e){} }
   const r=document.documentElement.style; r.setProperty('--c-ink',tema.ink); r.setProperty('--c-acc',tema.acc); r.setProperty('--c-paper',tema.paper);
@@ -891,6 +929,21 @@ async function bootNuvem(cfg){
   if(session) await afterLogin(); else { gate='login'; ready=true; render(); }
 }
 let flush=async()=>{}, loadAll=async()=>null;
+// who else has the app open right now (supabase presence)
+let pres=null, online=[], lastSync=0;
+const nomeDe=em=>/igor/i.test(em||'')?'igor':'laís';
+function presenca(){ if(!sb||pres) return;
+  try{ pres=sb.channel('online',{config:{presence:{key:userEmail||uid()}}});
+    pres.on('presence',{event:'sync'},()=>{ const st=pres.presenceState(); online=[...new Set(Object.keys(st).filter(k=>k!==userEmail).map(nomeDe))]; renderNav(); })
+      .subscribe(async st=>{ if(st==='SUBSCRIBED'){ try{ await pres.track({em:Date.now()}); }catch(_){} } }); }catch(e){} }
+// realtime can drop on phones; every 12s, fetch whatever changed since the last look
+async function puxar(){
+  if(mode!=='nuvem'||!session||gate||document.hidden||!ready) return;
+  const desde=new Date((lastSync||Date.now())-120000).toISOString(), agora=Date.now();
+  const {data,error}=await sb.from('lancamentos').select('id,doc').gt('updated_at',desde).limit(1000); if(error||!data) return;
+  let n=0; for(const r of data){ const novo={...r.doc,id:r.id}; if(outbox.some(o=>(o.id||o.it?.id)===r.id)) continue; if(JSON.stringify(items.get(r.id))!==JSON.stringify(novo)){ items.set(r.id,novo); n++; } }
+  lastSync=agora; if(n) renderSoon(); }
+setInterval(puxar,12000);
 async function afterLogin(){
   userEmail=session?.user?.email||''; gate=null; ready=false; render();
   const mem=await sb.from('membros').select('email').limit(1);
@@ -902,7 +955,7 @@ async function afterLogin(){
   if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
     if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); if(p.new.id===perfilId()) loadPerfil(); }
     renderSoon(); }).subscribe();
-  loadPerfil(); fonteInicial(); migrarSaldos();
+  loadPerfil(); fonteInicial(); migrarSaldos(); presenca(); lastSync=Date.now();
   ready=true; render(); setTimeout(autoParcelas,400);
 }
 function toast(t,i='check',o={}){const h=$('#toastHost'); toast.undo=o.undo||null; h.innerHTML=`<div class="toast">${ic(i,'sm')}${esc(t)}${o.undo?'<button class="undo" data-undo="1">desfazer</button>':''}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>{h.innerHTML='';toast.undo=null;},o.undo?5000:2400);}
@@ -915,18 +968,25 @@ async function safe(p,ok){try{await p; if(ok) toast(ok);}catch(e){toast(e?.code=
 const ROXO_NUBANK=[['2026-08','juntos','cama 4/12'],['2026-08','juntos','rihappy 2/3'],['2026-08','igor','perfume 1/2'],['2026-08','lais','crocs 1/4'],
   ['2026-09','juntos','cama 5/12'],['2026-09','juntos','rihappy 3/3'],['2026-09','igor','perfume 2/2'],['2026-09','lais','crocs 2/4'],['2026-09','juntos','assinaturas'],['2026-09','igor','boné 1/2'],['2026-09','juntos','adidas 2/2'],
   ['2026-10','juntos','lanche'],['2026-10','juntos','cama 6/12'],['2026-10','lais','crocs 3/4'],['2026-10','juntos','assinaturas'],['2026-10','igor','boné 2/2']];
+// one-time: "nubank" becomes "nubank pf" (pj is its own card now)
+async function migrarNubank(){
+  const MK='migr_nubank_pf'; if(items.has(MK)) return;
+  try{ for(const i of [...items.values()].filter(i=>i.tipo==='conta'&&String(i.banco||'').toLowerCase()==='nubank')) await store.patch(i.id,{banco:'nubank pf'});
+    const d=items.get('banco_nubank'); if(d){ await store.put({...d,id:'banco_nubank-pf',nome:'nubank pf'}); await store.del('banco_nubank'); }
+    await store.put({id:MK,tipo:'migracao',em:new Date().toISOString()}); }catch(e){}
+}
 async function migrarRoxo(){
   const MK='migr_roxo_nubank'; if(items.has(MK)) return;
   const exato=new Set(ROXO_NUBANK.map(([m,q,d])=>m+'|'+q+'|'+d)), serie=new Set(), fixa=new Set();
   for(const [,q,d] of ROXO_NUBANK){ const p=parc(d); if(p) serie.add(q+'|'+p.base.toLowerCase()+'|'+p.y); else if(d==='assinaturas') fixa.add(q+'|'+d); }
   const alvo=[...items.values()].filter(i=>{ if(i.tipo!=='conta'||i.banco!==undefined) return false; const d=(i.desc||'').trim().toLowerCase(), p=parc(d);
     return exato.has(i.mes+'|'+i.quem+'|'+d)||(p&&serie.has(i.quem+'|'+p.base.toLowerCase()+'|'+p.y))||(fixa.has(i.quem+'|'+d)&&i.mes>='2026-09'); });
-  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
+  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank pf'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
     if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas como nubank`,'card'); }catch(e){}
 }
 async function autoParcelas(){
   if(autoDone||!canWrite||!store) return; autoDone=true;
-  await migrarRoxo();
+  await migrarRoxo(); await migrarNubank();
   const cur=today().slice(0,7); let n=0;
   for(const m of [cur, addM(cur,1)]){
     const prev=addM(m,-1);
@@ -954,8 +1014,9 @@ function renderNav(){
   $('#nav').innerHTML=PAGES.map(([k,l])=>`<a data-page="${k}" ${cur_(k)}>${l}${k==='lanc'&&atras?`<span class="badge">${atras}</span>`:''}</a>`).join('');
   const hr=new Date().getHours(), saud=hr<12?'bom dia,':hr<18?'boa tarde,':'boa noite,';
   const hoje=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'}).replace(/\./g,'').replace('-feira','');
-  $('#appbar').innerHTML=`<span class="mark" data-mark>${markHead()}</span><span class="who"><small>${saud.replace(',','')} · ${hoje}</small><b>laís &amp; igor</b></span><button class="rbtn" data-buscaon="1" aria-label="buscar">${ic('search')}</button>`;
-  $('#navR').innerHTML=`<button class="icbtn" data-buscaon="1" aria-label="buscar">${ic('search')}</button><button class="icbtn" data-page="ajustes" aria-label="ajustes" ${cur_('ajustes')}>${ic('gear')}</button>${canWrite?`<button class="btn dark" data-new="auto">${ic('plus','sm')} lançar</button>`:''}`;
+  const on=online.length?`<span class="online"><i></i>${online.join(' e ')} ${online.length>1?'estão':'está'} online</span>`:'';
+  $('#appbar').innerHTML=`<span class="mark" data-mark>${markHead()}</span><span class="who"><small>${on||`${saud.replace(',','')} · ${hoje}`}</small><b>laís &amp; igor</b></span><button class="rbtn" data-buscaon="1" aria-label="buscar">${ic('search')}</button>`;
+  $('#navR').innerHTML=(online.length?`<span class="online"><i></i>${online.join(' e ')} online</span>`:'')+`<button class="icbtn" data-buscaon="1" aria-label="buscar">${ic('search')}</button><button class="icbtn" data-page="ajustes" aria-label="ajustes" ${cur_('ajustes')}>${ic('gear')}</button>${canWrite?`<button class="btn dark" data-new="auto">${ic('plus','sm')} lançar</button>`:''}`;
   const d=(k,l,i)=>`<a data-page="${k}" ${cur_(k)}>${ic(i,'lg')}<span>${l}</span>${k==='lanc'&&atras?'<span class="dotb"></span>':''}</a>`;
   $('#dock').innerHTML=d('inicio','início','home')+d('lanc','lançamentos','file')
     +(canWrite?`<button class="plus" data-new="auto" aria-label="lançar">${ic('plus','lg')}</button>`:'<span></span>')
@@ -1025,23 +1086,29 @@ function quickForm(p,tipo,fixo){
 }
 const keepVals=p=>{const k={}; ['desc','valor','data'].forEach(x=>{const el=$('#'+p+'-'+x); if(el) k[x]=el.value;}); return k;};
 const putVals=(p,k)=>Object.entries(k).forEach(([x,v])=>{const el=$('#'+p+'-'+x); if(el&&v) el.value=v;});
+try{ ui.cont=localStorage.getItem('fin-cont')==='1'; }catch(e){}
 function openQuick(tipo){
   ui.qtipo=tipo; form=null;
   $('#sheetHost').innerHTML=`<div class="scrim" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="lançar">
-    <div class="card-h" style="margin:0"><h2>lançar</h2><button type="button" class="icbtn" data-close="1" aria-label="fechar">${ic('x')}</button></div>
-    ${quickForm('s',tipo)}</div></div>`;
+    <div class="card-h" style="margin:0"><h2>lançar</h2><span class="cont-n" id="contN">${ui.contN?`${ui.contN} lançado${ui.contN>1?'s':''}`:''}</span><button type="button" class="icbtn" data-close="1" aria-label="fechar">${ic('x')}</button></div>
+    ${quickForm('s',tipo)}
+    <label class="cont"><input type="checkbox" id="contLanc" ${ui.cont?'checked':''}><span class="sw-t"></span><span><b>continuar lançando</b><small>depois de adicionar, o formulário fica aberto para o próximo</small></span></label></div></div>`;
   setTimeout(()=>$('#s-valor')?.focus(),60);
 }
 
 function pInicio(){
   const m=ui.mes, r=resumo(m), vazio=!r.E&&!r.C&&!r.G;
-  let h=`<h1 class="big">${vazio?`nada lançado <span class="script">em ${mName(m)}</span>`:`${r.S<0?'faltou':'sobrou'} <span class="num">${fmt(Math.abs(r.S))}</span> <span class="script">em ${mName(m)}</span>`}</h1>`+monthNav();
+  const acabou=m<today().slice(0,7), v=`<span class="num">${fmt(Math.abs(r.S))}</span>`;
+  const frase=vazio?`nada lançado <span class="script">em ${mName(m)}</span>`
+    :acabou?`${r.S<0?'faltou':'sobrou'} ${v} <span class="script">em ${mName(m)}</span>`
+    :r.S<0?`faltam ${v} <span class="script">para fechar ${mName(m)}</span>`:`sobrando ${v} <span class="script">até agora em ${mName(m)}</span>`;
+  let h=`<h1 class="big">${frase}</h1>`+monthNav();
   const ne=ofMes(m,'entrada').length;
   if(canWrite) h+=`<div class="quick">${[['gasto','gasto','t-pink','bag'],['conta','conta','t-lilac','file'],['entrada','entrada','t-lime','up']].map(([k,l,c,i])=>`<button class="qk ${c}" data-new="${k}"><span class="t-ico">${ic('plus','sm')}</span><span>${l}<small>adicionar</small></span></button>`).join('')}</div>`;
   h+=`<div class="bento">
     <button class="tile t-lime go" style="min-height:140px" data-golt="entradas"><span class="t-top"><span class="t-ico">${ic('sw')}</span></span><span class="t-lbl" style="margin-top:auto">entrou</span><span class="t-big num">${fmt(r.E)}</span><span class="t-sub">${ne} entrada${ne===1?'':'s'}</span></button>
     <button class="tile t-pink go" style="min-height:140px" data-golt="gastos"><span class="t-top"><span class="t-ico">${ic('ne')}</span></span><span class="t-lbl" style="margin-top:auto">saiu</span><span class="t-big num">${fmt(r.C+r.G)}</span><span class="t-sub">contas + gastos</span></button>
-    ${progTile(m)}${proximas(m)}${cartoesStack(m)}${cardGuardado(m)}${cardMetas(m)}<div class="span2">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
+    ${progTile(m)}${proximas(m)}${cartoesStack(m)}${cardMetas(m)?cardGuardado(m)+cardMetas(m):cardGuardado(m).replace('class="tile t-sky span2"','class="tile t-sky span2 span4"')}<div class="span2 span4">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
   h+=`<details class="mais" ${ui.mais?'open':''}><summary>${ic('chart','sm')} mais detalhes do mês<small>últimos 6 meses, ritmo dos gastos, dias e quem gastou</small>${ic('chev','sm')}</summary>${ui.mais?`<div class="cols"><div class="col"><section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section>${chartRitmo(m)}</div><div class="col">${cardCalendario(m)}${cardQuem(m)}</div></div>`:''}</details>`;
   return h;
 }
@@ -1137,8 +1204,8 @@ function lista(tipo,list,total){
     const ab=list.filter(c=>!c.pago), pg=list.filter(c=>c.pago);
     const meta=c=>{ const b=banco(c), late=!c.pago&&c.data&&c.data<t; return [quemTxt(c), c.data?(late?`<span class="late">venceu ${dm(c.data)}</span>`:'vence '+dm(c.data)):'', b&&b!=='boleto'?`<span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:''].filter(Boolean).join(' · '); };
     if(!list.length) h+=bloco('',`<div class="vazio">nenhuma conta neste mês.</div>`);
-    if(ab.length) h+=bloco(`<span>${ic('clock','sm')} a pagar</span><span class="num">${fmt(sumResta(ab))}</span>`,ab.map(c=>linha(c,'conta',meta(c))).join(''));
-    if(pg.length) h+=bloco(`<span>${ic('check','sm')} pagas</span><span class="num">${fmt(sum(pg))}</span>`,pg.map(c=>linha(c,'conta',meta(c))).join(''));
+    if(ab.length) h+=bloco(`<span>${ic('clock','sm')} a pagar</span><span class="num">${fmt(sumResta(ab))}</span>`,porBanco(ab,meta,true));
+    if(pg.length) h+=bloco(`<span>${ic('check','sm')} pagas</span><span class="num">${fmt(sum(pg))}</span>`,porBanco(pg,meta,false));
     h+=cartoesLinha(list);
     if(canWrite&&list.length) h+=`<div class="more"><span>parcelas passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir as fixas em ${mName(addM(ui.mes,1))}</button></div>`;
   } else if(tipo==='gasto'){
@@ -1153,6 +1220,16 @@ function lista(tipo,list,total){
     h+=porPessoa(list,'cada um recebeu',['lais','igor']);
   }
   return h+`</div>`;
+}
+// bills on the same card stay separate lines, held together under the card's name and color
+function porBanco(arr,meta,aberto){
+  const B=BK(), soltas=[], g=new Map();
+  for(const c of arr){ const b=banco(c); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(c); } else soltas.push(c); }
+  let h=soltas.map(c=>linha(c,'conta',meta(c))).join('');
+  for(const [b,l] of g){ const k=B[b]||B['outro cartão']||{c:'#8e8580'};
+    if(l.length===1){ h+=linha(l[0],'conta',meta(l[0])); continue; }
+    h+=`<div class="bkg" style="--bk:${k.c}"><button class="bkg-h" data-banco="${esc(b)}"><span class="bk-dot" style="background:${k.c}"></span>${esc(b)}<small>${l.length} contas</small><span class="num">${fmt(aberto?sumResta(l):sum(l))}</span></button>${l.map(c=>linha(c,'conta',meta(c).replace(/ · <span class="bk-dot"[^>]*><\/span>[^<]*$/,''))).join('')}</div>`; }
+  return h;
 }
 function porPessoa(list,tit,ks){ if(!list.length) return ''; const q={}; list.forEach(i=>q[i.quem]=(q[i.quem]||0)+(+i.valor||0));
   return `<div class="foot"><span class="lbl">${tit}</span>${ks.map(k=>`<span class="chip"><span class="dot ${k}"></span>${QUEM[k]} <b class="num">${fmt(q[k]||0)}</b></span>`).join('')}</div>`; }
@@ -1315,7 +1392,9 @@ async function quickAdd(p,force){
   if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc})||''; if(b!==auto) base.banco=b==='boleto'?'':b; }
   const n=tipo==='conta'?+($('#'+p+'-parc')?.value||1):1;
   if(!force){ const dups=acharDup({...base,desc:n>1?`${desc} 1/${n}`:desc}); if(dups.length){ dupPend={p,base,dups}; abrirDup(); return; } }
-  if(p==='s') $('#sheetHost').innerHTML=''; else { ['desc','valor'].forEach(x=>$('#'+p+'-'+x).value=''); if($('#'+p+'-parc')) $('#'+p+'-parc').value='1'; if($('#'+p+'-bank')) $('#'+p+'-bank').value=''; const ch=$('#'+p+'-cathint'); if(ch) ch.textContent='a categoria é identificada sozinha pelo que você escrever.'; }
+  const seguir=p==='s'&&ui.cont;
+  if(seguir){ ['desc','valor'].forEach(x=>$('#s-'+x).value=''); if($('#s-parc')) $('#s-parc').value='1'; if($('#s-bank')) $('#s-bank').value=''; ui.contN=(ui.contN||0)+1; const cn=$('#contN'); if(cn) cn.textContent=`${ui.contN} lançado${ui.contN>1?'s':''}`; setTimeout(()=>$('#s-valor')?.focus(),30); }
+  else if(p==='s') $('#sheetHost').innerHTML=''; else { ['desc','valor'].forEach(x=>$('#'+p+'-'+x).value=''); if($('#'+p+'-parc')) $('#'+p+'-parc').value='1'; if($('#'+p+'-bank')) $('#'+p+'-bank').value=''; const ch=$('#'+p+'-cathint'); if(ch) ch.textContent='a categoria é identificada sozinha pelo que você escrever.'; }
   const onde=base.mes!==ui.mes?` em ${mName(base.mes)}`:'';
   if(n>1){ const d0=data||base.mes+'-10'; for(let i=0;i<n;i++){ const dt=addMd(d0,i); await safe(store.put({...base,id:uid(),desc:`${desc} ${i+1}/${n}`,data:dt,mes:dt.slice(0,7)})); } toast(`${n} parcelas lançadas`,'layers'); }
   else { const M=metas(), antes={}; if(tipo==='gasto') for(const c of [cat(base),TOTAL]) if(M[c]) antes[c]=gastoCat(base.mes,c)/M[c];
@@ -1401,6 +1480,47 @@ function vSemAcesso(){
     <p class="muted" style="margin:0">o email <b>${esc(userEmail)}</b> entrou, mas ainda não foi liberado para ver os dados. adicione esse email na tabela <b>membros</b> do supabase e entre de novo.</p>
     <button class="btn line" data-sair="1">${ic('logout','sm')} sair</button></section>`;
 }
+// ---------- bank editor: name + an in-app color picker (presets, hue/saturation/light, hex, rgb) ----------
+const toRgb=h=>{ h=h.replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)); };
+const toHex=(r,g,b)=>'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+function toHsl(r,g,b){ r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2; let h=0,s=0;
+  if(mx!==mn){ const d=mx-mn; s=l>.5?d/(2-mx-mn):d/(mx+mn); h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4; h*=60; } return [h,s*100,l*100]; }
+function fromHsl(h,s,l){ s/=100;l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return [f(0)*255,f(8)*255,f(4)*255]; }
+const PRESETS=['#820AD1','#4E0A82','#EC7000','#FF7A00','#D7192F','#CC092F','#005CA9','#009EE3','#11A85F','#2B2B2B','#3B5BA5','#c23d72','#2c9a6c','#7b5ce0','#a65a40','#8e8580'];
+let bkEd=null;
+function abrirBanco(nome){ const k=nome?(BK()[nome]||{}):{}; bkEd={orig:nome||'',nome:nome||'',cor:(k.c||'#7b5ce0').toLowerCase()}; drawBanco(); }
+function drawBanco(){ const b=bkEd, [r,g,bl]=toRgb(b.cor), [h,sa,l]=toHsl(r,g,bl);
+  $('#sheetHost').innerHTML=`<div class="scrim" data-bkcancel="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="banco">
+    <div class="card-h"><h2>${b.orig?'editar':'novo'} <span class="script">banco</span></h2><button type="button" class="icbtn" data-bkcancel="1" aria-label="fechar">${ic('x')}</button></div>
+    <div class="bk-prev"><span class="bm big" id="bkPrev" style="background:${b.cor}">${esc((b.nome||'?').replace(/[^a-z0-9à-ú]/gi,'').slice(0,2))}</span><input id="bk-nm" value="${esc(b.nome)}" placeholder="nome do banco ou cartão" maxlength="30" aria-label="nome"></div>
+    <div class="pal">${PRESETS.map(c=>`<button type="button" class="pal-c" data-bksw="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>
+    <div class="sl"><label>matiz<input type="range" id="bk-h" min="0" max="360" value="${Math.round(h)}"></label>
+      <label>saturação<input type="range" id="bk-s" min="0" max="100" value="${Math.round(sa)}"></label>
+      <label>luz<input type="range" id="bk-l" min="5" max="95" value="${Math.round(l)}"></label></div>
+    <div class="cfields"><label>hex<input id="bk-hex" value="${b.cor}" maxlength="7" spellcheck="false"></label><label>r<input id="bk-r" inputmode="numeric" value="${r}"></label><label>g<input id="bk-g" inputmode="numeric" value="${g}"></label><label>b<input id="bk-b" inputmode="numeric" value="${bl}"></label></div>
+    ${b.orig&&b.orig!==b.nome.trim().toLowerCase()&&b.nome.trim()?`<p class="hint">as contas de "${esc(b.orig)}" passam a ser de "${esc(b.nome.trim().toLowerCase())}".</p>`:''}
+    <div class="sheet-foot">${b.orig?`<button type="button" class="btn line danger" data-bkdel="1">${ic('trash','sm')} remover</button>`:'<span></span>'}<button type="button" class="btn dark" data-bksave="1">${ic('check','sm')} salvar</button></div></div></div>`;
+  pintarSliders(); }
+function pintarSliders(){ const [r,g,b]=toRgb(bkEd.cor), [h,sa,l]=toHsl(r,g,b);
+  const hs=$('#bk-h'), ss=$('#bk-s'), ls=$('#bk-l'); if(!hs) return;
+  hs.style.background='linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)';
+  ss.style.background=`linear-gradient(90deg,${toHex(...fromHsl(h,0,l))},${toHex(...fromHsl(h,100,l))})`;
+  ls.style.background=`linear-gradient(90deg,#000,${toHex(...fromHsl(h,sa,50))},#fff)`;
+  $('#bkPrev').style.background=bkEd.cor; }
+function setCorBanco(hex,de){ if(!/^#[0-9a-f]{6}$/i.test(hex)) return; bkEd.cor=hex.toLowerCase(); const [r,g,b]=toRgb(hex), [h,sa,l]=toHsl(r,g,b);
+  if(de!=='hsl'){ $('#bk-h').value=Math.round(h); $('#bk-s').value=Math.round(sa); $('#bk-l').value=Math.round(l); }
+  if(de!=='hex') $('#bk-hex').value=bkEd.cor; if(de!=='rgb'){ $('#bk-r').value=r; $('#bk-g').value=g; $('#bk-b').value=b; }
+  pintarSliders(); }
+async function salvarBanco(){ const b=bkEd, nome=(b.nome||'').trim().toLowerCase(); if(!nome){ toast('escreva o nome do banco.','alert'); return; }
+  const id='banco_'+slug(nome), old=b.orig;
+  if(old&&old!==nome){ // rename: bills follow, old name stays hidden and remembered so new bills still land here
+    const contas=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&banco(i)===old);
+    await safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome,cor:b.cor,oculto:false,de:old}));
+    for(const c of contas) await safe(store.patch(c.id,{banco:nome}));
+    const oid='banco_'+slug(old); await safe(store.put({...(items.get(oid)||{}),id:oid,tipo:'banco',nome:old,oculto:true}));
+    toast(`${old} agora é ${nome} · ${contas.length} conta${contas.length===1?'':'s'}`);
+  } else await safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome,cor:b.cor,oculto:false}),`${nome} salvo`);
+  bkEd=null; $('#sheetHost').innerHTML=''; }
 function pAjustes(){
   const n=live().length;
   const where=mode==='claude'?['salvo no claude','os dados ficam no link do claude e sincronizam entre vocês dois.']
@@ -1413,17 +1533,16 @@ function pAjustes(){
     <div class="opt-row foto"><span class="mark big">${temFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${temFoto?'sua foto':'sem foto'}</b><small>${temFoto?'só vocês dois veem, dentro do app. nunca vira o ícone.':'escolha uma foto da galeria.'}</small></span>
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn fileb">${temFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" aria-label="escolher foto"></label>${temFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
 </div>
-  <div class="col"><section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="sub">cada um escolhe a sua</span></div>
+  <div class="col"><section class="card"><div class="card-h"><h2>aparência</h2><span class="sub">neste aparelho</span></div>
+    <div class="seg">${[['auto','automático'],['claro','claro'],['escuro','escuro']].map(([k,l])=>`<button type="button" data-modo="${k}" aria-pressed="${modo===k}">${l}</button>`).join('')}</div></section>
+  <section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="sub">cada um escolhe a sua</span></div>
     <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:conic-gradient(${c.ink} 0 25%,${c.e} 0 50%,${c.c} 0 75%,${c.s} 0)"></span>${nome}</button>`).join('')}</div></section></div></div>`;
   h+=`<p class="sec-t">dinheiro</p>
   <section class="card" id="metas"><div class="card-h"><h2>metas <span class="script">por mês</span></h2><span class="sub">vazio = sem meta</span></div>
     <div class="metas">${METACATS.map(c=>{ const v=metas()[c], md=media3(today().slice(0,7),c); return `<label class="mrow"><span><span class="dot" style="background:${c===TOTAL?'var(--ink)':CATC[c]}"></span><b>${esc(c)}</b><small>${md?`média recente ${fmt(md)}`:'sem gastos recentes'}</small></span><input data-meta="${esc(c)}" inputmode="decimal" placeholder="sem meta" value="${v?String(v).replace('.',','):''}" ${canWrite?'':'disabled'} aria-label="meta de ${esc(c)}"></label>`; }).join('')}</div></section>
   <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><button class="link" data-banco="">explorar ${ic('arrow','sm')}</button></div>
-    <p class="hint" style="margin:-4px 0 10px">toque na cor para trocar. remover não muda as contas que já usaram.</p>
-    <div class="temas" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr))">${Object.entries(BK()).filter(([n,k])=>n!=='outro cartão'&&!k.oculto).map(([n,k])=>`<div class="tema"><label class="sw2" style="background:${k.c};display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer">${esc(k.m)}${canWrite?`<input type="color" data-bankcor="${esc(n)}" value="${k.c}" aria-label="cor do ${esc(n)}">`:''}</label>${esc(n)}${canWrite?`<button class="link" style="font-size:.74rem" data-bankdel="${esc(n)}">${ic('trash','sm')} remover</button>`:''}</div>`).join('')}</div>${bankDocs().some(b=>b.oculto)&&canWrite?`<button class="link" style="margin-top:8px" data-bankrestore="1">mostrar os bancos removidos (${bankDocs().filter(b=>b.oculto).length})</button>`:''}
-    ${canWrite?`<div class="addbank"><input id="bk-nome" placeholder="novo banco (ex.: neon, will)" maxlength="30" aria-label="nome do banco">
-      <label class="pill-btn fileb" style="height:44px;gap:8px"><span id="bk-sw" class="dot" style="width:16px;height:16px;background:#5a7d9a"></span>cor<input type="color" id="bk-cor" value="#5a7d9a" aria-label="cor do banco"></label>
-      <button class="btn dark" data-bankadd="1">${ic('plus','sm')} adicionar</button></div>`:''}</section>`;
+    <p class="hint" style="margin:-4px 0 10px">toque num banco para mudar o nome ou a cor.</p>
+    <div class="bkgrid">${Object.entries(BK()).filter(([n,k])=>n!=='outro cartão'&&!k.oculto).map(([n,k])=>`<button class="bkit" ${canWrite?`data-bankedit="${esc(n)}"`:''}><span class="bm" style="background:${k.c}">${esc(k.m)}</span><span>${esc(n)}</span></button>`).join('')}${canWrite?`<button class="bkit novo" data-bankedit=""><span class="bm">${ic('plus','sm')}</span><span>novo banco</span></button>`:''}</div>${bankDocs().some(b=>b.oculto&&!b.de&&!bankDocs().some(x=>x.de===b.nome))&&canWrite?`<button class="link" style="margin-top:10px" data-bankrestore="1">mostrar os bancos removidos</button>`:''}</section>`;
   h+=`<p class="sec-t">dados</p><div class="cols"><div class="col">
   <section class="card"><div class="card-h"><h2>onde ficam os dados</h2><span class="tag">${n} lançamentos</span></div>
     <div class="opt-row"><span class="tico">${ic(mode==='local'?'phone':'cloud','sm')}</span><span><b>${where[0]}</b><small>${where[1]}</small></span></div>
@@ -1527,7 +1646,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-addrow],[data-jump],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1556,6 +1675,12 @@ document.addEventListener('click',e=>{
   if(d.jump){ $('#'+d.jump)?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
   if(d.lt){ ui.lt=d.lt; ui.cat=null; ui.add=null; ui.qtipo={contas:'conta',gastos:'gasto',entradas:'entrada'}[d.lt]; render(); return; }
   if(d.qq){ ui.qquem=d.qq; if($('#sF')){ const k=keepVals('s'); openQuick(ui.qtipo); putVals('s',k); } else render(); return; }
+  if(d.bankedit!==undefined){ abrirBanco(d.bankedit); return; }
+  if(d.bksw){ setCorBanco(d.bksw); return; }
+  if(d.bksave){ salvarBanco(); return; }
+  if(d.bkcancel){ if(e.target===t||t.tagName==='BUTTON'){ bkEd=null; $('#sheetHost').innerHTML=''; } return; }
+  if(d.bkdel){ const n=bkEd.orig, id='banco_'+slug(n); bkEd=null; $('#sheetHost').innerHTML=''; safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,oculto:true}),`${n} saiu da lista`); return; }
+  if(d.modo){ modo=d.modo; try{localStorage.setItem('fin-modo',modo)}catch(_){} applyModo(); applyTema(tema); render(); return; }
   if(d.bankadd){ const n=($('#bk-nome').value||'').trim().toLowerCase(); if(!n){ toast('escreva o nome do banco.','alert'); return; }
     safe(store.put({...(items.get('banco_'+slug(n))||{}),id:'banco_'+slug(n),tipo:'banco',nome:n,cor:$('#bk-cor').value,oculto:false}),`${n} adicionado`); return; }
   if(d.bankdel){ const n=d.bankdel, id='banco_'+slug(n);
@@ -1574,7 +1699,7 @@ document.addEventListener('click',e=>{
   if(d.goto){ ui.mes=d.goto; ui.page='lanc'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.pagar){ if(!canWrite) return; const it=items.get(d.pagar); if(it) safe(store.patch(it.id,{pago:!it.pago}), it.pago?'voltou para a pagar':'conta paga'); return; }
   if(d.edit){ if(!canWrite) return; const it=items.get(d.edit); if(it) openSheet(it); return; }
-  if(d.new){ openQuick(d.new==='auto'?({contas:'conta',entradas:'entrada'}[ui.lt]||'gasto'):d.new); return; }
+  if(d.new){ ui.contN=0; openQuick(d.new==='auto'?({contas:'conta',entradas:'entrada'}[ui.lt]||'gasto'):d.new); return; }
   if(d.cat!==undefined){ ui.cat=d.cat||null; ui.lt='gastos'; const ir=ui.page!=='lanc'; ui.page='lanc'; saveUi(); render(); if(ir) window.scrollTo({top:0}); return; }
   if(d.ano){ ui.ano=d.ano; render(); return; }
   if(d.copiar){ repetirFixas(); return; }
@@ -1590,12 +1715,17 @@ document.addEventListener('click',e=>{
     safe(soft?store.patch(id,{removido:true}):store.del(id)).then(()=>toast('excluído','trash',{undo:()=>{ const {removido,...back}=old; return safe(store.put(back),'voltou'); }})); return; }
   if(d.undo){ const f=toast.undo; toast.undo=null; $('#toastHost').innerHTML=''; f?.(); return; }
 });
-document.addEventListener('change',async e=>{ if(e.target.id==='fonteFile'&&e.target.files.length){ await lerFontes([...e.target.files]); e.target.value=''; return; } if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
+document.addEventListener('change',async e=>{ if(e.target.id==='contLanc'){ ui.cont=e.target.checked; try{localStorage.setItem('fin-cont',ui.cont?'1':'0')}catch(_){} return; } if(e.target.id==='fonteFile'&&e.target.files.length){ await lerFontes([...e.target.files]); e.target.value=''; return; } if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
     if(!raw||!(v>0)){ if(items.has(id)) safe(store.del(id),`meta de ${c} tirada`); return; }
     safe(store.put({id,tipo:'meta',cat:c,valor:v}),`meta de ${c}: ${fmtT(v)} por mês`); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag)F$/.exec(e.target.id); if(qm){e.preventDefault();quickAdd(qm[1]);} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
+  if(bkEd&&/^bk-/.test(e.target.id)){ const id=e.target.id;
+    if(id==='bk-nm'){ bkEd.nome=e.target.value; $('#bkPrev').textContent=(bkEd.nome||'?').replace(/[^a-z0-9à-ú]/gi,'').slice(0,2); return; }
+    if(id==='bk-hex'){ let v=e.target.value.trim(); if(!v.startsWith('#')) v='#'+v; if(/^#[0-9a-f]{6}$/i.test(v)) setCorBanco(v,'hex'); return; }
+    if(['bk-r','bk-g','bk-b'].includes(id)){ const v=['r','g','b'].map(k=>+$('#bk-'+k).value||0); setCorBanco(toHex(...v),'rgb'); return; }
+    if(['bk-h','bk-s','bk-l'].includes(id)){ setCorBanco(toHex(...fromHsl(+$('#bk-h').value,+$('#bk-s').value,+$('#bk-l').value)),'hsl'); return; } }
   if(e.target.id==='cropZ'&&crop){ const z=+e.target.value, r=z/crop.z; crop.x*=r; crop.y*=r; crop.z=z; cropPaint(); return; }
   if(e.target.id==='bk-cor'){ $('#bk-sw').style.background=e.target.value; return; }
   if(/^(q|s|ae|ac|ag)-desc$/.test(e.target.id)){ const p=e.target.id.split('-')[0], d=e.target.value; const ch=$('#'+p+'-cathint'); if(ch) ch.innerHTML=d.trim()?`categoria: <b>${esc(cat({desc:d}))}</b> · dá para trocar depois tocando no gasto`:'a categoria é identificada sozinha pelo que você escrever.'; const b=$('#'+p+'-bank'); if(b){ const k=banco({tipo:'conta',desc:d}); b.value=k||''; } }
