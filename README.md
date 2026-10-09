@@ -2,8 +2,8 @@
 
 site para controlar entradas, contas e gastos do dia a dia, no lugar da planilha. funciona no celular, no tablet e no computador, e pode ser instalado na tela inicial como app.
 
-- **início**: entrou, saiu e sobrou, contas da semana, gráfico, para onde foi e quem gastou.
-- **lançamentos**: a folha do mês, como na planilha: balanço do mês, depois entradas, contas e saídas em tabelas (quem, descrição, data, valor) com total e o total de cada um. "nova linha" no fim de cada tabela lança direto ali.
+- **início**: o mês de relance — balanço, próximas contas, metas, dinheiro guardado e para onde foi; o resto em "mais detalhes".
+- **lançamentos**: só as listas do mês — entradas, contas e saídas (uma por vez no celular, as três lado a lado no computador), com "adicionar" no fim de cada uma.
 - **parcelas automáticas**: "notebook 7/10" vira "notebook 8/10" no mês seguinte e para na última.
 - **ano**: balanço de 2025 e 2026. **ajustes**: cor, ícone, bancos e backup.
 - **sem internet**: o que for lançado fica salvo no celular e sobe sozinho quando a conexão volta. ao reabrir o app, ele busca o que o outro mudou.
