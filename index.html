@@ -4,56 +4,52 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#f5f0ed">
+<meta name="theme-color" content="#f4f2ee">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Financeiro">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,300&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
 <style>
-/* financeiro · laís & igor — phone first, bento style.
-   planê palette (ink, rose, paper) driven by three inputs per person: --c-ink, --c-acc, --c-paper.
-   one card, one list row, one pill: every page is built from the same few parts.
+/* financeiro · laís & igor — a spreadsheet you want to open.
+   one ink (plum), one accent (violet) and three soft blocks (lilac, lime, pink) that each mean one thing:
+   lilac = contas, lime = entrou, pink = saiu. numbers always right-aligned, same size, same weight.
+   each person can still pick a color: --c-ink, --c-acc, --c-paper drive everything.
    all copy lowercase; only the R in R$ stays uppercase. */
 :root{
-  --c-ink:#33414d; --c-acc:#ad7466; --c-paper:#f5f0ed;
-  --bg:var(--c-paper); --surface:color-mix(in srgb,var(--c-paper) 22%,#fff);
-  --sunk:color-mix(in srgb,var(--c-paper) 86%,var(--c-ink)); --line:color-mix(in srgb,var(--c-paper) 84%,var(--c-acc));
-  --bd:color-mix(in srgb,var(--c-acc) 20%,var(--c-paper));
-  --ink:var(--c-ink); --ink-2:color-mix(in srgb,var(--c-ink) 80%,var(--c-paper)); --muted:color-mix(in srgb,var(--c-ink) 52%,var(--c-paper)); --on-ink:#fffdfb;
-  --rose:var(--c-acc); --rose-soft:color-mix(in srgb,var(--c-acc) 13%,var(--surface)); --rose-mid:color-mix(in srgb,var(--c-acc) 55%,var(--surface));
+  --c-ink:#241b35; --c-acc:#7b5ce0; --c-paper:#f4f2ee;
+  --bg:var(--c-paper); --surface:#fff; --sunk:color-mix(in srgb,var(--c-paper) 70%,var(--c-ink) 6%);
+  --line:color-mix(in srgb,var(--c-ink) 9%,#fff); --bd:color-mix(in srgb,var(--c-ink) 10%,#fff);
+  --ink:var(--c-ink); --ink-2:color-mix(in srgb,var(--c-ink) 78%,#fff); --muted:color-mix(in srgb,var(--c-ink) 52%,#fff); --on-ink:#fff;
+  --rose:var(--c-acc); --rose-soft:color-mix(in srgb,var(--c-acc) 12%,#fff); --rose-mid:color-mix(in srgb,var(--c-acc) 45%,#fff);
   --hero:var(--c-ink);
-  /* chart series, validated for color-blind separation on this surface */
-  --s1:#d0643b; --s2:#1f9a8a; --s3:#3a78c9; --s4:#d49a1a; --s5:#c9497a; --s6:#4f9a3c; --s7:#7056c2; --s8:#b8433f; --s0:#a39a94;
-  --lais:#b5677e; --igor:#4d6b85; --juntos:#a68b55;
-  --good:color-mix(in srgb,var(--c-ink) 55%,#5f8a72); --good-soft:color-mix(in srgb,var(--c-paper) 70%,#dfe9e2);
-  --bad:color-mix(in srgb,var(--c-acc) 72%,#5a1c12); --bad-soft:color-mix(in srgb,var(--c-acc) 16%,var(--surface));
-  --warn:#a2702c; --warn-soft:#f6ead6;
-  --shadow:0 1px 2px rgba(51,65,77,.04),0 6px 18px rgba(51,65,77,.05);
-  --f-ui:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --r:22px;
+  --lilac:color-mix(in srgb,var(--c-acc) 30%,#fff); --lime:#dcef7c; --pink:#f6bfd8; --sky:#cfe0f5; --t-txt:#1e1a2b;
+  --s1:#d0643b; --s2:#1f9a8a; --s3:#3a78c9; --s4:#d49a1a; --s5:#c9497a; --s6:#4f9a3c; --s7:#7056c2; --s8:#b8433f; --s0:#a39fae;
+  --lais:#c7588a; --igor:#4d6fa3; --juntos:#a58a3e;
+  --good:#3f8a5a; --good-soft:#e2f2e7; --bad:#c2454f; --bad-soft:#fbe4e6; --warn:#a2702c; --warn-soft:#f6ead6;
+  --shadow:0 1px 2px rgba(36,27,53,.04),0 8px 24px rgba(36,27,53,.06);
+  --f-ui:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:28px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:color-mix(in srgb,var(--c-ink) 30%,#121416); --surface:color-mix(in srgb,var(--c-ink) 34%,#1c1e21);
-  --sunk:color-mix(in srgb,var(--c-ink) 30%,#16181a); --line:color-mix(in srgb,var(--c-ink) 40%,#2c2f33); --bd:color-mix(in srgb,var(--c-acc) 22%,#2a2d31);
-  --ink:#efe9e5; --ink-2:#cfc7c2; --muted:#a59c97; --on-ink:#16181a;
-  --rose:color-mix(in srgb,var(--c-acc) 62%,#fff); --rose-soft:color-mix(in srgb,var(--c-acc) 22%,var(--surface)); --rose-mid:color-mix(in srgb,var(--c-acc) 70%,var(--surface));
-  --hero:color-mix(in srgb,var(--c-ink) 70%,#0e0f10);
-  --s1:#d4683f; --s2:#1fa08a; --s3:#4f80dd; --s4:#b8871c; --s5:#d0558a; --s6:#58a043; --s7:#8a74dc; --s8:#d85e58; --s0:#7d7570;
-  --lais:#e59ab0; --igor:#8fb0cf; --juntos:#d4b67c;
-  --good:#8cc29f; --good-soft:#203229; --bad:#f09a86; --bad-soft:#3d2420; --warn:#e3b86c; --warn-soft:#382d1b;
+  --bg:color-mix(in srgb,var(--c-ink) 40%,#0e0d12); --surface:color-mix(in srgb,var(--c-ink) 45%,#17151d); --sunk:color-mix(in srgb,var(--c-ink) 40%,#121016);
+  --line:rgba(255,255,255,.08); --bd:rgba(255,255,255,.09);
+  --ink:#f3f0f8; --ink-2:#d6d1e0; --muted:#a19bb0; --on-ink:#16131d;
+  --rose:color-mix(in srgb,var(--c-acc) 55%,#fff); --rose-soft:color-mix(in srgb,var(--c-acc) 22%,#17151d); --rose-mid:color-mix(in srgb,var(--c-acc) 65%,#17151d);
+  --hero:color-mix(in srgb,var(--c-ink) 55%,#000);
+  --lais:#ec8fb8; --igor:#8fb0e0; --juntos:#d7bd78;
+  --good:#7fd19c; --good-soft:#1d3226; --bad:#f08a92; --bad-soft:#3b1f24; --warn:#e3b86c; --warn-soft:#382d1b;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:color-mix(in srgb,var(--c-ink) 30%,#121416); --surface:color-mix(in srgb,var(--c-ink) 34%,#1c1e21);
-  --sunk:color-mix(in srgb,var(--c-ink) 30%,#16181a); --line:color-mix(in srgb,var(--c-ink) 40%,#2c2f33); --bd:color-mix(in srgb,var(--c-acc) 22%,#2a2d31);
-  --ink:#efe9e5; --ink-2:#cfc7c2; --muted:#a59c97; --on-ink:#16181a;
-  --rose:color-mix(in srgb,var(--c-acc) 62%,#fff); --rose-soft:color-mix(in srgb,var(--c-acc) 22%,var(--surface)); --rose-mid:color-mix(in srgb,var(--c-acc) 70%,var(--surface));
-  --hero:color-mix(in srgb,var(--c-ink) 70%,#0e0f10);
-  --s1:#d4683f; --s2:#1fa08a; --s3:#4f80dd; --s4:#b8871c; --s5:#d0558a; --s6:#58a043; --s7:#8a74dc; --s8:#d85e58; --s0:#7d7570;
-  --lais:#e59ab0; --igor:#8fb0cf; --juntos:#d4b67c;
-  --good:#8cc29f; --good-soft:#203229; --bad:#f09a86; --bad-soft:#3d2420; --warn:#e3b86c; --warn-soft:#382d1b;
+  --bg:color-mix(in srgb,var(--c-ink) 40%,#0e0d12); --surface:color-mix(in srgb,var(--c-ink) 45%,#17151d); --sunk:color-mix(in srgb,var(--c-ink) 40%,#121016);
+  --line:rgba(255,255,255,.08); --bd:rgba(255,255,255,.09);
+  --ink:#f3f0f8; --ink-2:#d6d1e0; --muted:#a19bb0; --on-ink:#16131d;
+  --rose:color-mix(in srgb,var(--c-acc) 55%,#fff); --rose-soft:color-mix(in srgb,var(--c-acc) 22%,#17151d); --rose-mid:color-mix(in srgb,var(--c-acc) 65%,#17151d);
+  --hero:color-mix(in srgb,var(--c-ink) 55%,#000);
+  --lais:#ec8fb8; --igor:#8fb0e0; --juntos:#d7bd78;
+  --good:#7fd19c; --good-soft:#1d3226; --bad:#f08a92; --bad-soft:#3b1f24; --warn:#e3b86c; --warn-soft:#382d1b;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
 
 /* ---------- base ---------- */
@@ -61,7 +57,7 @@
 [hidden]{display:none!important}
 html,body{min-height:100%;overscroll-behavior-x:none}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-transform:lowercase;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;text-transform:lowercase;-webkit-tap-highlight-color:transparent}
 .brl,input,select,textarea,::placeholder{text-transform:none!important}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0;padding:0;text-transform:inherit}
@@ -70,8 +66,7 @@ button{cursor:pointer;background:none;border:0;padding:0;text-transform:inherit}
 .muted{color:var(--muted)}
 .ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .ico.sm{width:15px;height:15px}.ico.lg{width:21px;height:21px}
-.script{font-style:italic;font-weight:300;color:var(--rose);letter-spacing:-.01em}
-.seasons .script{font-family:"The Seasons",var(--f-ui);font-weight:700;font-size:1.12em;letter-spacing:0;line-height:1}
+.script{font-style:italic;font-weight:700;color:var(--rose);letter-spacing:-.02em}
 h1,h2{margin:0;font-weight:600;letter-spacing:-.02em}
 .lbl{font-size:.7rem;font-weight:600;letter-spacing:.1em;color:var(--muted)}
 .dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
@@ -79,19 +74,6 @@ h1,h2{margin:0;font-weight:600;letter-spacing:-.02em}
 .bk-dot{display:inline-block;width:8px;height:8px;border-radius:3px;flex:none}
 .late{color:var(--bad)!important;font-weight:500}
 @media (max-width:899px){input,select,textarea{font-size:16px!important}}
-
-/* ---------- tile colors: the planê palette as a set of soft blocks ---------- */
-:root{
-  --t-ink:var(--hero); --t-rose:color-mix(in srgb,var(--c-acc) 52%,#fff); --t-blush:color-mix(in srgb,var(--c-acc) 17%,#fff);
-  --t-sky:color-mix(in srgb,var(--c-ink) 16%,#eef3f7); --t-sand:color-mix(in srgb,var(--c-paper) 55%,#e7d7c1); --t-white:var(--surface);
-  --t-txt:var(--c-ink);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --t-rose:color-mix(in srgb,var(--c-acc) 55%,#1c1e21); --t-blush:color-mix(in srgb,var(--c-acc) 22%,#1f2124);
-  --t-sky:color-mix(in srgb,var(--c-ink) 55%,#1b1e22); --t-sand:color-mix(in srgb,#b49a77 22%,#1f2124); --t-txt:#f3eeea}}
-:root[data-theme="dark"]{
-  --t-rose:color-mix(in srgb,var(--c-acc) 55%,#1c1e21); --t-blush:color-mix(in srgb,var(--c-acc) 22%,#1f2124);
-  --t-sky:color-mix(in srgb,var(--c-ink) 55%,#1b1e22); --t-sand:color-mix(in srgb,#b49a77 22%,#1f2124); --t-txt:#f3eeea}
 
 /* ---------- shell ---------- */
 .mark{width:46px;height:46px;border-radius:50%;background:var(--rose-soft);color:var(--rose);display:grid;place-items:center;flex:none;overflow:hidden}
@@ -449,6 +431,87 @@ body:has(.scrim){overflow:hidden}
   @keyframes mesInL{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 }
 .cv{content-visibility:auto;contain-intrinsic-size:auto 320px}
+
+/* ---------- v5: blocks with one meaning each ---------- */
+.t-ink{background:var(--hero);color:#fff}
+.t-lilac{background:var(--lilac);color:var(--t-txt)}.t-lime{background:var(--lime);color:var(--t-txt)}.t-pink{background:var(--pink);color:var(--t-txt)}.t-sky{background:var(--sky);color:var(--t-txt)}
+.t-white{background:var(--surface);border:1px solid var(--bd);color:var(--ink)}
+.tile{border-radius:var(--r);padding:18px}
+.tile h2{font-size:1.08rem;font-weight:700}
+.tile .t-big{font-weight:800;letter-spacing:-.04em}
+.tile .t-ico{background:rgba(255,255,255,.6);color:var(--t-txt)}
+.tile .t-go{background:var(--t-txt);color:#fff}
+.t-ink .t-go{background:var(--lime);color:var(--t-txt)}
+.t-ink .t-ico{background:rgba(255,255,255,.12);color:#fff}
+.t-white .t-go{background:var(--ink);color:var(--on-ink)}
+.t-white .t-ico{background:var(--sunk);color:var(--ink)}
+.ring circle:last-child{stroke:var(--lime)}
+.big{font-weight:800;letter-spacing:-.05em}
+.big .script{font-weight:700}
+.cap{border-radius:999px}
+.cap.on{background:var(--ink);color:var(--on-ink)}
+.cap.now:not(.on)::before{background:var(--c-acc)}
+.cap.ano{background:var(--lilac);color:var(--t-txt)}.cap.ano.on{background:var(--ink);color:var(--on-ink)}
+.sp[aria-pressed="true"]{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.sp[aria-pressed="true"] i{background:var(--lime);color:var(--t-txt)}
+.sp[aria-pressed="true"] small{color:inherit;opacity:.7}
+.addbtn{border:1.5px dashed color-mix(in srgb,var(--c-acc) 45%,transparent);color:var(--rose)}
+.rw-v{font-weight:700}
+.box.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.dia-h{color:var(--ink)}
+.grp{color:var(--rose)}
+.card,.dia,.mais,.addrow{border-radius:var(--r)}
+/* segmented control: one rounded block, the chosen option in white */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:4px;border-radius:999px;background:var(--sunk);border:1px solid var(--bd)}
+.seg button{min-height:42px;border-radius:999px;font-size:.88rem;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;padding:4px 6px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--on-ink)}
+.seg3{border-radius:30px}.seg3 button{min-height:58px;border-radius:26px;gap:2px}
+.seg3 i{font-style:normal;font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:99px;background:color-mix(in srgb,currentColor 14%,transparent);margin-left:2px}
+.seg3 button[aria-pressed="true"] i{background:var(--lime);color:var(--t-txt)}
+.seg3 button>span{white-space:nowrap;font-size:clamp(.74rem,3.4vw,.88rem)}
+.seg3 i{font-size:.66rem!important;padding:0 5px!important}
+.seg small{font-size:.72rem;font-weight:500;opacity:.8;white-space:nowrap}
+/* quick add: three buttons that open the form already on the right type */
+.quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.qk{border-radius:24px;padding:14px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:14px;color:var(--t-txt);font-weight:700;font-size:.9rem;text-align:left}
+.qk .t-ico{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.65)}
+.qk small{display:block;font-weight:500;font-size:.72rem;opacity:.7}
+/* the symbol */
+.marca{display:block;width:100%;height:100%}
+.mark{background:transparent}
+.mark:has(img){background:var(--sunk)}
+/* dock: plum pill, open page in a white capsule, + in lime */
+@media (max-width:700px){
+  .dock{background:var(--hero)}
+  .dock a[aria-current="page"]{background:#fff;color:var(--t-txt)}
+  .dock .plus{background:var(--lime);color:var(--t-txt)}
+  .dock a .dotb{background:var(--lime)}
+}
+/* form: value first, big; then what, who, when */
+.qadd{gap:12px}
+.qadd .seg{width:100%}
+.qadd .qv{width:100%;border:0;background:transparent;text-align:center;font-size:2.4rem;font-weight:800;letter-spacing:-.04em;height:64px;padding:0;color:var(--ink)}
+.qadd .qv::placeholder{color:var(--muted);opacity:.5}
+.qadd>*{flex:none!important}
+.qadd .qv:focus{outline:none}
+.qadd .qv{font-size:2.3rem!important}
+.addrow .qadd .qv{font-size:1.8rem!important}
+.qadd .qv{border-bottom:2px solid var(--line)!important;border-radius:0!important}
+.qadd .qv:focus{border-bottom-color:var(--c-acc)!important}
+.qadd input:not(.qv),.qadd select{height:50px;border-radius:999px;border:1px solid var(--bd);background:var(--bg);padding:0 18px;min-width:0;flex:1 1 140px;width:100%}
+.qadd .qrow{display:flex;gap:8px;flex-wrap:wrap}
+.qadd .qrow>*{flex:1 1 0}
+.qadd .chipset{display:flex;width:100%}
+.qadd .chipset button{flex:1;justify-content:center;padding:10px 8px}
+.qadd .btn{width:100%;height:54px;font-size:.98rem}
+.qadd .hint{text-align:center}
+.addrow .qadd .qv{text-align:left;font-size:1.9rem;height:52px}
+@media (min-width:900px){.qadd input[id$="-desc"]{flex:1 1 100%}.qadd .btn{flex:1 1 100%}}
+.brand b i{color:var(--c-acc)}
+.nav a[aria-current="page"]{background:var(--ink);color:var(--on-ink)}
+.btn.dark{background:var(--ink);color:var(--on-ink);box-shadow:none}
+.link{color:var(--rose)}
+.legend .sw,.dleg i{border-radius:50%}
 </style>
 
 <header class="topnav">
@@ -568,6 +631,7 @@ const uid=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 // ---------- color per device ----------
 // each phone keeps its own pick in localStorage; the default is the planê palette.
 const TEMAS=[
+  ['nova','ameixa',{ink:'#241b35',acc:'#7b5ce0',paper:'#f4f2ee'}],
   ['plane','planê',{ink:'#33414d',acc:'#ad7466',paper:'#f5f0ed'}],
   ['cafe','café',{ink:'#4a2a26',acc:'#a65a40',paper:'#f6f1ea'}],
   ['salvia','sálvia',{ink:'#2f4a3f',acc:'#7b9a68',paper:'#f1f2ea'}],
@@ -579,38 +643,37 @@ const TEMAS=[
 ];
 const hx=h=>{h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))};
 const mixHex=(a,b,t)=>'#'+hx(a).map((v,i)=>Math.round(v*(1-t)+hx(b)[i]*t).toString(16).padStart(2,'0')).join('');
-let tema={id:'plane',...TEMAS[0][2]};
+let tema={id:'nova',...TEMAS[0][2]};
+// the old default (planê, never picked by hand) moves to the new look; a color someone chose stays
+const temaOk=t=>t&&t.ink&&t.acc&&t.paper&&!(t.id==='plane'&&!t.escolhido);
 function applyTema(t){
-  if(t) tema=t; else { try{ const s=JSON.parse(localStorage.getItem('fin-tema')||'null'); if(s&&s.ink&&s.acc&&s.paper) tema=s; }catch(e){} }
+  if(t){ if(temaOk(t)) tema=t; } else { try{ const s=JSON.parse(localStorage.getItem('fin-tema')||'null'); if(temaOk(s)) tema=s; }catch(e){} }
   const r=document.documentElement.style; r.setProperty('--c-ink',tema.ink); r.setProperty('--c-acc',tema.acc); r.setProperty('--c-paper',tema.paper);
   const dark=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content',dark?mixHex(tema.ink,'#121416',.7):tema.paper);
 }
 try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyTema(tema)); }catch(e){}
-function setTema(t){ applyTema(t); try{localStorage.setItem('fin-tema',JSON.stringify(t))}catch(e){} applyIcone(); render(); savePerfil(); }
+function setTema(t){ t={...t,escolhido:true}; applyTema(t); try{localStorage.setItem('fin-tema',JSON.stringify(t))}catch(e){} applyIcone(); render(); savePerfil(); }
 const temaCustom=acc=>({id:'custom',acc,ink:mixHex(acc,'#141414',.62),paper:mixHex(acc,'#ffffff',.93)});
 applyTema();
 
 // ---------- app icon per device ----------
-const ICONES=[['wallet','carteira'],['piggy','porquinho'],['dollar','cifrão']];
+const ICONES=[['marca','símbolo']];
+const marcaSvg=(bg)=>`<svg class="marca" viewBox="0 0 100 100" aria-hidden="true">${bg?`<rect width="100" height="100" rx="${bg==='sq'?0:30}" fill="${tema.ink}"/>`:''}<circle cx="40" cy="50" r="22" fill="#cdbdf5"/><circle cx="60" cy="50" r="22" fill="#dcef7c"/><path d="M50 30.4A22 22 0 0 1 50 69.6A22 22 0 0 1 50 30.4Z" fill="#fff"/></svg>`;
 let icone={id:'wallet'};
 try{ const s=JSON.parse(localStorage.getItem('fin-icone')||'null'); if(s&&s.id) icone={...icone,...s}; }catch(e){}
 let foto=null; try{ foto=localStorage.getItem('fin-foto')||null; }catch(e){}
 if(icone.id==='foto'){ icone.id='wallet'; icone.usaFoto=true; }
-if(!ICONES.some(([id])=>id===icone.id)) icone.id='wallet';
-const markInner=(ic_=icone)=>ic(P[ic_.id]?ic_.id:'wallet','mk');
+icone.id='marca';
+const markInner=()=>marcaSvg(true);
 // the profile spot inside the app shows the photo when there is one; the app icon is always a drawing
 const markHead=()=>icone.usaFoto&&foto?`<img src="${foto}" alt="foto de perfil">`:markInner();
 function iconPng(size){
-  // draws the chosen icon on the theme color; used as favicon and home-screen icon
+  // the symbol on its plum square: favicon and home-screen icon
   return new Promise(res=>{ try{
     const c=document.createElement('canvas'); c.width=c.height=size; const x=c.getContext('2d');
-    const g=x.createLinearGradient(0,0,size,size); g.addColorStop(0,mixHex(tema.ink,'#ffffff',.18)); g.addColorStop(.6,tema.ink); g.addColorStop(1,mixHex(tema.ink,'#000000',.12));
-    x.fillStyle=g; x.fillRect(0,0,size,size);
-    const fg=mixHex(tema.acc,'#ffffff',.55);
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${fg}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${P[icone.id]}</svg>`;
-    const im=new Image(); im.onload=()=>{ const s=size*.52; x.drawImage(im,(size-s)/2,(size-s)/2,s,s); res(c.toDataURL('image/png')); }; im.onerror=()=>res(null);
-    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+    const im=new Image(); im.onload=()=>{ x.drawImage(im,0,0,size,size); res(c.toDataURL('image/png')); }; im.onerror=()=>res(null);
+    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(marcaSvg('sq').replace('<svg class="marca"',`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"`));
   }catch(e){ res(null); } });
 }
 async function applyIcone(){
@@ -632,9 +695,9 @@ let perfilT=0;
 function savePerfil(){ const id=perfilId(); if(!id||!store||mode!=='nuvem') return; clearTimeout(perfilT);
   perfilT=setTimeout(()=>{ store.put({id,tipo:'perfil',email:userEmail,icone,foto:icone.usaFoto?foto:null,tema}).catch(()=>{}); },400); }
 function loadPerfil(){ const d=perfilId()&&items.get(perfilId()); if(!d) { savePerfil(); return; }
-  if(d.tema&&d.tema.ink){ applyTema(d.tema); try{localStorage.setItem('fin-tema',JSON.stringify(d.tema))}catch(e){} }
+  if(temaOk(d.tema)){ applyTema(d.tema); try{localStorage.setItem('fin-tema',JSON.stringify(d.tema))}catch(e){} }
   if(d.foto){ foto=d.foto; try{localStorage.setItem('fin-foto',foto)}catch(e){} }
-  if(d.icone&&d.icone.id){ icone={...icone,...d.icone}; if(icone.id==='foto'){ icone.id='wallet'; icone.usaFoto=true; } try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} }
+  if(d.icone&&d.icone.id){ icone={...icone,...d.icone}; if(icone.id==='foto'){ icone.usaFoto=true; } icone.id='marca'; try{localStorage.setItem('fin-icone',JSON.stringify(icone))}catch(e){} }
   applyIcone(); }
 // photo: opens a framing step (drag to move, slider to zoom), then saves a 512px jpeg square (small enough to sync)
 let crop=null;
@@ -916,16 +979,15 @@ function quickForm(p,tipo,fixo){
       <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão: não sei</option><option value="boleto">boleto ou pix</option>${bkAtivos().map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
     :'';
   return `<form class="qadd" id="${p}F" data-tipo="${tipo}" novalidate>
-    <div class="qrow">${fixo?'':`<div class="chipset">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>`}
-      <div class="chipset">${Object.entries(QUEM).filter(([k])=>tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${qq===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
-    <div class="qrow"><input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="next" placeholder="${tipo==='conta'?'qual conta':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
-      <datalist id="${p}dl">${sugestoes(tipo)}</datalist>
-      <input id="${p}-valor" data-keep inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
-      <input id="${p}-data" data-keep type="date" value="${dDef}" aria-label="${tipo==='conta'?'vencimento':'data'}">
-      ${extra}
-      <button class="btn dark" type="submit">${ic('plus','sm')} adicionar</button></div>
+    ${fixo?'':`<div class="seg">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>`}
+    <input id="${p}-valor" class="qv" data-keep inputmode="decimal" enterkeyhint="next" placeholder="R$ 0,00" aria-label="valor">
+    <input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="done" placeholder="${tipo==='conta'?'qual conta':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
+    <datalist id="${p}dl">${sugestoes(tipo)}</datalist>
+    <div class="chipset">${Object.entries(QUEM).filter(([k])=>tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${qq===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div>
+    <input id="${p}-data" data-keep type="date" value="${dDef}" aria-label="${tipo==='conta'?'vencimento':'data'}">${extra?`<div class="qrow">${extra}</div>`:''}
     ${tipo==='gasto'?`<p class="hint" id="${p}-cathint">a categoria é identificada sozinha pelo que você escrever.</p>`:''}
-    <p class="err" id="${p}-err" hidden></p></form>`;
+    <p class="err" id="${p}-err" hidden></p>
+    <button class="btn dark" type="submit">${ic('check','sm')} adicionar</button></form>`;
 }
 const keepVals=p=>{const k={}; ['desc','valor','data'].forEach(x=>{const el=$('#'+p+'-'+x); if(el) k[x]=el.value;}); return k;};
 const putVals=(p,k)=>Object.entries(k).forEach(([x,v])=>{const el=$('#'+p+'-'+x); if(el&&v) el.value=v;});
@@ -934,25 +996,26 @@ function openQuick(tipo){
   $('#sheetHost').innerHTML=`<div class="scrim" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="lançar">
     <div class="card-h" style="margin:0"><h2>lançar</h2><button type="button" class="icbtn" data-close="1" aria-label="fechar">${ic('x')}</button></div>
     ${quickForm('s',tipo)}</div></div>`;
-  setTimeout(()=>$('#s-desc')?.focus(),60);
+  setTimeout(()=>$('#s-valor')?.focus(),60);
 }
 
 function pInicio(){
   const m=ui.mes, r=resumo(m), vazio=!r.E&&!r.C&&!r.G;
   let h=`<h1 class="big">${vazio?`nada lançado <span class="script">em ${mName(m)}</span>`:`${r.S<0?'faltou':'sobrou'} <span class="num">${fmt(Math.abs(r.S))}</span> <span class="script">em ${mName(m)}</span>`}</h1>`+monthNav();
   const ne=ofMes(m,'entrada').length;
-  h+=`<div class="bento">${progTile(m)}
-    <button class="tile t-rose go" style="min-height:150px" data-golt="entradas"><span class="t-top"><span class="t-ico">${ic('sw')}</span></span><span class="t-lbl" style="margin-top:auto">entrou</span><span class="t-big num">${fmt(r.E)}</span><span class="t-sub">${ne} entrada${ne===1?'':'s'}</span></button>
-    <button class="tile t-blush go" style="min-height:150px" data-golt="gastos"><span class="t-top"><span class="t-ico">${ic('ne')}</span></span><span class="t-lbl" style="margin-top:auto">saiu</span><span class="t-big num">${fmt(r.C+r.G)}</span><span class="t-sub">contas + gastos</span></button>
-    ${proximas(m)}${cartoesStack(m)}${cardGuardado(m)}${cardMetas(m)}<div class="span2">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
+  if(canWrite) h+=`<div class="quick">${[['gasto','gasto','t-pink','bag'],['conta','conta','t-lilac','file'],['entrada','entrada','t-lime','up']].map(([k,l,c,i])=>`<button class="qk ${c}" data-new="${k}"><span class="t-ico">${ic('plus','sm')}</span><span>${l}<small>adicionar</small></span></button>`).join('')}</div>`;
+  h+=`<div class="bento">
+    <button class="tile t-lime go" style="min-height:140px" data-golt="entradas"><span class="t-top"><span class="t-ico">${ic('sw')}</span></span><span class="t-lbl" style="margin-top:auto">entrou</span><span class="t-big num">${fmt(r.E)}</span><span class="t-sub">${ne} entrada${ne===1?'':'s'}</span></button>
+    <button class="tile t-pink go" style="min-height:140px" data-golt="gastos"><span class="t-top"><span class="t-ico">${ic('ne')}</span></span><span class="t-lbl" style="margin-top:auto">saiu</span><span class="t-big num">${fmt(r.C+r.G)}</span><span class="t-sub">contas + gastos</span></button>
+    ${progTile(m)}${proximas(m)}${cartoesStack(m)}${cardGuardado(m)}${cardMetas(m)}<div class="span2">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
   h+=`<details class="mais" ${ui.mais?'open':''}><summary>${ic('chart','sm')} mais detalhes do mês<small>últimos 6 meses, ritmo dos gastos, dias e quem gastou</small>${ic('chev','sm')}</summary>${ui.mais?`<div class="cols"><div class="col"><section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section>${chartRitmo(m)}</div><div class="col">${cardCalendario(m)}${cardQuem(m)}</div></div>`:''}</details>`;
   return h;
 }
 // a ring for "how much is done": pct 0..1
-const ring=(pct,label)=>{ const R=48,C=2*Math.PI*R; return `<div class="ring"><svg viewBox="0 0 118 118" aria-hidden="true"><circle cx="59" cy="59" r="${R}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="11"/><circle cx="59" cy="59" r="${R}" fill="none" stroke="var(--c-acc)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(Math.max(.001,pct)*C).toFixed(1)} ${C.toFixed(1)}"/></svg><span class="rc"><b>${Math.round(pct*100)}<small>%</small></b><em>${label}</em></span></div>`; };
+const ring=(pct,label)=>{ const R=48,C=2*Math.PI*R; return `<div class="ring"><svg viewBox="0 0 118 118" aria-hidden="true"><circle cx="59" cy="59" r="${R}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="11"/><circle cx="59" cy="59" r="${R}" fill="none" stroke="var(--c-acc)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(Math.max(.001,pct)*C).toFixed(1)} ${C.toFixed(1)}"/></svg><span class="rc"><b>${Math.round(pct*100)}<small>%</small></b><em>${label}</em></span></div>`; };
 function progTile(m){
   const r=resumo(m), contas=ofMes(m,'conta'), falta=sumResta(contas), pagas=contas.filter(c=>c.pago).length, pct=r.C?(r.C-falta)/r.C:0;
-  return `<section class="tile t-ink span2"><div class="t-top"><h2>contas do <span class="script">mês</span></h2><button class="t-go" data-vercontas="1" aria-label="ver contas">${ic('ne','sm')}</button></div>
+  return `<section class="tile t-lilac span2"><div class="t-top"><h2>contas do <span class="script">mês</span></h2><button class="t-go" data-vercontas="1" aria-label="ver contas">${ic('ne','sm')}</button></div>
     <div class="prog">${ring(pct,'pagas')}<div class="pl3"><div><span>pagas</span><b>${pagas} de ${contas.length}</b></div><div><span>falta pagar</span><b class="num">${fmt(falta)}</b></div><div><span>total de contas</span><b class="num">${fmt(r.C)}</b></div></div></div></section>`;
 }
 // the month's cards, stacked like a wallet (biggest in front)
@@ -974,7 +1037,7 @@ function pLanc(){
   if(ui.busca) return h+vBusca(ui.busca);
   const L={entrada:ofMes(m,'entrada').sort(byDate),conta:ofMes(m,'conta').sort(byDate),gasto:ofMes(m,'gasto')}, T={entrada:r.E,conta:r.C,gasto:r.G};
   const lt=ui.lt||'gastos', ativo={entradas:'entrada',contas:'conta',gastos:'gasto'}[lt]||'gasto';
-  h+=`<div class="spills lanc-sp" role="tablist">${[['gastos','saídas','gasto'],['contas','contas','conta'],['entradas','entradas','entrada']].map(([k,l,t])=>`<button type="button" class="sp" role="tab" data-lt="${k}" aria-pressed="${lt===k}"><i>${L[t].length}</i>${l} <small>${fmt(T[t])}</small></button>`).join('')}</div>`;
+  h+=`<div class="seg seg3 lanc-sp" role="tablist">${[['gastos','saídas','gasto'],['contas','contas','conta'],['entradas','entradas','entrada']].map(([k,l,t])=>`<button type="button" role="tab" data-lt="${k}" aria-pressed="${lt===k}"><span>${l} <i>${L[t].length}</i></span><small class="num">${fmt(T[t])}</small></button>`).join('')}</div>`;
   const todas=innerWidth>=1100;
   h+=`<div class="folha3">${['entrada','conta','gasto'].filter(k=>todas||k===ativo).map(k=>lista(k,L[k],T[k])).join('')}</div>`;
   return h;
@@ -1093,7 +1156,7 @@ function metaInfo(m,c,lim){
 }
 function cardMetas(m){
   const M=metas(), ks=METACATS.filter(c=>M[c]); if(!ks.length) return '';
-  return `<section class="tile t-sand span2"><div class="t-top"><h2>metas do <span class="script">mês</span></h2><button class="t-go" data-page="ajustes" data-metas="1" aria-label="ajustar metas">${ic('ne','sm')}</button></div><div class="bars">${ks.map(c=>{ const lim=M[c], k=metaInfo(m,c,lim);
+  return `<section class="tile t-white span2"><div class="t-top"><h2>metas do <span class="script">mês</span></h2><button class="t-go" data-page="ajustes" data-metas="1" aria-label="ajustar metas">${ic('ne','sm')}</button></div><div class="bars">${ks.map(c=>{ const lim=M[c], k=metaInfo(m,c,lim);
     const txt=k.p>=1?`passou ${fmt(-k.resta)}`:k.nivel==='warn'&&k.prev>lim?`no ritmo, fecha em ${fmt(k.prev)}`:`sobra ${fmt(k.resta)}`;
     return `<div class="bar"><span><span class="dot" style="background:${c===TOTAL?'var(--ink)':CATC[c]}"></span>${esc(c)}</span><span class="num">${fmt(k.g)} <span class="muted">de ${fmt(lim)}</span></span><div class="trk"><i style="width:${Math.min(100,k.p*100)}%;background:var(--${k.nivel==='good'?'rose':k.nivel})"></i></div><small class="${k.nivel}">${txt}</small></div>`; }).join('')}</div></section>`;
 }
@@ -1247,9 +1310,9 @@ function pAno(){
   if(!rows.length) return h+`<section class="card empty">${ic('chart')}<div>${Y} ainda não tem lançamentos até hoje.</div></section>`;
   h+=`<div class="bento"><section class="tile t-ink span2"><div class="t-top"><h2>meses no <span class="script">positivo</span></h2></div>
       <div class="prog">${ring(pos/rows.length,`${pos} de ${rows.length}`)}<div class="pl3"><div><span>entrou</span><b class="num">${fmt(E)}</b></div><div><span>contas</span><b class="num">${fmt(C)}</b></div><div><span>gastos</span><b class="num">${fmt(G)}</b></div></div></div></section>
-    <div class="tile ${S<0?'t-rose':'t-sky'}" style="min-height:140px"><span class="t-ico">${ic(S<0?'ne':'sw')}</span><span class="t-lbl" style="margin-top:auto">${S<0?'faltou':'sobrou'} no ano</span><span class="t-big num">${fmt(Math.abs(S))}</span></div>
-    <div class="tile t-blush" style="min-height:140px"><span class="t-ico">${ic('chart')}</span><span class="t-lbl" style="margin-top:auto">saída por mês</span><span class="t-big num">${fmt((C+G)/rows.length)}</span><span class="t-sub">em média</span></div>
-    <button class="tile t-sand span2 go" data-banco=""><span class="t-top"><h2>bancos e <span class="script">cartões</span></h2><span class="t-go">${ic('ne','sm')}</span></span><span class="t-sub">quanto foi em cada cartão, parcelas e histórico</span></button></div>`;
+    <div class="tile ${S<0?'t-pink':'t-lime'}" style="min-height:140px"><span class="t-ico">${ic(S<0?'ne':'sw')}</span><span class="t-lbl" style="margin-top:auto">${S<0?'faltou':'sobrou'} no ano</span><span class="t-big num">${fmt(Math.abs(S))}</span></div>
+    <div class="tile t-sky" style="min-height:140px"><span class="t-ico">${ic('chart')}</span><span class="t-lbl" style="margin-top:auto">saída por mês</span><span class="t-big num">${fmt((C+G)/rows.length)}</span><span class="t-sub">em média</span></div>
+    <button class="tile t-white span2 go" data-banco=""><span class="t-top"><h2>bancos e <span class="script">cartões</span></h2><span class="t-go">${ic('ne','sm')}</span></span><span class="t-sub">quanto foi em cada cartão, parcelas e histórico</span></button></div>`;
   const mx=Math.max(...rows.map(r=>Math.max(r.E,r.C+r.G)),1);
   h+=`<div class="cols"><div class="col"><section class="card flush"><div class="card-h"><h2>mês a mês</h2><span class="sub">toque para abrir</span></div>${rows.slice().reverse().map(r=>`<button class="ym" data-goto="${r.m}">
       <span class="ym-n">${r.n}</span>
@@ -1305,8 +1368,7 @@ function pAjustes(){
   <section class="card"><div class="card-h"><h2>foto de <span class="script">perfil</span></h2><span class="sub">só dentro do app</span></div>
     <div class="opt-row"><span class="mark big">${temFoto?`<img src="${foto}" alt="">`:ic('upload','mk')}</span><span><b>${temFoto?'sua foto':'sem foto'}</b><small>${temFoto?'só vocês dois veem, dentro do app. nunca vira o ícone.':'escolha uma foto da galeria.'}</small></span>
       <span style="display:flex;gap:8px;flex-wrap:wrap"><label class="pill-btn fileb">${temFoto?'trocar':'escolher foto'}<input type="file" id="fotoFile" accept="image/*" aria-label="escolher foto"></label>${temFoto?`<button class="pill-btn" data-fotoaj="1">ajustar</button><button class="pill-btn" data-fotodel="1">remover</button>`:''}</span></div></section>
-  <section class="card"><div class="card-h"><h2>ícone do <span class="script">app</span></h2><span class="sub">de cada um</span></div>
-    <div class="temas">${ICONES.map(([id,nome])=>`<button class="tema" data-icone="${id}" aria-pressed="${icone.id===id}"><span class="mark big">${markInner({id})}</span>${nome}</button>`).join('')}</div></section></div>
+</div>
   <div class="col"><section class="card"><div class="card-h"><h2>sua <span class="script">cor</span></h2><span class="sub">cada um escolhe a sua</span></div>
     <div class="temas">${TEMAS.map(([id,nome,c])=>`<button class="tema" data-tema="${id}" aria-pressed="${tema.id===id}"><span class="sw2" style="background:linear-gradient(135deg,${c.ink} 50%,${c.acc} 50%)"></span>${nome}</button>`).join('')}
       <label class="tema" aria-pressed="${tema.id==='custom'}"><span class="sw2" style="background:conic-gradient(#e0707a,#e6b85c,#7bb07a,#5c9bd6,#9b7ad0,#e0707a)"><input type="color" id="temaCor" value="${tema.acc}" aria-label="escolher qualquer cor"></span>escolher</label></div></section></div></div>`;
@@ -1443,7 +1505,7 @@ document.addEventListener('click',e=>{
   if(d.pickmes){ irMes(d.pickmes); return; }
   if(d.anomes){ const ms=meses().filter(x=>x.startsWith(d.anomes)); const cm=today().slice(0,7); irMes(ms.includes(cm)?cm:ms.includes(d.anomes+ui.mes.slice(4))?d.anomes+ui.mes.slice(4):ms.at(-1)); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
-  if(d.addrow!==undefined){ ui.add=d.addrow||null; render(); if(ui.add) setTimeout(()=>$('#'+PFX[ui.add]+'-desc')?.focus(),50); return; }
+  if(d.addrow!==undefined){ ui.add=d.addrow||null; render(); if(ui.add) setTimeout(()=>$('#'+PFX[ui.add]+'-valor')?.focus(),50); return; }
   if(d.buscaon){ const on=!(ui.buscaOn&&ui.page==='lanc'); ui.buscaOn=on; if(!on) ui.busca=''; ui.page='lanc'; saveUi(); render(); if(on){ window.scrollTo({top:0}); setTimeout(()=>$('#q-busca')?.focus(),30); } return; }
   if(d.golt){ ui.page='lanc'; ui.lt=d.golt; ui.cat=null; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.vercontas){ ui.page='lanc'; ui.lt='contas'; ui.cat=null; saveUi(); render(); window.scrollTo({top:0}); return; }
@@ -1458,7 +1520,7 @@ document.addEventListener('click',e=>{
     return; }
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
-  if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'plane',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
+  if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }
@@ -1503,7 +1565,7 @@ function showTip(el,x,y){ const t=tipEl(); t.innerHTML=el.dataset.tip.split('|')
 document.addEventListener('pointermove',e=>{ if(e.pointerType!=='mouse') return; const el=e.target.closest?.('[data-tip]'); if(el) showTip(el,e.clientX,e.clientY); else if(!tipEl().hidden) tipEl().hidden=true; });
 document.addEventListener('pointerdown',e=>{ if(e.pointerType==='mouse') return; const el=e.target.closest?.('[data-tip]'); document.querySelectorAll('.hit.on').forEach(h=>h.classList.remove('on')); if(el){ showTip(el,e.clientX,e.clientY); el.classList.add('on'); } else tipEl().hidden=true; });
 addEventListener('scroll',()=>{ if(!tipEl().hidden) tipEl().hidden=true; },{passive:true});
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.id==='f-pv'){ e.preventDefault(); $('[data-addparc]')?.click(); return; } if(e.key==='Enter'&&/^(q|s|ae|ac|ag)-desc$/.test(e.target.id)&&!$('#'+e.target.id.split('-')[0]+'-valor').value){ e.preventDefault(); $('#'+e.target.id.split('-')[0]+'-valor').focus(); return; } if(e.key==='Escape'&&$('#dupHost').innerHTML){ $('#dupHost').innerHTML=''; dupPend=null; return; } if(e.key==='Escape'){ if(form){form=null;drawSheet();} else { crop=null; $('#sheetHost').innerHTML=''; } } });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&/^(q|s|ae|ac|ag)-valor$/.test(e.target.id)&&!$('#'+e.target.id.split('-')[0]+'-desc').value){ e.preventDefault(); $('#'+e.target.id.split('-')[0]+'-desc').focus(); return; } if(e.key==='Enter'&&e.target.id==='f-pv'){ e.preventDefault(); $('[data-addparc]')?.click(); return; } if(e.key==='Enter'&&/^(q|s|ae|ac|ag)-desc$/.test(e.target.id)&&!$('#'+e.target.id.split('-')[0]+'-valor').value){ e.preventDefault(); $('#'+e.target.id.split('-')[0]+'-valor').focus(); return; } if(e.key==='Escape'&&$('#dupHost').innerHTML){ $('#dupHost').innerHTML=''; dupPend=null; return; } if(e.key==='Escape'){ if(form){form=null;drawSheet();} else { crop=null; $('#sheetHost').innerHTML=''; } } });
 
 // phones keep the app suspended for hours: when it comes back, catch up with what the other one changed
 // and, if the month turned meanwhile, move to the new month and carry the installments
