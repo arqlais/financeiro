@@ -190,6 +190,7 @@ body.gated .nav,body.gated .nav-r,body.gated .dock,body.gated .appbar .rbtn{disp
 @media (max-width:370px){.prog{grid-template-columns:100px minmax(0,1fr)}.ring{width:100px;height:100px}}
 /* bank cards, stacked like a wallet */
 .stack{display:flex;flex-direction:column}
+.wallet{display:flex;flex-direction:column}.wallet .stack{flex:1}.wallet .stack .ccard:last-child{height:auto;min-height:132px;flex:1}
 .ccard{position:relative;border-radius:24px;padding:16px 18px 18px;color:#fff;min-height:118px;overflow:hidden;display:flex;flex-direction:column;gap:2px;box-shadow:0 -6px 16px rgba(0,0,0,.08);text-align:left;width:100%}
 .stack .ccard{height:132px}.stack .ccard+.ccard{margin-top:-78px}
 .stack .ccard:not(:last-child) .cc-v,.stack .ccard:not(:last-child) .cc-s,.stack .ccard:not(:last-child) .t-go{visibility:hidden}
@@ -566,8 +567,7 @@ body:has(.scrim){overflow:hidden}
 .bkg-h{display:flex;align-items:center;gap:7px;width:100%;padding:8px 0 2px;font-size:.8rem;font-weight:700;color:var(--ink)}
 .bkg-h small{font-weight:500;color:var(--muted)}.bkg-h .num{margin-left:auto;font-weight:600;color:var(--ink-2)}
 /* v8: one bill per card */
-.fats{display:flex;flex-direction:column;gap:10px;padding:6px 0 4px}
-.fat{border-radius:20px;background:color-mix(in srgb,var(--bk) 7%,var(--surface));padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.fat{margin:8px 0;border-radius:20px;background:color-mix(in srgb,var(--bk) 7%,var(--surface));padding:12px 14px;display:flex;flex-direction:column;gap:9px}
 .fat-h{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
 .fat-t{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'n v' 's s';gap:2px 10px;align-items:center;text-align:left;color:inherit;width:100%;cursor:pointer}
 .fat-t .ico{color:var(--muted);transition:transform .2s;vertical-align:-3px;margin-left:2px}.fat.open .fat-t .ico{transform:rotate(180deg)}
@@ -584,7 +584,7 @@ body:has(.scrim){overflow:hidden}
 .rec{color:var(--c-acc);font-weight:600}.rw-d small .rec{display:block;margin-top:1px}.rec.ok{color:var(--muted);font-weight:500}
 .fat-q>.rec{display:inline;margin-left:auto}
 .fat-its{margin:2px 0 0;border-top:1px solid color-mix(in srgb,var(--bk) 22%,var(--line))}
-.fat-its .rw:last-of-type{border-bottom:0}.fat-its .addbtn{margin-top:4px}
+.fat-its .rw:last-of-type{border-bottom:0}.dia .fat:last-child{margin-bottom:4px}.fat-its .addbtn{margin-top:4px}
 .dl{display:grid;grid-template-columns:auto minmax(0,1fr) auto 32px;gap:10px;align-items:center;font-size:.88rem}
 .dl span{display:flex;flex-direction:column;min-width:0}.dl small{color:var(--muted);font-size:.74rem}.dl b{font-weight:600}
 .dl b{white-space:nowrap}.dl.ok>span,.dl.ok b{color:var(--muted)}.dl .icbtn{width:32px;height:32px}
@@ -671,7 +671,7 @@ const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" aria-hidden="true"
 const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const QUEM={lais:'laís',igor:'igor',juntos:'juntos'};
 const BANKS={
-  'nubank pf':{m:'nu',c:'#820AD1'}, 'nubank pj':{m:'pj',c:'#4E0A82'}, 'inter':{m:'in',c:'#FF7A00'}, 'mercado pago':{m:'mp',c:'#009EE3'},
+  'nubank pf':{m:'nu',c:'#820AD1'}, 'nubank pj':{m:'pj',c:'#4E0A82'}, 'nubank igor':{m:'nu',c:'#A35BD8'}, 'inter':{m:'in',c:'#FF7A00'}, 'mercado pago':{m:'mp',c:'#009EE3'},
   'itaú':{m:'it',c:'#EC7000'}, 'c6 bank':{m:'c6',c:'#2B2B2B'}, 'riachuelo':{m:'ri',c:'#D7192F'},
   'santander':{m:'sa',c:'#EC0000'}, 'bradesco':{m:'br',c:'#CC092F'}, 'caixa':{m:'cx',c:'#005CA9'},
   'banco do brasil':{m:'bb',c:'#3B5BA5'}, 'picpay':{m:'pp',c:'#11A85F'}, 'outro cartão':{m:'··',c:'#8e8580'},
@@ -720,7 +720,7 @@ function catGuess(desc){ const d=' '+(desc||'').toLowerCase().normalize('NFC')+'
   for(const [n,,ks] of CATS) if(ks.some(k=>d.includes(k.length<=3?' '+k+' ':k))) return n; return 'outros'; }
 function cat(it){ if(it.cat){const c=String(it.cat).toLowerCase(); if(CATN.includes(c)) return c;} const lc=learnedCat(it.desc); if(lc&&CATN.includes(lc)) return lc; return catGuess(it.desc); }
 function banco(it){ if(it.banco!==undefined) return it.banco?String(it.banco).toLowerCase():'boleto'; if(it.tipo!=='conta') return null;
-  const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) return apelido(b); return BOLETO.test(d)?'boleto':null; }
+  const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) return apelido(b==='nubank pf'&&it.quem==='igor'&&/\bnu\b/.test(d)&&!/\bpf\b/.test(d)?'nubank igor':b); return BOLETO.test(d)?'boleto':null; }
 const apelido=b=>{ const a=bankDocs().find(x=>x.de===b&&!x.oculto); return a?String(a.nome).toLowerCase():b; };
 const slug=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'x';
 const uid=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1008,7 +1008,7 @@ async function migrarRoxo(){
   const alvo=[...items.values()].filter(i=>{ if(i.tipo!=='conta'||i.banco!==undefined) return false; const d=(i.desc||'').trim().toLowerCase(), p=parc(d);
     return exato.has(i.mes+'|'+i.quem+'|'+d)||(p&&serie.has(i.quem+'|'+p.base.toLowerCase()+'|'+p.y))||(fixa.has(i.quem+'|'+d)&&i.mes>='2026-09'); });
   try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank pf'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
-    if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas como nubank`,'card'); }catch(e){}
+    if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas como nubank pf`,'card'); }catch(e){}
 }
 async function autoParcelas(){
   if(autoDone||!canWrite||!store) return; autoDone=true;
@@ -1159,7 +1159,7 @@ function cartoesStack(m){
   const g={}; ofMes(m,'conta').forEach(c=>{const b=banco(c); if(b&&b!=='boleto') (g[b]=g[b]||[]).push(c)});
   const a=Object.entries(g).sort((x,y)=>sum(x[1])-sum(y[1])); if(!a.length) return '';
   const B=BK();
-  return `<section class="span2"><div class="sec-h" style="margin-bottom:8px"><h2>cartões <span class="script">do mês</span></h2><button class="link" data-banco="">explorar ${ic('arrow','sm')}</button></div><div class="stack">${a.map(([b,l])=>{ const f=sumResta(l);
+  return `<section class="span2 wallet"><div class="sec-h" style="margin-bottom:8px"><h2>cartões <span class="script">do mês</span></h2><button class="link" data-banco="">explorar ${ic('arrow','sm')}</button></div><div class="stack">${a.map(([b,l])=>{ const f=sumResta(l);
     return `<button class="ccard" data-banco="${esc(b)}" style="background:${(B[b]||B['outro cartão']).c}"><span class="cc-top">${esc(b)}<small class="num">${fmt(sum(l))}</small></span><span class="cc-v num">${fmt(sum(l))}</span><span class="cc-s">${l.length} conta${l.length>1?'s':''} · ${f?`falta ${fmt(f)}`:'tudo pago'}</span><span class="t-go">${ic('ne','sm')}</span></button>`; }).join('')}</div></section>`;
 }
 // ---------- lançamentos: the lists of the month ----------
@@ -1227,14 +1227,16 @@ function lista(tipo,list,total){
   if(canWrite) h+=ui.add===tipo?`<div class="addrow">${quickForm(PFX[tipo],tipo,true)}<button class="link" data-addrow="">fechar</button></div>`
     :`<button class="addbtn" data-addrow="${tipo}">${ic('plus','sm')} adicionar ${um}</button>`;
   if(tipo==='conta'){
-    const ab=list.filter(c=>!c.pago), pg=list.filter(c=>c.pago);
     const meta=c=>{ const b=banco(c), late=!c.pago&&c.data&&c.data<t; return [quemTxt(c), c.data?(late?`<span class="late">venceu ${dm(c.data)}</span>`:'vence '+dm(c.data)):'', b&&b!=='boleto'?`<span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:''].filter(Boolean).join(' · '); };
     if(!list.length) h+=bloco('',`<div class="vazio">nenhuma conta neste mês.</div>`);
-    const noCartao=c=>{const b=banco(c); return b&&b!=='boleto';}, cards=list.filter(noCartao), solt=list.filter(c=>!noCartao(c));
-    const ab2=solt.filter(c=>!c.pago), pg2=solt.filter(c=>c.pago);
-    if(cards.length) h+=bloco(`<span>${ic('card','sm')} faturas</span><span class="num">${sumResta(cards)?'falta '+fmt(sumResta(cards)):'tudo pago'}</span>`,faturas(cards));
-    if(ab2.length) h+=bloco(`<span>${ic('clock','sm')} ${cards.length?'boletos e pix a pagar':'a pagar'}</span><span class="num">${fmt(sumResta(ab2))}</span>`,ab2.map(c=>linha(c,'conta',meta(c))).join(''));
-    if(pg2.length) h+=bloco(`<span>${ic('check','sm')} ${cards.length?'boletos e pix pagos':'pagas'}</span><span class="num">${fmt(sum(pg2))}</span>`,pg2.map(c=>linha(c,'conta',meta(c))).join(''));
+    // a card with more than one bill this month becomes one fatura; everything else stays a single line, all by due date
+    const g=new Map(); list.forEach(c=>{const b=banco(c); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(c); }});
+    const B=BK(), ent=[]; list.forEach(c=>{ const b=banco(c), l=g.get(b); if(!l||l.length<2) ent.push({d:c.data||'9',pago:c.pago,h:()=>linha(c,'conta',meta(c))}); });
+    for(const [b,l] of g) if(l.length>1) ent.push({d:l.map(c=>c.data).filter(Boolean).sort()[0]||'9',pago:l.every(c=>c.pago),h:()=>fatura(b,l,(B[b]||B['outro cartão']||{c:'#8e8580'}).c)});
+    ent.sort((a,b)=>a.d.localeCompare(b.d));
+    const ab=ent.filter(e=>!e.pago), pg=ent.filter(e=>e.pago), wrap=a=>a.map(e=>e.h()).join('');
+    if(ab.length) h+=bloco(`<span>${ic('clock','sm')} a pagar</span><span class="num">${fmt(sumResta(list))}</span>`,wrap(ab));
+    if(pg.length) h+=bloco(`<span>${ic('check','sm')} pagas</span><span class="num">${fmt(sum(list.filter(c=>c.pago)))}</span>`,wrap(pg));
     h+=receberFoot(list);
     if(canWrite&&list.length) h+=`<div class="more"><span>parcelas passam sozinhas para o mês seguinte.</span><button class="link" data-copiar="1">repetir as fixas em ${mName(addM(ui.mes,1))}</button></div>`;
   } else if(tipo==='gasto'){
@@ -1257,10 +1259,7 @@ const divTxt=i=>{ if(!i.div?.length) return ''; const r=aReceber(i); return `<sp
 function receberFoot(list){
   const q=new Map(); list.forEach(i=>(i.div||[]).forEach(p=>{ if(!p.ok&&+p.v) q.set(p.n,(q.get(p.n)||0)+(+p.v)); })); if(!q.size) return '';
   return `<div class="foot"><span class="lbl">a receber de outras pessoas</span><div class="chips">${[...q].map(([n,v])=>`<span class="chip">${ic('users','sm')}${esc(n)} <b class="num">${fmt(v)}</b></span>`).join('')}</div></div>`; }
-// each card becomes one bill: total, who it belongs to, what is left; opens to show what is inside
-function faturas(arr){
-  const B=BK(), g=new Map(); arr.forEach(c=>{const b=banco(c); if(!g.has(b)) g.set(b,[]); g.get(b).push(c);});
-  return `<div class="fats">${[...g].sort((x,y)=>(!sumResta(x[1]))-(!sumResta(y[1]))||sum(y[1])-sum(x[1])).map(([b,l])=>fatura(b,l,(B[b]||B['outro cartão']||{c:'#8e8580'}).c)).join('')}</div>`; }
+// a card with several bills in the month shows as one fatura: total, whose part is whose, what is left
 function fatura(b,l,cor){
   const t=today(), tot=sum(l), falta=sumResta(l), paga=!falta, parte=tot-falta, venc=l.map(c=>c.data).filter(Boolean).sort()[0], rec=l.reduce((s,c)=>s+aReceber(c),0);
   const q={lais:0,igor:0,juntos:0,outros:0}; l.forEach(c=>{ const o=Math.min(divTot(c),+c.valor||0); q.outros+=o; q[c.quem]=(q[c.quem]||0)+(+c.valor||0)-o; });
@@ -1276,21 +1275,8 @@ function fatura(b,l,cor){
       ${canWrite?`<button class="addbtn" data-fatadd="${esc(b)}">${ic('plus','sm')} adicionar na fatura ${esc(b)}</button>`:''}</div>`:''}
   </div>`;
 }
-// bills on the same card stay separate lines, held together under the card's name and color
-function porBanco(arr,meta,aberto){
-  const B=BK(), soltas=[], g=new Map();
-  for(const c of arr){ const b=banco(c); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(c); } else soltas.push(c); }
-  let h=soltas.map(c=>linha(c,'conta',meta(c))).join('');
-  for(const [b,l] of g){ const k=B[b]||B['outro cartão']||{c:'#8e8580'};
-    if(l.length===1){ h+=linha(l[0],'conta',meta(l[0])); continue; }
-    h+=`<div class="bkg" style="--bk:${k.c}"><button class="bkg-h" data-banco="${esc(b)}"><span class="bk-dot" style="background:${k.c}"></span>${esc(b)}<small>${l.length} contas</small><span class="num">${fmt(aberto?sumResta(l):sum(l))}</span></button>${l.map(c=>linha(c,'conta',meta(c).replace(/ · <span class="bk-dot"[^>]*><\/span>[^<]*$/,''))).join('')}</div>`; }
-  return h;
-}
 function porPessoa(list,tit,ks){ if(!list.length) return ''; const q={}; list.forEach(i=>q[i.quem]=(q[i.quem]||0)+(+i.valor||0));
   return `<div class="foot"><span class="lbl">${tit}</span>${ks.map(k=>`<span class="chip"><span class="dot ${k}"></span>${QUEM[k]} <b class="num">${fmt(q[k]||0)}</b></span>`).join('')}</div>`; }
-function cartoesLinha(contas){
-  const g={}; contas.forEach(c=>{const b=banco(c); if(b&&b!=='boleto') (g[b]=g[b]||[]).push(c)}); const a=Object.entries(g).sort((x,y)=>sum(y[1])-sum(x[1])); if(!a.length) return '';
-  const B=BK(); return `<div class="foot"><span class="lbl">por cartão</span><div class="chips">${a.map(([b,l])=>{const f=sumResta(l);return `<button class="chip" data-banco="${esc(b)}"><span class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></span>${esc(b)} <b class="num">${fmt(sum(l))}</b>${f?` <span class="muted">falta ${fmt(f)}</span>`:''}</button>`}).join('')}</div></div>`; }
 // ---------- explore a bank ----------
 function bankStats(){
   // every bill that has a card, grouped by card, across all months
