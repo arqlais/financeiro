@@ -676,7 +676,7 @@ const BANKS={
   'santander':{m:'sa',c:'#EC0000'}, 'bradesco':{m:'br',c:'#CC092F'}, 'caixa':{m:'cx',c:'#005CA9'},
   'banco do brasil':{m:'bb',c:'#3B5BA5'}, 'picpay':{m:'pp',c:'#11A85F'}, 'outro cartão':{m:'··',c:'#8e8580'},
 };
-const BANK_RULES=[[/fatura pj\b|nubank pj|\bnu pj\b|cart[aã]o pj\b/,'nubank pj'],[/\bnu\b|nubank|fatura pf\b|cart[aã]o pf\b/,'nubank pf'],[/\binter\b/,'inter'],[/m\.\s?pago|mercado\s?pago/,'mercado pago'],[/ita[uú]/,'itaú'],[/\bc6\b/,'c6 bank'],[/riachuelo/,'riachuelo'],[/santander/,'santander'],[/bradesco/,'bradesco'],[/\bcaixa\b/,'caixa'],[/\bbb\b|banco do brasil/,'banco do brasil'],[/picpay/,'picpay']];
+const BANK_RULES=[[/\bclaude\b/,'nubank pf'],[/^\s*assinaturas?\s*$/,'nubank igor'],[/fatura pj\b|nubank pj|\bnu pj\b|cart[aã]o pj\b/,'nubank pj'],[/\bnu\b|nubank|fatura pf\b|cart[aã]o pf\b/,'nubank pf'],[/\binter\b/,'inter'],[/m\.\s?pago|mercado\s?pago/,'mercado pago'],[/ita[uú]/,'itaú'],[/\bc6\b/,'c6 bank'],[/riachuelo/,'riachuelo'],[/santander/,'santander'],[/bradesco/,'bradesco'],[/\bcaixa\b/,'caixa'],[/\bbb\b|banco do brasil/,'banco do brasil'],[/picpay/,'picpay']];
 const BOLETO=/claro|vivo|\btim\b|mrv|obra|mensalidade|rematr|acordo|\bcasa\b|assinatura|serasa|anual|aluguel|condom|\bluz\b|internet|tia dani/;
 const CATS=[
   ['comida fora','var(--s1)',['almoço','almoco','lanche','pizza','açaí','acai','japonês','japones','mcdonald','mc donald','burger','salgado','marmita','café','cafe','doce','sorvete','cachorro','churros','milk','paçoca','pacoca','pão de queijo','chiclete','besteira','cookie','ifood','restaurante','bar','caldocana','lanchonete','chocolate','comida','salgadinho','adega','bebida','coca','kfc','popeyes','churras','chorão','cerveja','feijoada','snickers','guloseima','gin','refri','bolo','ifood','rappi','delivery','hamburguer','hambúrguer','pastel','sushi','esfiha','padoca','boteco','sorveteria','cafeteria','starbucks','subway','burger king','bk','outback','coxinha','tapioca','espetinho','yakisoba','temaki','poke','brigadeiro','bombom','suco','energético','energetico','guaraná','guarana','gatorade','ice','bala','pipoca','casquinha','pastéis','pasteis','espeto','canelinha','kariri','goya','mel']],
@@ -1010,8 +1010,13 @@ async function migrarRoxo(){
   try{ for(const i of alvo) await store.patch(i.id,{banco:roxoBanco(i)}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
     if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas no nubank`,'card'); }catch(e){}
 }
-// in the lilac rows only the claude subscription is on the pf card; everything else is pj
-const roxoBanco=i=>/assinatura|claude|\bpf\b/.test((i.desc||'').toLowerCase())?'nubank pf':'nubank pj';
+// lilac rows: the claude subscription is on the pf card, "assinaturas" on igor's card, everything else on pj
+const roxoBanco=i=>{ const d=(i.desc||'').toLowerCase(); return /claude|\bpf\b/.test(d)?'nubank pf':/assinatura/.test(d)?'nubank igor':'nubank pj'; };
+async function migrarAssinIgor(){
+  const MK='migr_assin_igor'; if(items.has(MK)) return;
+  const alvo=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&i.banco==='nubank pf'&&/^\s*assinaturas?\s*$/i.test(i.desc||''));
+  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank igor'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length}); }catch(e){}
+}
 async function migrarRoxoPj(){
   const MK='migr_roxo_pj'; if(items.has(MK)||!items.has('migr_roxo_nubank')) return;
   const alvo=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&i.banco==='nubank pf'&&roxoBanco(i)==='nubank pj');
@@ -1020,7 +1025,7 @@ async function migrarRoxoPj(){
 }
 async function autoParcelas(){
   if(autoDone||!canWrite||!store) return; autoDone=true;
-  await migrarRoxo(); await migrarNubank(); await migrarRoxoPj();
+  await migrarRoxo(); await migrarNubank(); await migrarRoxoPj(); await migrarAssinIgor();
   const cur=today().slice(0,7); let n=0;
   for(const m of [cur, addM(cur,1)]){
     const prev=addM(m,-1);
