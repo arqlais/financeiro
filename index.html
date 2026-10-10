@@ -1007,12 +1007,20 @@ async function migrarRoxo(){
   for(const [,q,d] of ROXO_NUBANK){ const p=parc(d); if(p) serie.add(q+'|'+p.base.toLowerCase()+'|'+p.y); else if(d==='assinaturas') fixa.add(q+'|'+d); }
   const alvo=[...items.values()].filter(i=>{ if(i.tipo!=='conta'||i.banco!==undefined) return false; const d=(i.desc||'').trim().toLowerCase(), p=parc(d);
     return exato.has(i.mes+'|'+i.quem+'|'+d)||(p&&serie.has(i.quem+'|'+p.base.toLowerCase()+'|'+p.y))||(fixa.has(i.quem+'|'+d)&&i.mes>='2026-09'); });
-  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank pf'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
-    if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas como nubank pf`,'card'); }catch(e){}
+  try{ for(const i of alvo) await store.patch(i.id,{banco:roxoBanco(i)}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
+    if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas no nubank`,'card'); }catch(e){}
+}
+// in the lilac rows only the claude subscription is on the pf card; everything else is pj
+const roxoBanco=i=>/assinatura|claude|\bpf\b/.test((i.desc||'').toLowerCase())?'nubank pf':'nubank pj';
+async function migrarRoxoPj(){
+  const MK='migr_roxo_pj'; if(items.has(MK)||!items.has('migr_roxo_nubank')) return;
+  const alvo=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&i.banco==='nubank pf'&&roxoBanco(i)==='nubank pj');
+  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank pj'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length});
+    if(alvo.length) toast(`${alvo.length} contas do roxinho foram para o nubank pj`,'card'); }catch(e){}
 }
 async function autoParcelas(){
   if(autoDone||!canWrite||!store) return; autoDone=true;
-  await migrarRoxo(); await migrarNubank();
+  await migrarRoxo(); await migrarNubank(); await migrarRoxoPj();
   const cur=today().slice(0,7); let n=0;
   for(const m of [cur, addM(cur,1)]){
     const prev=addM(m,-1);
@@ -1022,7 +1030,7 @@ async function autoParcelas(){
       const k=c.quem+'|'+baseOf(c); if(keys.has(k)) continue;
       const id=`auto_${m}_${c.quem}_${slug(p.base)}_${p.y}`;
       if(items.has(id)) continue;
-      const it={id,tipo:'conta',quem:c.quem,desc:`${p.base} ${p.x+1}/${p.y}`,valor:c.valor,data:c.data?addMd(c.data,1):`${m}-10`,mes:m,pago:false,auto:true};
+      const it={id,tipo:'conta',quem:c.quem,desc:`${p.base} ${p.x+1}/${p.y}`,valor:c.valor,data:c.data?addMd(c.data,1):`${m}-10`,mes:m,pago:false,auto:true}; if(c.banco!==undefined) it.banco=c.banco;
       if(c.banco!==undefined) it.banco=c.banco;
       items.set(id,it); keys.add(k); n++;
       try{ await store.put(it); }catch(e){}
