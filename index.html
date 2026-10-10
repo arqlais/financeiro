@@ -588,6 +588,11 @@ body:has(.scrim){overflow:hidden}
 .dl{display:grid;grid-template-columns:auto minmax(0,1fr) auto 32px;gap:10px;align-items:center;font-size:.88rem}
 .dl span{display:flex;flex-direction:column;min-width:0}.dl small{color:var(--muted);font-size:.74rem}.dl b{font-weight:600}
 .dl b{white-space:nowrap}.dl.ok>span,.dl.ok b{color:var(--muted)}.dl .icbtn{width:32px;height:32px}
+.bk-dia{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:18px;background:var(--sunk)}
+.bk-dia label{display:flex;flex-direction:column;gap:2px;font-size:.86rem;min-width:0}.bk-dia small{color:var(--muted);font-size:.74rem}
+.bk-dia>span{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted);white-space:nowrap}
+.bk-dia input{width:56px;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--surface);text-align:center;font-weight:700;font-size:1rem}
+.qn{white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .pl-add input.dv{flex:0 0 104px}.pl-add input.dv+.btn{padding:0 14px}.pbox-h b{white-space:nowrap}
 .pbox-n{color:var(--muted);font-size:.76rem}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
@@ -887,7 +892,7 @@ const bankDocs=()=>{ if(bdVer!==ver){ bdC=[...items.values()].filter(i=>i.tipo==
 function BK(){ if(bkVer===ver) return bkC; bkVer=ver; return bkC=bk0(); }
 // a removed bank leaves only the list of choices: bills that already used it, in any month, keep its name and color
 const bkAtivos=()=>Object.keys(BK()).filter(n=>!BK()[n].oculto);
-function bk0(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(!n) return; const k=BANKS[n]; o[n]={m:(b.sigla||k?.m||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||k?.c||'#8e8580',custom:!k,oculto:!!b.oculto}; }); return o; }
+function bk0(){ const o={...BANKS}; bankDocs().forEach(b=>{ const n=String(b.nome||'').toLowerCase(); if(!n) return; const k=BANKS[n]; o[n]={m:(b.sigla||k?.m||n.replace(/[^a-z0-9à-ú]/g,'').slice(0,2)),c:b.cor||k?.c||'#8e8580',custom:!k,oculto:!!b.oculto,dia:+b.dia||null}; }); return o; }
 const ofMes=(m,t)=>{const a=index().byMes.get(m)||[]; return t?a.filter(i=>i.tipo===t):a.slice();};
 const meses=()=>{const a=index().meses, c=today().slice(0,7); return a.includes(c)?a:[...a,c].sort();};
 
@@ -1229,7 +1234,7 @@ function linha(i,tipo,meta){
     +`<span class="tap" data-edit="${esc(i.id)}"><span class="rw-d"><b>${esc(i.desc)}</b><small>${meta}${divTxt(i)}</small>${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta <b class="num">${fmt(resta(i))}</b></small>`:''}</span>`
     +`<span class="rw-v num">${fmt(pp>0?resta(i):i.valor)}</span></span></div>`;
 }
-const quemTxt=i=>`<span class="dot ${i.quem}"></span>${QUEM[i.quem]||''}`;
+const quemTxt=i=>`<span class="qn"><span class="dot ${i.quem}"></span>${QUEM[i.quem]||''}</span>`;
 const dm=d=>d?d.slice(8)+'/'+d.slice(5,7):'';
 function lista(tipo,list,total){
   const [tit,um]=SEC[tipo], t=today();
@@ -1277,14 +1282,16 @@ function fatura(b,l,cor){
   const t=today(), tot=sum(l), falta=sumResta(l), paga=!falta, parte=tot-falta, venc=l.map(c=>c.data).filter(Boolean).sort()[0], rec=l.reduce((s,c)=>s+aReceber(c),0);
   const q={lais:0,igor:0,juntos:0,outros:0}; l.forEach(c=>{ const o=Math.min(divTot(c),+c.valor||0); q.outros+=o; q[c.quem]=(q[c.quem]||0)+(+c.valor||0)-o; });
   const ks=['lais','igor','juntos','outros'].filter(k=>q[k]>0.004), open=ui.fat?.includes(b), late=!paga&&venc&&venc<t;
-  const sub=paga?'fatura paga':parte>0.004?`pagou ${fmt(parte)} · falta <b class="num">${fmt(falta)}</b>`:venc?(late?`<span class="late">venceu ${dm(venc)}</span>`:'vence '+dm(venc)):'a pagar';
-  const its=[...l].sort((a,b2)=>(b2.valor||0)-(a.valor||0));
+  const datas=[...new Set(l.filter(c=>paga||!c.pago).map(c=>c.data).filter(Boolean))].sort(), varias=datas.length>1;
+  const sub=paga?'fatura paga':parte>0.004?`pagou ${fmt(parte)} · falta <b class="num">${fmt(falta)}</b>`:venc?(late?`<span class="late">venceu ${dm(venc)}</span>`:'vence '+(varias&&datas.every(d=>d.slice(0,7)===datas[0].slice(0,7))?datas.map(d=>d.slice(8)).join(datas.length>2?', ':' e ').replace(/, (\d+)$/,' e $1')+'/'+datas[0].slice(5,7):dm(venc))):'a pagar';
+  const its=[...l].sort((a,b2)=>(a.data||'').localeCompare(b2.data||'')||(b2.valor||0)-(a.valor||0));
+  const sub2='';
   return `<div class="fat ${paga?'paga':''} ${open?'open':''}" style="--bk:${cor}">
     <div class="fat-h"><button class="box ${paga?'on':parte>0.004?'half':''}" data-fatpag="${esc(b)}" aria-label="${paga?'desmarcar a fatura':'marcar a fatura toda como paga'}" ${canWrite?'':'disabled'}>${paga?ic('check','sm'):''}</button>
-      <button class="fat-t" data-fat="${esc(b)}" aria-expanded="${!!open}"><span class="fat-n"><b><span class="bk-dot" style="background:${cor}"></span>${esc(b)}</b><small>${l.length} ${l.length>1?'itens':'item'} · ${sub}${ic('chev','sm')}</small></span><span class="fat-v num">${fmt(tot)}</span></button></div>
+      <button class="fat-t" data-fat="${esc(b)}" aria-expanded="${!!open}"><span class="fat-n"><b><span class="bk-dot" style="background:${cor}"></span>${esc(b)}</b><small>${l.length} ${l.length>1?'itens':'item'} · ${sub}${sub2}${ic('chev','sm')}</small></span><span class="fat-v num">${fmt(tot)}</span></button></div>
     <div class="fat-bar" aria-hidden="true">${ks.map(k=>`<i class="${k}" style="flex:${q[k]}"></i>`).join('')}</div>
     <div class="fat-q">${ks.map(k=>`<span><span class="dot ${k}"></span>${k==='outros'?'outras pessoas':QUEM[k]} <b class="num">${fmt(q[k])}</b></span>`).join('')}${rec?`<span class="rec">a receber ${fmt(rec)}</span>`:''}</div>
-    ${open?`<div class="fat-its">${its.map(c=>{ const p=parc(c.desc); return linha(c,'conta',[quemTxt(c),p&&p.y>1?`parcela ${p.x} de ${p.y}`:''].filter(Boolean).join(' · ')); }).join('')}
+    ${open?`<div class="fat-its">${its.map(c=>{ const p=parc(c.desc); const lt=!c.pago&&c.data&&c.data<t; return linha(c,'conta',[quemTxt(c),varias&&c.data?(lt?`<span class="late">venceu ${dm(c.data)}</span>`:'vence '+dm(c.data)):''].filter(Boolean).join(' · ')); }).join('')}
       ${canWrite?`<button class="addbtn" data-fatadd="${esc(b)}">${ic('plus','sm')} adicionar na fatura ${esc(b)}</button>`:''}</div>`:''}
   </div>`;
 }
@@ -1443,7 +1450,8 @@ async function quickAdd(p,force){
   if(!desc) return err('escreva o que foi.'); if(raw===''||!(v>=0)) return err('digite o valor, por exemplo 45,90.');
   const tipo=f.dataset.tipo; let quem=ui.qquem||'juntos'; if(tipo==='entrada'&&quem==='juntos') quem='lais';
   const base={tipo,quem,desc,valor:v,data,mes:(data||ui.mes).slice(0,7)};
-  if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc})||''; if(b!==auto) base.banco=b==='boleto'?'':b; }
+  if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc,quem})||''; if(b!==auto) base.banco=b==='boleto'?'':b;
+    const dc=BK()[b||auto]?.dia; if(dc){ base.data=diaNoMes(base.mes,dc); } }
   const n=tipo==='conta'?+($('#'+p+'-parc')?.value||1):1;
   if(!force){ const dups=acharDup({...base,desc:n>1?`${desc} 1/${n}`:desc}); if(dups.length){ dupPend={p,base,dups}; abrirDup(); return; } }
   const seguir=p==='s'&&ui.cont;
@@ -1542,7 +1550,8 @@ function toHsl(r,g,b){ r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.mi
 function fromHsl(h,s,l){ s/=100;l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return [f(0)*255,f(8)*255,f(4)*255]; }
 const PRESETS=['#820AD1','#4E0A82','#EC7000','#FF7A00','#D7192F','#CC092F','#005CA9','#009EE3','#11A85F','#2B2B2B','#3B5BA5','#c23d72','#2c9a6c','#7b5ce0','#a65a40','#8e8580'];
 let bkEd=null;
-function abrirBanco(nome){ const k=nome?(BK()[nome]||{}):{}; bkEd={orig:nome||'',nome:nome||'',cor:(k.c||'#7b5ce0').toLowerCase()}; drawBanco(); }
+const diaNoMes=(m,d)=>{ const [y,mm]=m.split('-').map(Number), ult=new Date(y,mm,0).getDate(); return `${m}-${String(Math.min(d,ult)).padStart(2,'0')}`; };
+function abrirBanco(nome){ const k=nome?(BK()[nome]||{}):{}; bkEd={orig:nome||'',nome:nome||'',cor:(k.c||'#7b5ce0').toLowerCase(),dia:k.dia||''}; drawBanco(); }
 function drawBanco(){ const b=bkEd, [r,g,bl]=toRgb(b.cor), [h,sa,l]=toHsl(r,g,bl);
   $('#sheetHost').innerHTML=`<div class="scrim" data-bkcancel="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="banco">
     <div class="card-h"><h2>${b.orig?'editar':'novo'} <span class="script">banco</span></h2><button type="button" class="icbtn" data-bkcancel="1" aria-label="fechar">${ic('x')}</button></div>
@@ -1552,6 +1561,7 @@ function drawBanco(){ const b=bkEd, [r,g,bl]=toRgb(b.cor), [h,sa,l]=toHsl(r,g,bl
       <label>saturação<input type="range" id="bk-s" min="0" max="100" value="${Math.round(sa)}"></label>
       <label>luz<input type="range" id="bk-l" min="5" max="95" value="${Math.round(l)}"></label></div>
     <div class="cfields"><label>hex<input id="bk-hex" value="${b.cor}" maxlength="7" spellcheck="false"></label><label>r<input id="bk-r" inputmode="numeric" value="${r}"></label><label>g<input id="bk-g" inputmode="numeric" value="${g}"></label><label>b<input id="bk-b" inputmode="numeric" value="${bl}"></label></div>
+    <div class="bk-dia"><label for="bk-dia"><b>vencimento da fatura</b><small>as contas a pagar deste cartão passam a vencer nesse dia</small></label><span>todo dia<input id="bk-dia" inputmode="numeric" maxlength="2" value="${b.dia||''}" placeholder="—"></span></div>
     ${b.orig&&b.orig!==b.nome.trim().toLowerCase()&&b.nome.trim()?`<p class="hint">as contas de "${esc(b.orig)}" passam a ser de "${esc(b.nome.trim().toLowerCase())}".</p>`:''}
     <div class="sheet-foot">${b.orig?`<button type="button" class="btn line danger" data-bkdel="1">${ic('trash','sm')} remover</button>`:'<span></span>'}<button type="button" class="btn dark" data-bksave="1">${ic('check','sm')} salvar</button></div></div></div>`;
   pintarSliders(); }
@@ -1566,14 +1576,19 @@ function setCorBanco(hex,de){ if(!/^#[0-9a-f]{6}$/i.test(hex)) return; bkEd.cor=
   if(de!=='hex') $('#bk-hex').value=bkEd.cor; if(de!=='rgb'){ $('#bk-r').value=r; $('#bk-g').value=g; $('#bk-b').value=b; }
   pintarSliders(); }
 async function salvarBanco(){ const b=bkEd, nome=(b.nome||'').trim().toLowerCase(); if(!nome){ toast('escreva o nome do banco.','alert'); return; }
-  const id='banco_'+slug(nome), old=b.orig;
+  const dia=+b.dia||null; if(dia&&(dia<1||dia>31)){ toast('o dia do vencimento vai de 1 a 31.','alert'); return; }
+  const id='banco_'+slug(nome), old=b.orig, diaAntes=old?BK()[old]?.dia||null:null;
   if(old&&old!==nome){ // rename: bills follow, old name stays hidden and remembered so new bills still land here
     const contas=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&banco(i)===old);
-    await safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome,cor:b.cor,oculto:false,de:old}));
+    await safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome,cor:b.cor,oculto:false,de:old,dia}));
     for(const c of contas) await safe(store.patch(c.id,{banco:nome}));
     const oid='banco_'+slug(old); await safe(store.put({...(items.get(oid)||{}),id:oid,tipo:'banco',nome:old,oculto:true}));
     toast(`${old} agora é ${nome} · ${contas.length} conta${contas.length===1?'':'s'}`);
-  } else await safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome,cor:b.cor,oculto:false}),`${nome} salvo`);
+  } else await safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome,cor:b.cor,oculto:false,dia}),`${nome} salvo`);
+  if(dia&&dia!==diaAntes){ // open bills of this card, from this month on, move to the card's due day; past months stay as they were
+    const cm=today().slice(0,7), l=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&!i.pago&&i.mes>=cm&&banco(i)===nome&&i.data!==diaNoMes(i.mes,dia));
+    for(const c of l) await safe(store.patch(c.id,{data:diaNoMes(c.mes,dia)}));
+    if(l.length) toast(`${l.length} conta${l.length>1?'s':''} de ${nome} agora vence${l.length>1?'m':''} dia ${dia}`,'cal'); }
   bkEd=null; $('#sheetHost').innerHTML=''; }
 function pAjustes(){
   const n=live().length;
@@ -1797,6 +1812,7 @@ document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefau
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
   if(bkEd&&/^bk-/.test(e.target.id)){ const id=e.target.id;
+    if(id==='bk-dia'){ bkEd.dia=e.target.value.replace(/\D/g,''); return; }
     if(id==='bk-nm'){ bkEd.nome=e.target.value; $('#bkPrev').textContent=(bkEd.nome||'?').replace(/[^a-z0-9à-ú]/gi,'').slice(0,2); return; }
     if(id==='bk-hex'){ let v=e.target.value.trim(); if(!v.startsWith('#')) v='#'+v; if(/^#[0-9a-f]{6}$/i.test(v)) setCorBanco(v,'hex'); return; }
     if(['bk-r','bk-g','bk-b'].includes(id)){ const v=['r','g','b'].map(k=>+$('#bk-'+k).value||0); setCorBanco(toHex(...v),'rgb'); return; }
