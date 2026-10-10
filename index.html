@@ -1016,7 +1016,12 @@ async function migrarRoxo(){
     if(alvo.length) toast(`${alvo.length} contas do roxinho marcadas no nubank`,'card'); }catch(e){}
 }
 // lilac rows: the claude subscription is on the pf card, "assinaturas" on igor's card, everything else on pj
-const roxoBanco=i=>{ const d=(i.desc||'').toLowerCase(); return /claude|\bpf\b/.test(d)?'nubank pf':/assinatura/.test(d)?'nubank igor':'nubank pj'; };
+const roxoBanco=i=>{ const d=(i.desc||'').toLowerCase(); return /claude|\bpf\b/.test(d)?'nubank pf':/assinatura|^bon[eé](\s|$)/.test(d)?'nubank igor':'nubank pj'; };
+async function migrarBoneIgor(){
+  const MK='migr_bone_igor'; if(items.has(MK)) return;
+  const alvo=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&/^nubank p[fj]$/.test(i.banco||'')&&/^\s*bon[eé](\s|$)/i.test(i.desc||''));
+  try{ for(const i of alvo) await store.patch(i.id,{banco:'nubank igor'}); await store.put({id:MK,tipo:'migracao',em:new Date().toISOString(),n:alvo.length}); }catch(e){}
+}
 async function migrarAssinIgor(){
   const MK='migr_assin_igor'; if(items.has(MK)) return;
   const alvo=[...items.values()].filter(i=>i.tipo==='conta'&&!i.removido&&i.banco==='nubank pf'&&/^\s*assinaturas?\s*$/i.test(i.desc||''));
@@ -1030,7 +1035,7 @@ async function migrarRoxoPj(){
 }
 async function autoParcelas(){
   if(autoDone||!canWrite||!store) return; autoDone=true;
-  await migrarRoxo(); await migrarNubank(); await migrarRoxoPj(); await migrarAssinIgor();
+  await migrarRoxo(); await migrarNubank(); await migrarRoxoPj(); await migrarAssinIgor(); await migrarBoneIgor();
   const cur=today().slice(0,7); let n=0;
   for(const m of [cur, addM(cur,1)]){
     const prev=addM(m,-1);
