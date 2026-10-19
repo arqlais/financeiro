@@ -221,7 +221,7 @@ body.gated .nav,body.gated .nav-r,body.gated .dock,body.gated .appbar .rbtn{disp
 .empty .ico{width:26px;height:26px;color:var(--rose-mid)}
 .vazio{padding:14px 0;color:inherit;opacity:.7;font-size:.86rem;text-align:center}
 .hint{font-size:.78rem;color:var(--muted);margin:0}
-.err{font-size:.84rem;color:var(--bad);margin:0}
+.err{font-size:.84rem;color:var(--bad);margin:0}.err.ok{color:var(--ink-2)}
 .banner{font-size:.82rem;color:var(--muted);padding:10px 14px;border-radius:16px;background:var(--sunk)}
 .pending{font-size:.8rem;color:var(--warn);background:var(--warn-soft);padding:8px 14px;border-radius:16px;display:flex;gap:8px;align-items:center}
 .cols{display:flex;flex-direction:column;gap:14px}
@@ -898,6 +898,8 @@ const meses=()=>{const a=index().meses, c=today().slice(0,7); return a.includes(
 
 // ---------- storage ----------
 // Three places the data can live: the claude.ai artifact store, a supabase project (github pages + config.js), or this browser only.
+// a password-reset link opens the app with #...type=recovery; read it before supabase clears the address
+let recup=/type=recovery/.test(location.hash);
 let mode='local', sb=null, session=null, gate=null, userEmail='', channel=null;
 async function boot(){
   render();
@@ -955,6 +957,7 @@ async function bootNuvem(cfg){
   };
   const {data}=await sb.auth.getSession(); session=data.session;
   sb.auth.onAuthStateChange((ev,s)=>{ const had=!!session; session=s;
+    if(ev==='PASSWORD_RECOVERY'&&s){ recup=true; userEmail=s.user?.email||''; gate='novasenha'; ready=true; render(); return; }
     if(!s){ items.clear(); gate='login'; ready=true; autoDone=false; render(); }
     else if(!had){ setTimeout(afterLogin,0); } });
   if(session) await afterLogin(); else { gate='login'; ready=true; render(); }
@@ -976,7 +979,10 @@ async function puxar(){
   lastSync=agora; if(n) renderSoon(); }
 setInterval(puxar,12000);
 async function afterLogin(){
-  userEmail=session?.user?.email||''; gate=null; ready=false; render();
+  userEmail=session?.user?.email||'';
+  if(recup){ gate='novasenha'; ready=true; render(); return; }
+  try{ if(userEmail) localStorage.setItem('fin-email',userEmail); }catch(_){}
+  gate=null; ready=false; render();
   const mem=await sb.from('membros').select('email').limit(1);
   if(mem.error||!mem.data?.length){ gate='semacesso'; ready=true; render(); return; }
   const n=await loadAll();
@@ -1084,6 +1090,7 @@ function render(){
   if(!ready){ m.innerHTML=`<div class="card empty">${ic('clock')}<div>carregando os lançamentos…</div></div>`; return; }
   if(gate==='login'){ m.innerHTML=vLogin(); return; }
   if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
+  if(gate==='novasenha'){ m.innerHTML=vNovaSenha(); return; }
   const v={inicio:pInicio,lanc:pLanc,ano:pAno,ajustes:pAjustes,bancos:pBancos}[ui.page]||pInicio;
   // keep what is being typed in the quick-add line when live updates re-render the page
   const keep={}; m.querySelectorAll('[data-keep]').forEach(el=>keep[el.id]=el.value); const fid=document.activeElement?.id;
@@ -1536,11 +1543,41 @@ function vLogin(){
     <div><span class="eyebrow">financeiro</span><h1>entrar <span class="script">no nosso</span></h1></div>
     <p class="muted" style="margin:0">entre com o seu email e senha. na primeira vez, é só escolher a senha aqui mesmo.</p>
     <form id="loginF" class="opt" novalidate>
-      <div class="f"><label for="l-email">email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"></div>
+      <div class="f"><label for="l-email">email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" value="${esc(lsGet('fin-email')||'')}"></div>
       <div class="f"><label for="l-pass">senha</label><input id="l-pass" type="password" autocomplete="current-password"></div>
       <p class="err" id="l-err" hidden></p>
       <button class="btn dark" type="submit">${ic('lock','sm')} entrar</button>
+      <button class="link" type="button" data-esqueci="1" style="align-self:center">esqueci minha senha</button>
     </form></section>`;
+}
+function vNovaSenha(){
+  return `<section class="card login"><span class="mark" data-mark></span>
+    <div><span class="eyebrow">financeiro</span><h1>nova <span class="script">senha</span></h1></div>
+    <p class="muted" style="margin:0">escolha a senha nova para <b>${esc(userEmail)}</b>. depois é só usar ela para entrar.</p>
+    <form id="novaF" class="opt" novalidate>
+      <div class="f"><label for="n-pass">senha nova</label><input id="n-pass" type="password" autocomplete="new-password" minlength="6"></div>
+      <p class="err" id="n-err" hidden></p>
+      <button class="btn dark" type="submit">${ic('check','sm')} salvar senha e entrar</button>
+    </form></section>`;
+}
+const lsGet=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+async function esqueci(){
+  const email=$('#l-email').value.trim().toLowerCase(), e=$('#l-err'); const msg=t=>{ e.textContent=t; e.hidden=false; };
+  if(!email) return msg('escreva o seu email primeiro.');
+  const b=$('[data-esqueci]'); b.disabled=true; b.textContent='enviando…';
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  b.disabled=false; b.textContent='esqueci minha senha';
+  if(error) return msg(/rate|security|seconds/i.test(error.message||'')?'já mandei um link há pouco. espere um minuto e tente de novo.':'não consegui mandar o email: '+String(error.message||'').toLowerCase());
+  e.classList.add('ok'); msg(`mandei um link para ${email}. abra o email neste aparelho e toque no link para escolher uma senha nova.`);
+}
+async function salvarNovaSenha(){
+  const pass=$('#n-pass').value, e=$('#n-err'); const msg=t=>{ e.textContent=t; e.hidden=false; };
+  if(pass.length<6) return msg('use pelo menos 6 caracteres.');
+  const b=$('#novaF button[type=submit]'); b.disabled=true; b.textContent='salvando…';
+  const {error}=await sb.auth.updateUser({password:pass});
+  if(error){ b.disabled=false; b.innerHTML=`${ic('check','sm')} salvar senha e entrar`; return msg('não deu certo: '+String(error.message||'').toLowerCase()); }
+  recup=false; try{ history.replaceState(null,'',location.pathname+location.search); }catch(_){}
+  toast('senha nova salva'); afterLogin();
 }
 function vSemAcesso(){
   return `<section class="card login"><span class="mark" data-mark></span><h1>ainda <span class="script">sem acesso</span></h1>
@@ -1729,7 +1766,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1771,6 +1808,7 @@ document.addEventListener('click',e=>{
     return; }
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
+  if(d.esqueci){ esqueci(); return; }
   if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
@@ -1813,7 +1851,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',async e=>{ if(e.target.id==='contLanc'){ ui.cont=e.target.checked; try{localStorage.setItem('fin-cont',ui.cont?'1':'0')}catch(_){} return; } if(e.target.id==='fonteFile'&&e.target.files.length){ await lerFontes([...e.target.files]); e.target.value=''; return; } if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
     if(!raw||!(v>0)){ if(items.has(id)) safe(store.del(id),`meta de ${c} tirada`); return; }
     safe(store.put({id,tipo:'meta',cat:c,valor:v}),`meta de ${c}: ${fmtT(v)} por mês`); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
-document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag)F$/.exec(e.target.id); if(qm){e.preventDefault();quickAdd(qm[1]);} });
+document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='novaF'){e.preventDefault();salvarNovaSenha();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag)F$/.exec(e.target.id); if(qm){e.preventDefault();quickAdd(qm[1]);} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
   if(bkEd&&/^bk-/.test(e.target.id)){ const id=e.target.id;
