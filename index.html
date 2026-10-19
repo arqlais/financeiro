@@ -1561,6 +1561,9 @@ function vNovaSenha(){
       <button class="btn dark" type="submit">${ic('check','sm')} salvar senha e entrar</button>
     </form></section>`;
 }
+// "load failed" / "failed to fetch": the phone could not reach supabase at all (no internet, or the free project is paused)
+const semServidor=m=>/load failed|failed to fetch|networkerror|network request/i.test(m||'');
+const MSG_SERV='não consegui falar com o servidor. se a internet estiver ok, o projeto do supabase deve estar pausado: entre em supabase.com, abra o projeto e toque em restore.';
 const lsGet=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
 async function esqueci(){
   const email=$('#l-email').value.trim().toLowerCase(), e=$('#l-err'); const msg=t=>{ e.textContent=t; e.hidden=false; };
@@ -1568,6 +1571,7 @@ async function esqueci(){
   const b=$('[data-esqueci]'); b.disabled=true; b.textContent='enviando…';
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
   b.disabled=false; b.textContent='esqueci minha senha';
+  if(error&&semServidor(error.message)) return msg(MSG_SERV);
   if(error) return msg(/rate|security|seconds/i.test(error.message||'')?'já mandei um link há pouco. espere um minuto e tente de novo.':'não consegui mandar o email: '+String(error.message||'').toLowerCase());
   e.classList.add('ok'); msg(`mandei um link para ${email}. abra o email neste aparelho e toque no link para escolher uma senha nova.`);
 }
@@ -1697,7 +1701,7 @@ async function doLogin(){
     if(u.error&&/already registered/i.test(u.error.message||'')) r={error:{message:'invalid login'}}; else r=u;
   }
   btn.disabled=false; btn.innerHTML=`${ic('lock','sm')} entrar`;
-  if(r.error){ const m=r.error.message||''; return err(/invalid login/i.test(m)?'senha incorreta.':/not confirmed/i.test(m)?'no supabase, desligue "confirm email" e tente de novo.':'não deu certo: '+m.toLowerCase()); }
+  if(r.error){ const m=r.error.message||''; if(semServidor(m)) return err(MSG_SERV); return err(/invalid login/i.test(m)?'senha incorreta.':/not confirmed/i.test(m)?'no supabase, desligue "confirm email" e tente de novo.':'não deu certo: '+m.toLowerCase()); }
   if(!r.data?.session) return err('no supabase, desligue "confirm email" e tente de novo.');
   guardarAcesso(email,pass);
 }
