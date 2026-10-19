@@ -958,9 +958,10 @@ async function bootNuvem(cfg){
   const {data}=await sb.auth.getSession(); session=data.session;
   sb.auth.onAuthStateChange((ev,s)=>{ const had=!!session; session=s;
     if(ev==='PASSWORD_RECOVERY'&&s){ recup=true; userEmail=s.user?.email||''; gate='novasenha'; ready=true; render(); return; }
-    if(!s){ items.clear(); gate='login'; ready=true; autoDone=false; render(); }
+    if(!s){ if(!saindo&&lsGet('fin-acesso')){ reLogin().then(ok=>{ if(!ok&&!session){ items.clear(); gate='login'; ready=true; autoDone=false; render(); } }); return; }
+      saindo=false; items.clear(); gate='login'; ready=true; autoDone=false; render(); }
     else if(!had){ setTimeout(afterLogin,0); } });
-  if(session) await afterLogin(); else { gate='login'; ready=true; render(); }
+  if(session) await afterLogin(); else if(!(await reLogin())){ gate='login'; ready=true; render(); }
 }
 let flush=async()=>{}, loadAll=async()=>null;
 // who else has the app open right now (supabase presence)
@@ -1541,10 +1542,10 @@ let importPend=null;
 function vLogin(){
   return `<section class="card login"><span class="mark" data-mark></span>
     <div><span class="eyebrow">financeiro</span><h1>entrar <span class="script">no nosso</span></h1></div>
-    <p class="muted" style="margin:0">entre com o seu email e senha. na primeira vez, é só escolher a senha aqui mesmo.</p>
+    <p class="muted" style="margin:0">entre com o seu email e senha. depois disso o app fica conectado neste aparelho e só sai se você tocar em sair.</p>
     <form id="loginF" class="opt" novalidate>
-      <div class="f"><label for="l-email">email</label><input id="l-email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" value="${esc(lsGet('fin-email')||'')}"></div>
-      <div class="f"><label for="l-pass">senha</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+      <div class="f"><label for="l-email">email</label><input id="l-email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" value="${esc(lsGet('fin-email')||'')}"></div>
+      <div class="f"><label for="l-pass">senha</label><input id="l-pass" name="password" type="password" autocomplete="current-password"></div>
       <p class="err" id="l-err" hidden></p>
       <button class="btn dark" type="submit">${ic('lock','sm')} entrar</button>
       <button class="link" type="button" data-esqueci="1" style="align-self:center">esqueci minha senha</button>
@@ -1575,6 +1576,7 @@ async function salvarNovaSenha(){
   if(pass.length<6) return msg('use pelo menos 6 caracteres.');
   const b=$('#novaF button[type=submit]'); b.disabled=true; b.textContent='salvando…';
   const {error}=await sb.auth.updateUser({password:pass});
+  if(!error&&userEmail) guardarAcesso(userEmail,pass);
   if(error){ b.disabled=false; b.innerHTML=`${ic('check','sm')} salvar senha e entrar`; return msg('não deu certo: '+String(error.message||'').toLowerCase()); }
   recup=false; try{ history.replaceState(null,'',location.pathname+location.search); }catch(_){}
   toast('senha nova salva'); afterLogin();
@@ -1696,7 +1698,18 @@ async function doLogin(){
   }
   btn.disabled=false; btn.innerHTML=`${ic('lock','sm')} entrar`;
   if(r.error){ const m=r.error.message||''; return err(/invalid login/i.test(m)?'senha incorreta.':/not confirmed/i.test(m)?'no supabase, desligue "confirm email" e tente de novo.':'não deu certo: '+m.toLowerCase()); }
-  if(!r.data?.session) err('no supabase, desligue "confirm email" e tente de novo.');
+  if(!r.data?.session) return err('no supabase, desligue "confirm email" e tente de novo.');
+  guardarAcesso(email,pass);
+}
+// stay signed in on this device: if the session is ever dropped, sign back in by itself (only "sair" forgets it)
+const guardarAcesso=(e,p)=>{ try{ localStorage.setItem('fin-acesso',JSON.stringify({e,p:btoa(unescape(encodeURIComponent(p)))})); }catch(_){} };
+let saindo=false;
+async function reLogin(){
+  let a=null; try{ a=JSON.parse(localStorage.getItem('fin-acesso')||'null'); }catch(_){}
+  if(!a?.e||!a?.p||!sb) return false;
+  try{ const {data,error}=await sb.auth.signInWithPassword({email:a.e,password:decodeURIComponent(escape(atob(a.p)))});
+    if(error){ if(/invalid login/i.test(error.message||'')) try{ localStorage.removeItem('fin-acesso'); }catch(_){} return false; }
+    return !!data?.session; }catch(_){ return false; }
 }
 
 // ---------- sheet ----------
@@ -1809,7 +1822,7 @@ document.addEventListener('click',e=>{
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
   if(d.esqueci){ esqueci(); return; }
-  if(d.sair){ ['fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
+  if(d.sair){ saindo=true; ['fin-acesso','fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }
