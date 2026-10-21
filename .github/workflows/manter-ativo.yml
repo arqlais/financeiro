@@ -1,0 +1,23 @@
+name: Manter o banco ativo
+
+# O Supabase grátis pausa o projeto depois de uns dias sem uso. Esta tarefa "toca" o banco
+# todo dia de manhã, para o site nunca ficar fora do ar, e avisa se o servidor não responder.
+on:
+  schedule:
+    - cron: '17 10 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/manter-ativo.yml']
+
+jobs:
+  tocar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tocar o banco
+        run: |
+          URL='https://aqoegpdvwtnjakaxuvfm.supabase.co'
+          KEY='sb_publishable_AGNRGlwFY4V21hXDJ4wy0Q_y6PYlBsK'
+          CODE=$(curl -s -o out.txt -w '%{http_code}' --max-time 30 "$URL/rest/v1/membros?select=email&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "resposta $CODE: $(head -c 300 out.txt)"
+          if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 300 ]; then echo "::notice title=banco ativo::respondeu $CODE"; else echo "::error title=banco fora do ar ($CODE)::$(head -c 300 out.txt | tr '\n' ' ')"; exit 1; fi
