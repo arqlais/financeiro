@@ -17,6 +17,6 @@ jobs:
         run: |
           URL='https://aqoegpdvwtnjakaxuvfm.supabase.co'
           KEY='sb_publishable_AGNRGlwFY4V21hXDJ4wy0Q_y6PYlBsK'
-          CODE=$(curl -s -o out.txt -w '%{http_code}' --max-time 30 "$URL/rest/v1/membros?select=email&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          CODE=$(curl -s -o out.txt -w '%{http_code}' --max-time 30 "$URL/rest/v1/membros?select=email&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY") || CODE=000
           echo "resposta $CODE: $(head -c 300 out.txt)"
-          if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 300 ]; then echo "::notice title=banco ativo::respondeu $CODE"; else echo "::error title=banco fora do ar ($CODE)::$(head -c 300 out.txt | tr '\n' ' ')"; exit 1; fi
+          if [ "$CODE" -ge 200 ] && [ "$CODE" -lt 300 ]; then echo "::notice title=banco ativo::respondeu $CODE"; else echo "::error title=banco fora do ar ($CODE)::o projeto do Supabase está pausado ou não responde. Entre em supabase.com, abra o projeto e toque em Restore."; exit 1; fi
