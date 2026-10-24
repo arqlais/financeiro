@@ -987,7 +987,11 @@ function afterLoginFb(){
   fbUn=fbDb.collection('lancamentos').onSnapshot({includeMetadataChanges:false},async snap=>{
     for(const ch of snap.docChanges()){ if(ch.type==='removed') items.delete(ch.doc.id); else { items.set(ch.doc.id,{...ch.doc.data(),id:ch.doc.id}); if(ch.doc.id===perfilId()) loadPerfil(); } }
     if(primeira){ primeira=false;
-      if(!items.size&&!snap.metadata.fromCache) await seedInicial();
+      // the first answer can come from this device's (empty) copy: ask the server before deciding the base is new
+      const temBase=()=>[...items.values()].some(i=>i.tipo==='gasto'||i.tipo==='conta'||i.tipo==='entrada');
+      if(!temBase()){ let falta=!snap.metadata.fromCache;
+        try{ const sv=await fbDb.collection('lancamentos').get({source:'server'}); sv.docs.forEach(d=>items.set(d.id,{...d.data(),id:d.id})); falta=!temBase(); }catch(e){}
+        if(falta) await seedInicial(); }
       await trazerDoAparelho();
       loadPerfil(); fonteInicial(); migrarSaldos(); presencaFb();
       bannerMsg=''; ready=true; render(); setTimeout(autoParcelas,400); return; }
@@ -1613,7 +1617,7 @@ function pAno(){
 // only by the two members, so the public repo never holds readable numbers. First login into an empty table uploads it.
 async function seedInicial(){
   const f=(window.FIN_CONFIG||{}).dadosIniciais; if(!f||!crypto?.subtle) return;
-  const chave=await pegarChave(); if(!chave) return;
+  const chave=await pegarChave(); if(!chave){ bannerMsg='para trazer o histórico, abra neste aparelho o link de configuração (o que termina com #chave=…).'; render(); return; }
   try{
     const r=await fetch(f,{cache:'no-store'}); if(!r.ok) return; const e=await r.json();
     const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
