@@ -221,7 +221,7 @@ body.gated .nav,body.gated .nav-r,body.gated .dock,body.gated .appbar .rbtn{disp
 .empty .ico{width:26px;height:26px;color:var(--rose-mid)}
 .vazio{padding:14px 0;color:inherit;opacity:.7;font-size:.86rem;text-align:center}
 .hint{font-size:.78rem;color:var(--muted);margin:0}
-.err{font-size:.84rem;color:var(--bad);margin:0}.err.ok{color:var(--ink-2)}
+.err{font-size:.84rem;color:var(--bad);margin:0}.err.ok{color:var(--ink-2)}.ou{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.8rem}.ou::before,.ou::after{content:'';flex:1;height:1px;background:var(--line)}
 .banner{font-size:.82rem;color:var(--muted);padding:10px 14px;border-radius:16px;background:var(--sunk)}
 .pending{font-size:.8rem;color:var(--warn);background:var(--warn-soft);padding:8px 14px;border-radius:16px;display:flex;gap:8px;align-items:center}
 .cols{display:flex;flex-direction:column;gap:14px}
@@ -840,8 +840,8 @@ const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
 // cache: {"300":base64,"400":base64} (an older cache held just the light italic as a plain string)
 try{ const c=localStorage.getItem('fin-fonte'); if(c&&c.includes('"700"')){ const o=JSON.parse(c); for(const [p,d] of Object.entries(o)) usarFonteBuf(b64(d).buffer,+p); } }catch(e){}
 async function migrarSaldos(){
-  if(!sb||!crypto?.subtle||items.has('migr_saldos')||saldos().length||!canWrite) return;
-  try{ const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); const chave=k.data?.valor; if(!chave) return;
+  if(!(sb||FB)||!crypto?.subtle||items.has('migr_saldos')||saldos().length||!canWrite) return;
+  try{ const chave=await pegarChave(); if(!chave) return;
     const r=await fetch('saldos.enc.json',{cache:'no-store'}); if(!r.ok) return; const e=await r.json();
     const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(chave),'PBKDF2',false,['deriveKey']);
     const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
@@ -850,8 +850,8 @@ async function migrarSaldos(){
     await store.bulk([...arr.map(x=>({id:'saldo_'+x.mes,tipo:'saldo',...x})),{id:'migr_saldos',tipo:'migracao',em:new Date().toISOString(),n:arr.length}]);
   }catch(err){} }
 async function fonteInicial(){
-  if(!sb||!crypto?.subtle) return; try{ if((localStorage.getItem('fin-fonte')||'').includes('"700"')&&fonteCripto) return; }catch(_){}
-  try{ const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); const chave=k.data?.valor; if(!chave) return;
+  if(!(sb||FB)||!crypto?.subtle) return; try{ if((localStorage.getItem('fin-fonte')||'').includes('"700"')&&fonteCripto) return; }catch(_){}
+  try{ const chave=await pegarChave(); if(!chave) return;
     const r=await fetch('fonte.enc.json'); if(!r.ok) return; const e=await r.json();
     const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(chave),'PBKDF2',false,['deriveKey']);
     const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
@@ -900,6 +900,7 @@ const meses=()=>{const a=index().meses, c=today().slice(0,7); return a.includes(
 // Three places the data can live: the claude.ai artifact store, a supabase project (github pages + config.js), or this browser only.
 // a password-reset link opens the app with #...type=recovery; read it before supabase clears the address
 let recup=/type=recovery/.test(location.hash);
+let FB=null, fbAuth=null, fbDb=null, fbUn=null;
 let mode='local', sb=null, session=null, gate=null, userEmail='', channel=null;
 async function boot(){
   render();
@@ -918,6 +919,7 @@ async function boot(){
     return;
   }
   const cfg=window.FIN_CONFIG||{};
+  if(cfg.firebase?.apiKey){ mode='nuvem'; return bootFirebase(cfg); }
   if(cfg.supabaseUrl&&cfg.supabaseKey){ mode='nuvem'; return bootNuvem(cfg); }
   let arr=null; try{arr=JSON.parse(localStorage.getItem('fin2-itens')||'null')}catch(e){}
   if(!arr){ arr=[]; for(const f of ['dados-2025.json','dados.json']){ try{const r=await fetch(f); if(r.ok) arr=arr.concat(await r.json());}catch(e){} } }
@@ -935,7 +937,7 @@ let outbox=[]; try{ outbox=JSON.parse(localStorage.getItem('fin-pend')||'[]'); }
 const saveOut=()=>{ try{localStorage.setItem('fin-pend',JSON.stringify(outbox))}catch(e){} };
 // a copy of the data on this device, so the app opens even when the server does not answer
 const comPrazo=(p,ms=15000)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);
-let cacheT=0; const guardarCache=()=>{ if(mode!=='nuvem'||!session) return; clearTimeout(cacheT); cacheT=setTimeout(()=>{ try{ localStorage.setItem('fin-cache',JSON.stringify([...items.values()])); }catch(e){} },1500); };
+let cacheT=0; const guardarCache=()=>{ if(mode!=='nuvem'||FB||!session) return; clearTimeout(cacheT); cacheT=setTimeout(()=>{ try{ localStorage.setItem('fin-cache',JSON.stringify([...items.values()])); }catch(e){} },1500); };
 const MSG_FORA='o servidor não respondeu. mostrando o que estava salvo neste aparelho; o que você lançar agora sobe sozinho quando ele voltar.';
 function foraDoAr(){
   let arr=null; try{ arr=JSON.parse(localStorage.getItem('fin-cache')||'null'); }catch(e){}
@@ -948,12 +950,77 @@ function foraDoAr(){
 }
 function vFora(){
   return `<section class="card login"><span class="mark" data-mark></span><h1>servidor <span class="script">fora do ar</span></h1>
-    <p class="muted" style="margin:0">não consegui falar com o banco de dados. se a internet estiver ok, o projeto do supabase está pausado ou voltando: entre em supabase.com, abra o projeto e toque em restore. seus lançamentos continuam guardados lá.</p>
+    <p class="muted" style="margin:0">${FB?'não consegui falar com o banco de dados. confira a internet e tente de novo.':'não consegui falar com o banco de dados. se a internet estiver ok, o projeto do supabase está pausado ou voltando: entre em supabase.com, abra o projeto e toque em restore. seus lançamentos continuam guardados lá.'}</p>
     <button class="btn dark" data-recarregar="1">${ic('repeat','sm')} tentar de novo</button></section>`;
 }
 const offlineErr=e=>!navigator.onLine||/fetch|network|load failed|timeout|offline/i.test(e?.message||'');
 const opId=o=>o.id||o.it?.id;
 function applyOutbox(){ for(const o of outbox){ if(o.k==='del') items.delete(o.id); else items.set(o.it.id,o.it); } }
+// ---------- firebase (firestore + auth): the free plan never pauses ----------
+const FBV='https://www.gstatic.com/firebasejs/10.14.1/';
+const fbLimpo=it=>JSON.parse(JSON.stringify(it));
+async function bootFirebase(cfg){
+  try{ for(const f of ['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js']) await loadScript(FBV+f); }
+  catch(e){ foraDoAr(); return; }
+  FB=firebase.initializeApp(cfg.firebase); fbAuth=firebase.auth(); fbDb=firebase.firestore();
+  try{ fbDb.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
+  const col=fbDb.collection('lancamentos');
+  // writes go to the local copy at once and reach the server when there is internet (the sdk keeps the queue)
+  const w=p=>{ p.catch(e=>toast(e?.code==='permission-denied'?'você não tem permissão para editar.':'não salvou. confira a internet e tente de novo.','alert')); return Promise.resolve(); };
+  store={
+    put:it=>{ items.set(it.id,it); renderSoon(); return w(col.doc(it.id).set(fbLimpo(it))); },
+    del:id=>{ items.delete(id); renderSoon(); return w(col.doc(id).delete()); },
+    patch:(id,o)=>{ const it={...items.get(id),...o}; items.set(id,it); renderSoon(); return w(col.doc(id).set(fbLimpo(it))); },
+    bulk:async arr=>{ for(let i=0;i<arr.length;i+=400){ const b=fbDb.batch(); arr.slice(i,i+400).forEach(it=>b.set(col.doc(it.id),fbLimpo(it))); await b.commit(); } arr.forEach(it=>items.set(it.id,it)); renderSoon(); },
+  };
+  try{ await fbAuth.getRedirectResult(); }catch(e){}
+  fbAuth.onAuthStateChanged(u=>{
+    if(u){ session={user:{email:(u.email||'').toLowerCase()}}; afterLoginFb(); }
+    else { session=null; if(fbUn){ fbUn(); fbUn=null; } items.clear(); gate='login'; ready=true; autoDone=false; render(); }
+  });
+}
+function afterLoginFb(){
+  userEmail=session.user.email; try{ localStorage.setItem('fin-email',userEmail); }catch(_){}
+  gate=null; ready=false; render(); guardarChaveLocal();
+  if(fbUn) fbUn();
+  let primeira=true;
+  fbUn=fbDb.collection('lancamentos').onSnapshot({includeMetadataChanges:false},async snap=>{
+    for(const ch of snap.docChanges()){ if(ch.type==='removed') items.delete(ch.doc.id); else { items.set(ch.doc.id,{...ch.doc.data(),id:ch.doc.id}); if(ch.doc.id===perfilId()) loadPerfil(); } }
+    if(primeira){ primeira=false;
+      if(!items.size&&!snap.metadata.fromCache) await seedInicial();
+      await trazerDoAparelho();
+      loadPerfil(); fonteInicial(); migrarSaldos(); presencaFb();
+      bannerMsg=''; ready=true; render(); setTimeout(autoParcelas,400); return; }
+    renderSoon();
+  }, e=>{ if(e?.code==='permission-denied'){ gate='semacesso'; ready=true; render(); } else foraDoAr(); });
+}
+// once per device: whatever was waiting on this phone from the old server (unsent changes, the saved copy) goes up
+async function trazerDoAparelho(){
+  if(lsGet('fin-fb-migrado')) return;
+  try{
+    let cache=null; try{ cache=JSON.parse(localStorage.getItem('fin-cache')||'null'); }catch(_){}
+    const novos=(cache||[]).filter(i=>i&&i.id&&!items.has(i.id));
+    for(const o of outbox){ if(o.k==='put'&&o.it?.id) novos.push(o.it); }
+    if(novos.length){ await store.bulk(novos); toast(`${novos.length} lançamento${novos.length>1?'s':''} deste aparelho foram para a nuvem`,'upload'); }
+    for(const o of outbox) if(o.k==='del'&&o.id) store.del(o.id);
+    outbox=[]; saveOut(); localStorage.setItem('fin-fb-migrado','1');
+  }catch(e){}
+}
+// who else has the app open: each one writes "estou aqui" every minute
+let presT=0;
+function presencaFb(){ if(!fbDb||presT) return; const eu=nomeDe(userEmail), ref=fbDb.collection('online');
+  const bate=()=>{ if(!document.hidden) ref.doc(eu).set({em:Date.now()}).catch(()=>{}); };
+  bate(); presT=setInterval(bate,60000);
+  ref.onSnapshot(s=>{ const ag=Date.now(); online=s.docs.filter(d=>d.id!==eu&&ag-(d.data().em||0)<150000).map(d=>d.id); renderNav(); },()=>{}); }
+// the key that opens the encrypted history/font/balances: firestore for members, or once from the setup link (#chave=...)
+const chaveDoLink=(()=>{ const m=/[#&]chave=([^&]+)/.exec(location.hash); if(!m) return ''; const k=decodeURIComponent(m[1]); try{ localStorage.setItem('fin-chave',k); history.replaceState(null,'',location.pathname+location.search); }catch(_){} return k; })();
+async function pegarChave(){
+  if(FB){ try{ const d=await fbDb.collection('segredos').doc('historico').get(); if(d.exists&&d.data().valor) return d.data().valor; }catch(e){} return lsGet('fin-chave')||chaveDoLink||''; }
+  if(sb){ try{ const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); return k.data?.valor||''; }catch(e){} }
+  return '';
+}
+async function guardarChaveLocal(){ const k=lsGet('fin-chave'); if(!FB||!k) return;
+  try{ const d=await fbDb.collection('segredos').doc('historico').get(); if(!d.exists) await fbDb.collection('segredos').doc('historico').set({valor:k}); }catch(e){} }
 async function bootNuvem(cfg){
   try{ await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'); }
   catch(e){ foraDoAr(); return; }
@@ -991,7 +1058,7 @@ function presenca(){ if(!sb||pres) return;
       .subscribe(async st=>{ if(st==='SUBSCRIBED'){ try{ await pres.track({em:Date.now()}); }catch(_){} } }); }catch(e){} }
 // realtime can drop on phones; every 12s, fetch whatever changed since the last look
 async function puxar(){
-  if(mode!=='nuvem'||!session||gate||document.hidden||!ready) return;
+  if(mode!=='nuvem'||FB||!session||gate||document.hidden||!ready) return;
   const desde=new Date((lastSync||Date.now())-120000).toISOString(), agora=Date.now();
   const {data,error}=await sb.from('lancamentos').select('id,doc').gt('updated_at',desde).limit(1000); if(error||!data) return;
   let n=0; for(const r of data){ const novo={...r.doc,id:r.id}; if(outbox.some(o=>(o.id||o.it?.id)===r.id)) continue; if(JSON.stringify(items.get(r.id))!==JSON.stringify(novo)){ items.set(r.id,novo); n++; } }
@@ -1546,7 +1613,7 @@ function pAno(){
 // only by the two members, so the public repo never holds readable numbers. First login into an empty table uploads it.
 async function seedInicial(){
   const f=(window.FIN_CONFIG||{}).dadosIniciais; if(!f||!crypto?.subtle) return;
-  const k=await sb.from('segredos').select('valor').eq('nome','chave_historico').maybeSingle(); const chave=k.data?.valor; if(!chave) return;
+  const chave=await pegarChave(); if(!chave) return;
   try{
     const r=await fetch(f,{cache:'no-store'}); if(!r.ok) return; const e=await r.json();
     const b64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
@@ -1570,6 +1637,7 @@ function vLogin(){
       <p class="err" id="l-err" hidden></p>
       <button class="btn dark" type="submit">${ic('lock','sm')} entrar</button>
       <button class="link" type="button" data-esqueci="1" style="align-self:center">esqueci minha senha</button>
+      ${FB?`<div class="ou"><span>ou</span></div><button class="btn line" type="button" data-google="1"><svg class="ico sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4" stroke="none"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853" stroke="none"/><path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z" fill="#FBBC05" stroke="none"/><path d="M12 6c1.5 0 2.8.5 3.9 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10C7.2 7.7 9.4 6 12 6z" fill="#EA4335" stroke="none"/></svg> entrar com google</button>`:''}
     </form></section>`;
 }
 function vNovaSenha(){
@@ -1590,6 +1658,8 @@ async function esqueci(){
   const email=$('#l-email').value.trim().toLowerCase(), e=$('#l-err'); const msg=t=>{ e.textContent=t; e.hidden=false; };
   if(!email) return msg('escreva o seu email primeiro.');
   const b=$('[data-esqueci]'); b.disabled=true; b.textContent='enviando…';
+  if(FB){ try{ await fbAuth.sendPasswordResetEmail(email); b.disabled=false; b.textContent='esqueci minha senha'; e.classList.add('ok'); return msg(`mandei um email para ${email} com um link para criar uma senha nova. confira também o spam. depois volte aqui e entre com ela.`); }
+    catch(x){ b.disabled=false; b.textContent='esqueci minha senha'; return msg(/user-not-found/.test(x?.code||'')?'esse email ainda não tem conta: digite uma senha e toque em entrar para criar.':'não consegui mandar o email: '+String(x?.code||'').replace('auth/','')); } }
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
   b.disabled=false; b.textContent='esqueci minha senha';
   if(error&&semServidor(error.message)) return msg(MSG_SERV);
@@ -1608,7 +1678,7 @@ async function salvarNovaSenha(){
 }
 function vSemAcesso(){
   return `<section class="card login"><span class="mark" data-mark></span><h1>ainda <span class="script">sem acesso</span></h1>
-    <p class="muted" style="margin:0">o email <b>${esc(userEmail)}</b> entrou, mas ainda não foi liberado para ver os dados. adicione esse email na tabela <b>membros</b> do supabase e entre de novo.</p>
+    <p class="muted" style="margin:0">o email <b>${esc(userEmail)}</b> entrou, mas ainda não foi liberado para ver os dados. ${FB?'confira se esse email está nas regras do firestore (firebase > firestore > rules) e entre de novo.':'adicione esse email na tabela <b>membros</b> do supabase e entre de novo.'}</p>
     <button class="btn line" data-sair="1">${ic('logout','sm')} sair</button></section>`;
 }
 // ---------- bank editor: name + an in-app color picker (presets, hue/saturation/light, hex, rgb) ----------
@@ -1688,7 +1758,7 @@ function pAjustes(){
   <div class="col"><section class="card"><div class="card-h"><h2>backup</h2></div>
     <div class="opt-row"><span class="tico">${ic('down','sm')}</span><span><b>baixar backup</b><small>um arquivo .json com tudo.</small></span><button class="pill-btn" data-export="1">baixar</button></div>
     <div class="opt-row"><span class="tico">${ic('file','sm')}</span><span><b>baixar planilha</b><small>.csv para o excel ou google planilhas.</small></span><button class="pill-btn" data-csv="1">baixar</button></div>
-    <div class="opt-row"><span class="tico">${ic('upload','sm')}</span><span><b>importar backup</b><small>o que tiver o mesmo código é atualizado, nada é apagado.</small></span>${canWrite?`<label class="pill-btn fileb">escolher<input type="file" id="impFile" accept=".json,application/json"></label>`:''}</div>
+    <div class="opt-row"><span class="tico">${ic('upload','sm')}</span><span><b>importar backup</b><small>o que tiver o mesmo código é atualizado, nada é apagado.</small></span>${canWrite?`<label class="pill-btn fileb">escolher<input type="file" id="impFile" accept=".json,.csv,application/json,text/csv"></label>`:''}</div>
     ${importPend?`<div class="alert">${ic('upload')}<span>importar <b>${importPend.length}</b> lançamentos?</span><span style="margin-left:auto;display:flex;gap:8px"><button class="pill-btn" data-impcancel="1">cancelar</button><button class="pill-btn rose" data-impok="1">importar</button></span></div>`:''}</section></div></div>`;
   if(!fonteCripto){ const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido);
     h+=`<section class="card"><div class="card-h"><h2>fonte do <span class="script">planê</span></h2><span class="sub">só para vocês dois</span></div><div class="opt-row"><span class="tico">${ic('file','sm')}</span><span><b>${fs.length?'the seasons':'sem fonte do planê'}</b><small>${fs.length?fs.map(f=>esc(f.nome)).join(', '):'escolha os arquivos da the seasons.'}</small></span>
@@ -1700,8 +1770,16 @@ async function saveFile(name,data,type){
   try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type})); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ toast('não consegui gerar o arquivo.','alert'); }
 }
 function exportJson(){ saveFile(`financeiro-backup-${today()}.json`, JSON.stringify({app:'financeiro',versao:1,exportado:new Date().toISOString(),itens:[...items.values()].filter(i=>!i.removido)}), 'application/json'); }
+// the supabase table exported as csv (columns id, doc, updated_at): every row becomes the saved item again
+function csvSupabase(t){ const rows=[]; let row=[], f='', q=false;
+  for(let i=0;i<t.length;i++){ const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if(c==='"') q=true; else if(c===','){ row.push(f); f=''; } else if(c==='\n'||c==='\r'){ if(c==='\r'&&t[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=''; } else f+=c; }
+  if(f||row.length){ row.push(f); rows.push(row); }
+  const h=rows.shift()||[], ci=h.indexOf('doc'), ii=h.indexOf('id'); if(ci<0) return [];
+  return rows.map(r=>{ try{ return {...JSON.parse(r[ci]),id:r[ii]}; }catch(e){ return null; } }).filter(Boolean); }
 async function readImport(file){
-  try{ const j=JSON.parse(await file.text()); const arr=(Array.isArray(j)?j:j.itens||[]).filter(i=>i&&i.id&&i.tipo&&(i.mes||i.tipo==='banco'||i.tipo==='meta'));
+  try{ const txt=await file.text(); const j=/^\s*[\[{]/.test(txt)?JSON.parse(txt):csvSupabase(txt); const arr=(Array.isArray(j)?j:j.itens||[]).filter(i=>i&&i.id&&i.tipo);
     if(!arr.length){ toast('esse arquivo não tem lançamentos.','alert'); return; } importPend=arr; render();
   }catch(e){ toast('não consegui ler esse arquivo.','alert'); }
 }
@@ -1714,6 +1792,13 @@ async function doLogin(){
   const email=$('#l-email').value.trim().toLowerCase(), pass=$('#l-pass').value; const err=t=>{const e=$('#l-err');e.textContent=t;e.hidden=false};
   if(!email||!pass) return err('preencha email e senha.');
   const btn=$('#loginF button[type=submit]'); btn.disabled=true; btn.textContent='entrando…';
+  if(FB){ const fim=()=>{ btn.disabled=false; btn.innerHTML=`${ic('lock','sm')} entrar`; };
+    try{ await fbAuth.signInWithEmailAndPassword(email,pass); fim(); return; }
+    catch(e){ const c=e?.code||'';
+      if(/invalid-credential|user-not-found|wrong-password|invalid-login/.test(c)){
+        try{ await fbAuth.createUserWithEmailAndPassword(email,pass); fim(); return; }
+        catch(e2){ fim(); const c2=e2?.code||''; return err(/email-already-in-use/.test(c2)?'senha incorreta. se esqueceu, toque em "esqueci minha senha".':/weak-password/.test(c2)?'primeiro acesso: use pelo menos 6 caracteres.':'não deu certo: '+c2.replace('auth/','')); } }
+      fim(); return err(/network/.test(c)?'sem internet. tente de novo.':/too-many/.test(c)?'muitas tentativas. espere um pouco e tente de novo.':'não deu certo: '+c.replace('auth/','')); } }
   let r=await sb.auth.signInWithPassword({email,password:pass});
   // first time: no account yet for this email, so create it with the password just typed
   if(r.error&&/invalid login/i.test(r.error.message||'')){
@@ -1731,7 +1816,7 @@ const guardarAcesso=(e,p)=>{ try{ localStorage.setItem('fin-acesso',JSON.stringi
 let saindo=false;
 async function reLogin(){
   let a=null; try{ a=JSON.parse(localStorage.getItem('fin-acesso')||'null'); }catch(_){}
-  if(!a?.e||!a?.p||!sb) return false;
+  if(!a?.e||!a?.p||!sb||FB) return false;
   try{ const {data,error}=await sb.auth.signInWithPassword({email:a.e,password:decodeURIComponent(escape(atob(a.p)))});
     if(error){ if(/invalid login/i.test(error.message||'')) try{ localStorage.removeItem('fin-acesso'); }catch(_){} return false; }
     return !!data?.session; }catch(_){ return false; }
@@ -1804,7 +1889,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1847,8 +1932,11 @@ document.addEventListener('click',e=>{
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
   if(d.esqueci){ esqueci(); return; }
+  if(d.google){ const pr=new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({prompt:'select_account'});
+    fbAuth.signInWithPopup(pr).catch(e=>{ const c=e?.code||''; if(/popup-blocked|operation-not-supported|web-storage/.test(c)) return fbAuth.signInWithRedirect(pr);
+      if(/popup-closed|cancelled/.test(c)) return; const er=$('#l-err'); if(er){ er.textContent=/unauthorized-domain/.test(c)?'no firebase, adicione o endereço do app em authentication > settings > authorized domains.':'não deu certo: '+c.replace('auth/',''); er.hidden=false; } }); return; }
   if(d.recarregar){ location.reload(); return; }
-  if(d.sair){ saindo=true; ['fin-acesso','fin-cache','fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
+  if(d.sair){ saindo=true; ['fin-acesso','fin-cache','fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); if(FB) fbAuth.signOut(); else sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }
@@ -1918,7 +2006,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&/^(q|s|ae|ac|ag)-va
 let hiddenAt=0, dia=today();
 async function voltar(){
   const t=today(); if(t!==dia){ if(ui.mes===dia.slice(0,7)) ui.mes=t.slice(0,7); dia=t; autoDone=false; }
-  if(mode==='nuvem'&&session&&!gate){ await flush(); await loadAll(); }
+  if(mode==='nuvem'&&!FB&&session&&!gate){ await flush(); await loadAll(); }
   render(); if(!autoDone) setTimeout(autoParcelas,300);
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') hiddenAt=Date.now(); else if(Date.now()-hiddenAt>45000||today()!==dia) voltar(); else if(render.pend) render(); });
