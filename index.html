@@ -933,12 +933,30 @@ const row=it=>({id:it.id,doc:it,updated_at:new Date().toISOString()});
 // without signal (a basement, the subway), changes stay on the phone and go up as soon as the internet is back
 let outbox=[]; try{ outbox=JSON.parse(localStorage.getItem('fin-pend')||'[]'); }catch(e){}
 const saveOut=()=>{ try{localStorage.setItem('fin-pend',JSON.stringify(outbox))}catch(e){} };
+// a copy of the data on this device, so the app opens even when the server does not answer
+const comPrazo=(p,ms=15000)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);
+let cacheT=0; const guardarCache=()=>{ if(mode!=='nuvem'||!session) return; clearTimeout(cacheT); cacheT=setTimeout(()=>{ try{ localStorage.setItem('fin-cache',JSON.stringify([...items.values()])); }catch(e){} },1500); };
+const MSG_FORA='o servidor não respondeu. mostrando o que estava salvo neste aparelho; o que você lançar agora sobe sozinho quando ele voltar.';
+function foraDoAr(){
+  let arr=null; try{ arr=JSON.parse(localStorage.getItem('fin-cache')||'null'); }catch(e){}
+  if(!arr?.length){ gate='fora'; ready=true; render(); return; }
+  items.clear(); arr.forEach(i=>items.set(i.id,i)); applyOutbox();
+  const fila=op=>{ outbox=outbox.filter(o=>(o.id||o.it?.id)!==(op.id||op.it?.id)); outbox.push(op); saveOut(); renderSoon(); };
+  if(!session) store={put:async it=>{items.set(it.id,it);fila({k:'put',it});}, del:async id=>{items.delete(id);fila({k:'del',id});},
+    patch:async(id,o)=>{const it={...items.get(id),...o};items.set(id,it);fila({k:'put',it});}, bulk:async a=>{for(const it of a){items.set(it.id,it);fila({k:'put',it});}}};
+  gate=null; autoDone=true; bannerMsg=MSG_FORA; ready=true; render();
+}
+function vFora(){
+  return `<section class="card login"><span class="mark" data-mark></span><h1>servidor <span class="script">fora do ar</span></h1>
+    <p class="muted" style="margin:0">não consegui falar com o banco de dados. se a internet estiver ok, o projeto do supabase está pausado ou voltando: entre em supabase.com, abra o projeto e toque em restore. seus lançamentos continuam guardados lá.</p>
+    <button class="btn dark" data-recarregar="1">${ic('repeat','sm')} tentar de novo</button></section>`;
+}
 const offlineErr=e=>!navigator.onLine||/fetch|network|load failed|timeout|offline/i.test(e?.message||'');
 const opId=o=>o.id||o.it?.id;
 function applyOutbox(){ for(const o of outbox){ if(o.k==='del') items.delete(o.id); else items.set(o.it.id,o.it); } }
 async function bootNuvem(cfg){
   try{ await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'); }
-  catch(e){ bannerMsg='sem internet: não consegui conectar ao banco de dados. tente de novo.'; ready=true; render(); return; }
+  catch(e){ foraDoAr(); return; }
   sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true}});
   const T=()=>sb.from('lancamentos');
   const chk=({error})=>{ if(error) throw error; };
@@ -955,7 +973,7 @@ async function bootNuvem(cfg){
     patch:async(id,o)=>{const it={...items.get(id),...o};items.set(id,it);renderSoon();await send({k:'put',it});},
     bulk:async arr=>{for(let i=0;i<arr.length;i+=500) chk(await T().upsert(arr.slice(i,i+500).map(row))); arr.forEach(it=>items.set(it.id,it)); renderSoon();},
   };
-  const {data}=await sb.auth.getSession(); session=data.session;
+  let data=null; try{ ({data}=await comPrazo(sb.auth.getSession())); }catch(e){ foraDoAr(); return; } session=data.session;
   sb.auth.onAuthStateChange((ev,s)=>{ const had=!!session; session=s;
     if(ev==='PASSWORD_RECOVERY'&&s){ recup=true; userEmail=s.user?.email||''; gate='novasenha'; ready=true; render(); return; }
     if(!s){ if(!saindo&&lsGet('fin-acesso')){ reLogin().then(ok=>{ if(!ok&&!session){ items.clear(); gate='login'; ready=true; autoDone=false; render(); } }); return; }
@@ -984,17 +1002,19 @@ async function afterLogin(){
   if(recup){ gate='novasenha'; ready=true; render(); return; }
   try{ if(userEmail) localStorage.setItem('fin-email',userEmail); }catch(_){}
   gate=null; ready=false; render();
-  const mem=await sb.from('membros').select('email').limit(1);
+  let mem; try{ mem=await comPrazo(sb.from('membros').select('email').limit(1)); }catch(e){ mem={error:e}; }
+  if(mem.error&&offlineErr(mem.error)){ foraDoAr(); return; }
   if(mem.error||!mem.data?.length){ gate='semacesso'; ready=true; render(); return; }
-  const n=await loadAll();
-  if(n===null) bannerMsg='não consegui carregar os lançamentos. recarregue a página.';
-  else if(!n) await seedInicial();
+  let n=null; try{ n=await comPrazo(loadAll(),30000); }catch(e){}
+  if(n===null){ foraDoAr(); return; }
+  bannerMsg='';
+  if(!n) await seedInicial();
   flush();
   if(!channel) channel=sb.channel('lancamentos').on('postgres_changes',{event:'*',schema:'public',table:'lancamentos'},p=>{
     if(p.eventType==='DELETE'){ if(p.old?.id) items.delete(p.old.id); } else if(p.new?.id){ items.set(p.new.id,{...p.new.doc,id:p.new.id}); if(p.new.id===perfilId()) loadPerfil(); }
     renderSoon(); }).subscribe();
   loadPerfil(); fonteInicial(); migrarSaldos(); presenca(); lastSync=Date.now();
-  ready=true; render(); setTimeout(autoParcelas,400);
+  ready=true; render(); guardarCache(); setTimeout(autoParcelas,400);
 }
 function toast(t,i='check',o={}){const h=$('#toastHost'); toast.undo=o.undo||null; h.innerHTML=`<div class="toast">${ic(i,'sm')}${esc(t)}${o.undo?'<button class="undo" data-undo="1">desfazer</button>':''}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>{h.innerHTML='';toast.undo=null;},o.undo?5000:2400);}
 async function safe(p,ok){try{await p; if(ok) toast(ok);}catch(e){toast(e?.code==='invalid_argument'||e?.code==='42501'?'você não tem permissão para editar.':'não salvou. confira a internet e tente de novo.','alert');}}
@@ -1081,7 +1101,7 @@ function renderNav(){
 }
 
 // ---------- render ----------
-let rq=0; const renderSoon=()=>{ if(!rq) rq=requestAnimationFrame(()=>{rq=0;render();}); };
+let rq=0; const renderSoon=()=>{ guardarCache(); if(!rq) rq=requestAnimationFrame(()=>{rq=0;render();}); };
 function render(){
   if(rq){cancelAnimationFrame(rq);rq=0;}
   if(document.hidden&&ready){ render.pend=true; return; } render.pend=false;
@@ -1092,6 +1112,7 @@ function render(){
   if(gate==='login'){ m.innerHTML=vLogin(); return; }
   if(gate==='semacesso'){ m.innerHTML=vSemAcesso(); return; }
   if(gate==='novasenha'){ m.innerHTML=vNovaSenha(); return; }
+  if(gate==='fora'){ m.innerHTML=vFora(); return; }
   const v={inicio:pInicio,lanc:pLanc,ano:pAno,ajustes:pAjustes,bancos:pBancos}[ui.page]||pInicio;
   // keep what is being typed in the quick-add line when live updates re-render the page
   const keep={}; m.querySelectorAll('[data-keep]').forEach(el=>keep[el.id]=el.value); const fid=document.activeElement?.id;
@@ -1783,7 +1804,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -1826,7 +1847,8 @@ document.addEventListener('click',e=>{
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
   if(d.esqueci){ esqueci(); return; }
-  if(d.sair){ saindo=true; ['fin-acesso','fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
+  if(d.recarregar){ location.reload(); return; }
+  if(d.sair){ saindo=true; ['fin-acesso','fin-cache','fin-foto','fin-foto-orig','fin-icone','fin-tema','fin-pend','fin-fonte'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}}); foto=null; icone={id:'wallet'}; outbox=[]; applyTema({id:'nova',...TEMAS[0][2]}); applyIcone(); sb?.auth.signOut(); return; }
   if(d.export){ exportJson(); return; }
   if(d.impok){ doImport(); return; }
   if(d.impcancel){ importPend=null; render(); return; }
