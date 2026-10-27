@@ -567,7 +567,7 @@ body:has(.scrim){overflow:hidden}
 .bkg-h{display:flex;align-items:center;gap:7px;width:100%;padding:8px 0 2px;font-size:.8rem;font-weight:700;color:var(--ink)}
 .bkg-h small{font-weight:500;color:var(--muted)}.bkg-h .num{margin-left:auto;font-weight:600;color:var(--ink-2)}
 /* v8: one bill per card */
-.fat{margin:8px 0;border-radius:20px;background:color-mix(in srgb,var(--bk) 7%,var(--surface));padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.fat{margin:8px -10px;border-radius:18px;background:color-mix(in srgb,var(--bk) 7%,var(--surface));padding:12px 10px;display:flex;flex-direction:column;gap:9px}
 .fat-h{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
 .fat-t{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'n v' 's s';gap:2px 10px;align-items:center;text-align:left;color:inherit;width:100%;cursor:pointer}
 .fat-t .ico{color:var(--muted);transition:transform .2s;vertical-align:-3px;margin-left:2px}.fat.open .fat-t .ico{transform:rotate(180deg)}
@@ -1350,7 +1350,7 @@ function lista(tipo,list,total){
   if(canWrite) h+=ui.add===tipo?`<div class="addrow">${quickForm(PFX[tipo],tipo,true)}<button class="link" data-addrow="">fechar</button></div>`
     :`<button class="addbtn" data-addrow="${tipo}">${ic('plus','sm')} adicionar ${um}</button>`;
   if(tipo==='conta'){
-    const meta=c=>{ const b=banco(c), late=!c.pago&&c.data&&c.data<t; return [quemTxt(c), c.data?(late?`<span class="late">venceu ${dm(c.data)}</span>`:'vence '+dm(c.data)):'', b&&b!=='boleto'?`<span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}`:''].filter(Boolean).join(' · '); };
+    const meta=c=>{ const b=banco(c), late=!c.pago&&c.data&&c.data<t; return [quemTxt(c), c.data?(late?`<span class="late">venceu ${dm(c.data)}</span>`:'vence '+dm(c.data)):'', b&&b!=='boleto'?`<span class="qn"><span class="bk-dot" style="background:${(BK()[b]||BANKS['outro cartão']).c}"></span>${esc(b)}</span>`:''].filter(Boolean).join(' · '); };
     if(!list.length) h+=bloco('',`<div class="vazio">nenhuma conta neste mês.</div>`);
     // a card with more than one bill this month becomes one fatura; everything else stays a single line, all by due date
     const g=new Map(); list.forEach(c=>{const b=banco(c); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(c); }});
@@ -1393,7 +1393,7 @@ function fatura(b,l,cor){
   const sub2='';
   return `<div class="fat ${paga?'paga':''} ${open?'open':''}" style="--bk:${cor}">
     <div class="fat-h"><button class="box ${paga?'on':parte>0.004?'half':''}" data-fatpag="${esc(b)}" aria-label="${paga?'desmarcar a fatura':'marcar a fatura toda como paga'}" ${canWrite?'':'disabled'}>${paga?ic('check','sm'):''}</button>
-      <button class="fat-t" data-fat="${esc(b)}" aria-expanded="${!!open}"><span class="fat-n"><b><span class="bk-dot" style="background:${cor}"></span>${esc(b)}</b><small>${l.length} ${l.length>1?'itens':'item'} · ${sub}${sub2}${ic('chev','sm')}</small></span><span class="fat-v num">${fmt(tot)}</span></button></div>
+      <button class="fat-t" data-fat="${esc(b)}" aria-expanded="${!!open}"><span class="fat-n"><b>${esc(b)}<span class="bk-dot" style="background:${cor}"></span></b><small>${l.length} ${l.length>1?'itens':'item'} · ${sub}${sub2}${ic('chev','sm')}</small></span><span class="fat-v num">${fmt(tot)}</span></button></div>
     <div class="fat-bar" aria-hidden="true">${ks.map(k=>`<i class="${k}" style="flex:${q[k]}"></i>`).join('')}</div>
     <div class="fat-q">${ks.map(k=>`<span><span class="dot ${k}"></span>${k==='outros'?'outras pessoas':QUEM[k]} <b class="num">${fmt(q[k])}</b></span>`).join('')}${rec?`<span class="rec">a receber ${fmt(rec)}</span>`:''}</div>
     ${open?`<div class="fat-its">${its.map(c=>{ const p=parc(c.desc); const lt=!c.pago&&c.data&&c.data<t; return linha(c,'conta',[quemTxt(c),varias&&c.data?(lt?`<span class="late">venceu ${dm(c.data)}</span>`:'vence '+dm(c.data)):''].filter(Boolean).join(' · ')); }).join('')}
