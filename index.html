@@ -633,6 +633,21 @@ body:has(.scrim){overflow:hidden}
 @media (min-width:1100px){
   .pt-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
 }
+
+/* v12: clean — light surfaces, the app's colors kept for meaning, purple as the one highlight */
+.tile.t-lilac,.tile.t-lime,.tile.t-pink,.tile.t-sky{background:var(--surface);border:1px solid var(--bd);color:var(--ink)}
+.tile.t-lilac .t-ico,.tile.t-lime .t-ico,.tile.t-pink .t-ico,.tile.t-sky .t-ico{background:var(--sunk);color:var(--ink)}
+.tile.t-sky .t-tag{background:var(--sunk);color:var(--ink-2)}
+.tile .t-go{background:var(--sunk)!important;color:var(--ink)!important}
+.qk{background:var(--surface)!important;border:1px solid var(--bd);color:var(--ink)!important;flex-direction:row!important;align-items:center!important;gap:10px!important;padding:12px!important;border-radius:18px!important}
+.qk .t-ico{width:32px!important;height:32px!important}
+.qk.t-pink .t-ico{background:color-mix(in srgb,var(--pink) 70%,var(--surface))}.qk.t-lilac .t-ico{background:color-mix(in srgb,var(--lilac) 70%,var(--surface))}.qk.t-lime .t-ico{background:color-mix(in srgb,var(--lime) 75%,var(--surface))}
+.quick{margin-bottom:12px}
+.cc-list{display:flex;flex-direction:column}
+.cc-l{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);text-align:left;color:inherit;width:100%}
+.cc-l:last-child{border-bottom:0}.cc-l .bk-dot{width:10px;height:10px;border-radius:50%}
+.cc-l>span:not(.num){display:flex;flex-direction:column;min-width:0}.cc-l>.num{white-space:nowrap}.cc-l b{font-weight:600;font-size:.9rem}.cc-l small{color:var(--muted);font-size:.74rem}.cc-l .num{font-weight:600}
+.tile h2 .script,.sec-h .script{color:var(--c-acc)}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
 .bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1304,10 +1319,8 @@ function pInicio(){
   let h=`<h1 class="big">${frase}</h1>`+monthNav();
   const ne=ofMes(m,'entrada').length;
   if(canWrite) h+=`<div class="quick">${[['gasto','gasto','t-pink','bag'],['conta','conta','t-lilac','file'],['entrada','entrada','t-lime','up']].map(([k,l,c,i])=>`<button class="qk ${c}" data-new="${k}"><span class="t-ico">${ic('plus','sm')}</span><span>${l}<small>adicionar</small></span></button>`).join('')}</div>`;
-  h+=`<div class="bento">
-    <button class="tile t-lime go" style="min-height:140px" data-golt="entradas"><span class="t-top"><span class="t-ico">${ic('sw')}</span></span><span class="t-lbl" style="margin-top:auto">entrou</span><span class="t-big num">${fmt(r.E)}</span><span class="t-sub">${ne} entrada${ne===1?'':'s'}</span></button>
-    <button class="tile t-pink go" style="min-height:140px" data-golt="gastos"><span class="t-top"><span class="t-ico">${ic('ne')}</span></span><span class="t-lbl" style="margin-top:auto">saiu</span><span class="t-big num">${fmt(r.C+r.G)}</span><span class="t-sub">contas + gastos</span></button>
-    ${progTile(m)}${proximas(m)}${cartoesStack(m)}${cardMetas(m)?cardGuardado(m)+cardMetas(m):cardGuardado(m).replace('class="tile t-sky span2"','class="tile t-sky span2 span4"')}<div class="span2 span4">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
+  h+=resumoCard(m);
+  h+=`<div class="bento">${proximas(m)}${cartoesStack(m)}${cardMetas(m)?cardGuardado(m)+cardMetas(m):cardGuardado(m).replace('class="tile t-sky span2"','class="tile t-sky span2 span4"')}<div class="span2 span4">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
   h+=`<details class="mais" ${ui.mais?'open':''}><summary>${ic('chart','sm')} mais detalhes do mês<small>últimos 6 meses, ritmo dos gastos, dias e quem gastou</small>${ic('chev','sm')}</summary>${ui.mais?`<div class="cols"><div class="col"><section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section>${chartRitmo(m)}</div><div class="col">${cardCalendario(m)}${cardQuem(m)}</div></div>`:''}</details>`;
   return h;
 }
@@ -1330,10 +1343,10 @@ function progTile(m){
 // the month's cards, stacked like a wallet (biggest in front)
 function cartoesStack(m){
   const g={}; ofMes(m,'conta').forEach(c=>{const b=banco(c); if(b&&b!=='boleto') (g[b]=g[b]||[]).push(c)});
-  const a=Object.entries(g).sort((x,y)=>sum(x[1])-sum(y[1])); if(!a.length) return '';
+  const a=Object.entries(g).sort((x,y)=>sum(y[1])-sum(x[1])); if(!a.length) return '';
   const B=BK();
-  return `<section class="span2 wallet"><div class="sec-h" style="margin-bottom:8px"><h2>cartões <span class="script">do mês</span></h2><button class="link" data-banco="">explorar ${ic('arrow','sm')}</button></div><div class="stack">${a.map(([b,l])=>{ const f=sumResta(l);
-    return `<button class="ccard" data-banco="${esc(b)}" style="background:${(B[b]||B['outro cartão']).c}"><span class="cc-top">${esc(b)}<small class="num">${fmt(sum(l))}</small></span><span class="cc-v num">${fmt(sum(l))}</span><span class="cc-s">${l.length} conta${l.length>1?'s':''} · ${f?`falta ${fmt(f)}`:'tudo pago'}</span><span class="t-go">${ic('ne','sm')}</span></button>`; }).join('')}</div></section>`;
+  return `<section class="tile t-white span2"><div class="t-top"><h2>cartões <span class="script">do mês</span></h2><button class="t-go" data-banco="" aria-label="explorar cartões">${ic('ne','sm')}</button></div>
+    <div class="cc-list">${a.map(([b,l])=>{ const f=sumResta(l); return `<button class="cc-l" data-banco="${esc(b)}"><i class="bk-dot" style="background:${(B[b]||B['outro cartão']).c}"></i><span><b>${esc(b)}</b><small>${l.length} conta${l.length>1?'s':''} · ${f?`falta ${fmt(f)}`:'pago'}</small></span><span class="num">${fmt(sum(l))}</span></button>`; }).join('')}</div></section>`;
 }
 // ---------- lançamentos: the lists of the month ----------
 // one list at a time on the phone (entradas, contas, saídas), all three side by side on a computer.
