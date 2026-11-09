@@ -669,6 +669,16 @@ body:has(.scrim){overflow:hidden}
 .pt-grid .pt-r.pt-sub.cartao{background:color-mix(in srgb,var(--bk) 6%,transparent)}
 .pt-add select,.pt-add input{background:var(--surface)!important}
 .pt-grid .pt-add{background:color-mix(in srgb,var(--tc) 30%,transparent);border-radius:12px;padding:8px 4px!important;margin-top:6px}
+
+.pt-dia{height:32px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font-size:.74rem;font-weight:600;padding:0;width:100%;cursor:pointer}
+.cal-scrim{position:fixed;inset:0;z-index:80}
+.calx{position:fixed;z-index:81;background:var(--surface);border:1px solid var(--bd);border-radius:20px;padding:12px;box-shadow:0 18px 50px rgba(20,14,40,.22)}
+.calx-h{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}.calx-h b{font-size:.9rem;font-weight:700}.calx-h .icbtn{width:32px;height:32px}
+.calx-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.calx-g i{font-style:normal;font-size:.66rem;color:var(--muted);padding:2px 0 4px}
+.calx-d{aspect-ratio:1;border-radius:50%;font-size:.8rem;font-weight:500;color:var(--ink);display:grid;place-items:center}
+.calx-d:hover{background:var(--sunk)}.calx-d.hoje{box-shadow:inset 0 0 0 1.5px var(--c-acc)}.calx-d.on{background:var(--ink);color:var(--on-ink);font-weight:700}
+.calx-f{display:flex;justify-content:center;padding-top:6px}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
 .bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -698,6 +708,7 @@ body:has(.scrim){overflow:hidden}
 <main class="main" id="main"></main>
 <nav class="dock" id="dock" aria-label="seções"></nav>
 <div id="sheetHost"></div>
+<div id="calHost"></div>
 <div id="dupHost"></div>
 <div id="toastHost" aria-live="polite"></div>
 <div id="updHost" aria-live="polite"></div>
@@ -1428,11 +1439,11 @@ function tabela(tipo,m){
   const q={}; l.forEach(i=>q[i.quem]=(q[i.quem]||0)+(+i.valor||0));
   const tot=sum(l), falta=ck?sumResta(l):0;
   const dDef=m===t.slice(0,7)?t:`${m}-${ck?'10':'01'}`;
-  const dia=m===t.slice(0,7)?+t.slice(8):ck?10:1;
+  const dia=m===t.slice(0,7)?+t.slice(8):ck?10:1, dEsc=(ui.pdata?.[P]||'').slice(0,7)===m?ui.pdata[P]:diaNoMes(m,dia);
   const add=canWrite?`<form class="pt-r pt-add" id="${P}F" data-tipo="${tipo}" novalidate>
       <select id="${P}-quem" class="pt-q ${quens.includes(ui.qquem)?ui.qquem:quens[0]}" aria-label="quem">${quens.map(k=>`<option value="${k}" ${(quens.includes(ui.qquem)?ui.qquem:quens[0])===k?'selected':''}>${QUEM[k]}</option>`).join('')}</select>
       <input id="${P}-desc" list="${P}dl" autocomplete="off" enterkeyhint="next" placeholder="descrição" aria-label="descrição"><datalist id="${P}dl">${sugestoes(tipo)}</datalist>
-      <input id="${P}-dia" inputmode="numeric" maxlength="2" value="${dia}" aria-label="dia"><input type="hidden" id="${P}-data">
+      <button type="button" class="pt-dia" id="${P}-dia" data-cal="${P}" aria-label="escolher o dia">${dm(dEsc)}</button><input type="hidden" id="${P}-data" value="${dEsc}">
       <input id="${P}-valor" inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
       <button class="pt-mais" type="submit" aria-label="adicionar">${ic('plus','sm')}</button></form>`:'';
   return `<section class="pt-tab pt-${tipo}" id="pt-${tipo}">
@@ -1444,6 +1455,21 @@ function tabela(tipo,m){
       <div class="pt-stats">${(ck?[['total',tot],['pago',tot-falta],['falta',falta]]:[['total',tot]]).map(([l,v])=>`<div><span>${l}</span><b class="num">${fmt(v)}</b></div>`).join('')}</div>
       <div class="pt-stats pessoas">${quens.map(k=>`<div><span><i class="dot ${k}"></i>${QUEM[k]}</span><b class="num">${fmt(q[k]||0)}</b></div>`).join('')}</div></div>
   </section>`;
+}
+// ---------- small calendar (the site's own) to pick the day of a new line ----------
+let cal=null;
+function abrirCal(P){ const v=$('#'+P+'-data')?.value||diaNoMes(ui.mes,1); cal={P,mes:v.slice(0,7),sel:v}; drawCal(); }
+function drawCal(){
+  const host=$('#calHost'); if(!cal){ host.innerHTML=''; return; }
+  const btn=$('#'+cal.P+'-dia'); if(!btn){ cal=null; host.innerHTML=''; return; }
+  const [y,mm]=cal.mes.split('-').map(Number), ini=new Date(y,mm-1,1).getDay(), n=new Date(y,mm,0).getDate(), t=today();
+  let dias=''; for(let i=0;i<ini;i++) dias+='<span></span>';
+  for(let d=1;d<=n;d++){ const k=`${cal.mes}-${pad(d)}`; dias+=`<button type="button" class="calx-d ${k===cal.sel?'on':''} ${k===t?'hoje':''}" data-calpick="${k}">${d}</button>`; }
+  const r=btn.getBoundingClientRect(), W=Math.min(284,innerWidth-24), left=Math.max(12,Math.min(r.right-W,innerWidth-W-12)), baixo=innerHeight-r.bottom>330;
+  host.innerHTML=`<div class="cal-scrim" data-calclose="1"></div><div class="calx" style="width:${W}px;left:${left}px;${baixo?`top:${r.bottom+6}px`:`bottom:${innerHeight-r.top+6}px`}" role="dialog" aria-label="escolher o dia">
+    <div class="calx-h"><button type="button" class="icbtn" data-calnav="-1" aria-label="mês anterior">${ic('left','sm')}</button><b>${mName(cal.mes)} <span class="script">${y}</span></b><button type="button" class="icbtn" data-calnav="1" aria-label="próximo mês">${ic('right','sm')}</button></div>
+    <div class="calx-g">${['d','s','t','q','q','s','s'].map(x=>`<i>${x}</i>`).join('')}${dias}</div>
+    <div class="calx-f"><button type="button" class="link" data-calpick="${t}">hoje</button></div></div>`;
 }
 // ---------- dinheiro guardado ----------
 // what the couple has (the spreadsheet's "temos atualmente"): one snapshot per month {tipo:'saldo', mes, debito, guardado, invest}.
@@ -2034,7 +2060,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-cal],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -2076,6 +2102,10 @@ document.addEventListener('click',e=>{
     return; }
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
+  if(d.cal){ abrirCal(d.cal); return; }
+  if(d.calclose){ cal=null; drawCal(); return; }
+  if(d.calnav){ cal.mes=addM(cal.mes,+d.calnav); drawCal(); return; }
+  if(d.calpick){ const P=cal?.P; if(P){ const h=$('#'+P+'-data'), b=$('#'+P+'-dia'); if(h) h.value=d.calpick; if(b) b.textContent=dm(d.calpick); ui.pdata={...(ui.pdata||{}),[P]:d.calpick}; } cal=null; drawCal(); return; }
   if(d.esqueci){ esqueci(); return; }
   if(d.google){ const pr=new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({prompt:'select_account'});
     fbAuth.signInWithPopup(pr).catch(e=>{ const c=e?.code||''; if(/popup-blocked|operation-not-supported|web-storage/.test(c)) return fbAuth.signInWithRedirect(pr);
@@ -2123,8 +2153,9 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',async e=>{ if(e.target.id==='contLanc'){ ui.cont=e.target.checked; try{localStorage.setItem('fin-cont',ui.cont?'1':'0')}catch(_){} return; } if(e.target.id==='fonteFile'&&e.target.files.length){ await lerFontes([...e.target.files]); e.target.value=''; return; } if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
     if(!raw||!(v>0)){ if(items.has(id)) safe(store.del(id),`meta de ${c} tirada`); return; }
     safe(store.put({id,tipo:'meta',cat:c,valor:v}),`meta de ${c}: ${fmtT(v)} por mês`); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
+addEventListener('scroll',()=>{ if(cal){ cal=null; drawCal(); } },{passive:true});
 document.addEventListener('change',e=>{ const t=e.target; if(/^p[ecg]-quem$/.test(t.id||'')) t.className='pt-q '+t.value; });
-document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='novaF'){e.preventDefault();salvarNovaSenha();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag|pe|pc|pg)F$/.exec(e.target.id); if(qm){e.preventDefault(); const qs=$('#'+qm[1]+'-quem'); if(qs) ui.qquem=qs.value; const dd=$('#'+qm[1]+'-dia'); if(dd){ const d=parseInt(dd.value,10); $('#'+qm[1]+'-data').value=diaNoMes(ui.mes,d>=1&&d<=31?d:1); } quickAdd(qm[1]);} });
+document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='novaF'){e.preventDefault();salvarNovaSenha();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag|pe|pc|pg)F$/.exec(e.target.id); if(qm){e.preventDefault(); const qs=$('#'+qm[1]+'-quem'); if(qs) ui.qquem=qs.value; quickAdd(qm[1]);} });
 document.addEventListener('input',e=>{
   if(e.target.id==='temaCor'){ applyTema(temaCustom(e.target.value)); return; }
   if(bkEd&&/^bk-/.test(e.target.id)){ const id=e.target.id;
