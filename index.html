@@ -693,6 +693,15 @@ body:has(.scrim){overflow:hidden}
 .pt-tab{padding-left:8px!important;padding-right:8px!important}
 .pt-grid .pt-r{grid-template-columns:44px minmax(0,1fr) 38px 76px 26px!important;column-gap:7px!important}
 .pt-stats>div{padding:0 12px!important}.pt-th{padding-left:12px!important}
+
+.pp-tg{display:flex!important;align-items:center;gap:3px;cursor:pointer;color:var(--muted)}.pp-tg .ico{width:12px;height:12px;transition:transform .2s}
+.pt-q.grupo{color:var(--muted)}.dot.grupo{background:repeating-linear-gradient(135deg,var(--muted) 0 2px,transparent 2px 4px)}
+.pt-grid .pt-pt .pt-d{padding-left:10px;font-size:.78rem}
+.pl.pt-parte{grid-template-columns:52px minmax(0,1fr) auto 32px}.pt-parte .pp-d{color:var(--ink);font-size:.84rem;min-width:0;overflow-wrap:break-word}
+.pp-add{display:grid;grid-template-columns:78px minmax(0,1fr) 92px 34px;gap:6px;align-items:center}
+.pp-add select,.pp-add input{height:40px;min-width:0;width:100%;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:0 12px;font:inherit;font-size:.86rem}
+.pp-add select{padding:0 8px;font-weight:600}.pp-add [id="f-dv"]{text-align:right;font-weight:600}.pp-add .pt-mais{width:34px;height:34px}
+.pt-d small.rec{white-space:nowrap;font-size:.68rem}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
 .bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1426,15 +1435,17 @@ function planilha(m){
 }
 function tabela(tipo,m){
   const P={entrada:'pe',conta:'pc',gasto:'pg'}[tipo], tit={entrada:'entradas',conta:'contas',gasto:'saídas diárias'}[tipo], ck=tipo==='conta', B=BK(), t=today();
-  const l=ofMes(m,tipo).sort((a,b)=>(tipo==='gasto'?byDate(b,a):byDate(a,b))||(a.desc||'').localeCompare(b.desc||''));
+  const l=ofMes(m,tipo).sort((a,b)=>byDate(a,b)||(a.desc||'').localeCompare(b.desc||''));
   const quens=tipo==='entrada'?['lais','igor']:['juntos','lais','igor'];
-  const row=(i,sub)=>{ const b=ck?banco(i):null, k=b&&b!=='boleto'?B[b]||B['outro cartão']:null, pp=ck&&!i.pago?pagoParte(i):0, late=ck&&!i.pago&&i.data&&i.data<t;
+  const row=(i,sub)=>{ const ps=partesDe(i), rec=ps.reduce((t,p)=>t+(p.q==='grupo'&&!p.ok?+p.v||0:0),0), abre=ps.length&&ui.partes?.includes(i.id), b=ck?banco(i):null, k=b&&b!=='boleto'?B[b]||B['outro cartão']:null, pp=ck&&!i.pago?pagoParte(i):0, late=ck&&!i.pago&&i.data&&i.data<t;
     return `<div class="pt-r ${ck&&i.pago?'paid':''} ${sub?'pt-sub':''} ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}>
       <span class="pt-q ${i.quem}" data-edit="${esc(i.id)}">${QUEM[i.quem]||''}</span>
-      <span class="pt-d" data-edit="${esc(i.id)}">${esc(i.desc)}${k&&!sub&&(i.desc||'').trim().toLowerCase()!==b?`<small><i class="bk-dot" style="background:${k.c}"></i>${esc(b)}</small>`:''}${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta ${fmt(resta(i))}</small>`:''}${(i.div||[]).length?`<small class="rec">a receber ${fmt(aReceber(i))}</small>`:''}</span>
+      <span class="pt-d" data-edit="${esc(i.id)}">${esc(i.desc)}${k&&!sub&&(i.desc||'').trim().toLowerCase()!==b?`<small><i class="bk-dot" style="background:${k.c}"></i>${esc(b)}</small>`:''}${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta ${fmt(resta(i))}</small>`:''}${ps.length?`<small class="pp-tg" data-partes="${esc(i.id)}">${ps.length} parte${ps.length>1?'s':''}${ic('chev','sm')}</small>${rec>0?`<small class="rec">a receber ${fmt(rec)}</small>`:''}`:''}</span>
       <span class="pt-dt ${late?'late':''}" data-edit="${esc(i.id)}">${dm(i.data)}</span>
       <span class="pt-v num" data-edit="${esc(i.id)}">${fmt(i.valor)}</span>
-      <span class="pt-c">${ck?`<button class="box sm ${i.pago?'on':pp>0?'half':''}" data-pagar="${esc(i.id)}" aria-label="${i.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${i.pago?ic('check','sm'):''}</button>`:''}</span></div>`; };
+      <span class="pt-c">${ck?`<button class="box sm ${i.pago?'on':pp>0?'half':''}" data-pagar="${esc(i.id)}" aria-label="${i.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${i.pago?ic('check','sm'):''}</button>`:''}</span></div>${abre?(()=>{ const resto=Math.round(((+i.valor||0)-ps.reduce((t,p)=>t+(+p.v||0),0))*100)/100;
+        return ps.map(p=>`<div class="pt-r pt-sub pt-pt ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}><span class="pt-q ${p.q}">${QP[p.q]}</span><span class="pt-d">${esc(p.d||'parte')}${p.q==='grupo'?`<small>${p.ok?'recebido':'a receber'}</small>`:''}</span><span class="pt-dt"></span><span class="pt-v num">${fmt(p.v)}</span><span class="pt-c"></span></div>`).join('')
+          +(resto>0.004?`<div class="pt-r pt-sub pt-pt ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}><span class="pt-q ${i.quem}">${QUEM[i.quem]||''}</span><span class="pt-d">restante</span><span class="pt-dt"></span><span class="pt-v num">${fmt(resto)}</span><span class="pt-c"></span></div>`:''); })():''}`; };
   const linhas=l=>{ if(!ck) return l.map(i=>row(i)).join('');
     const g=new Map(); l.forEach(i=>{ const b=banco(i); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(i); } });
     const feito=new Set(); let h='';
@@ -1450,7 +1461,8 @@ function tabela(tipo,m){
         <span class="pt-c"><button class="box sm ${paga?'on':parte>0.004?'half':''}" data-fatpag="${esc(b)}" aria-label="${paga?'desmarcar a fatura':'marcar a fatura toda como paga'}" ${canWrite?'':'disabled'}>${paga?ic('check','sm'):''}</button></span></div>`;
       if(open) h+=gl.map(x=>row(x,true)).join(''); }
     return h; };
-  const q={}; l.forEach(i=>q[i.quem]=(q[i.quem]||0)+(+i.valor||0));
+  const q={}; l.forEach(i=>{ let resto=+i.valor||0; for(const p of partesDe(i)){ q[p.q]=(q[p.q]||0)+(+p.v||0); resto-=+p.v||0; } q[i.quem]=(q[i.quem]||0)+resto; });
+  const quensT=q.grupo>0.004?[...quens,'grupo']:quens;
   const tot=sum(l), falta=ck?sumResta(l):0;
   const dDef=m===t.slice(0,7)?t:`${m}-${ck?'10':'01'}`;
   const dia=m===t.slice(0,7)?+t.slice(8):ck?10:1, dEsc=(ui.pdata?.[P]||'').slice(0,7)===m?ui.pdata[P]:diaNoMes(m,dia);
@@ -1467,7 +1479,7 @@ function tabela(tipo,m){
     ${canWrite?`<p class="err" id="${P}-err" hidden></p>`:''}
     <div class="pt-foot">
       <div class="pt-stats">${(ck?[['total',tot],['pago',tot-falta],['falta',falta]]:[['total',tot]]).map(([l,v])=>`<div><span>${l}</span><b class="num">${fmt(v)}</b></div>`).join('')}</div>
-      <div class="pt-stats pessoas">${quens.map(k=>`<div><span><i class="dot ${k}"></i>${QUEM[k]}</span><b class="num">${fmt(q[k]||0)}</b></div>`).join('')}</div></div>
+      <div class="pt-stats pessoas">${quensT.map(k=>`<div><span><i class="dot ${k}"></i>${QP[k]}</span><b class="num">${fmt(q[k]||0)}</b></div>`).join('')}</div></div>
   </section>`;
 }
 // ---------- small calendar (the site's own) for every date field ----------
@@ -2012,7 +2024,7 @@ async function reLogin(){
 
 // ---------- sheet ----------
 let form=null;
-function openSheet(it){ form={...it,confirm:false}; drawSheet(); }
+function openSheet(it){ form={...it,partes:partesDe(it),confirm:false}; drawSheet(); }
 function drawSheet(){
   const f=form; if(!f){$('#sheetHost').innerHTML='';return;}
   const bk=f.bankSel!==undefined?f.bankSel:(banco({...f,tipo:'conta'})||'');
@@ -2040,12 +2052,14 @@ function vParciais(f){
     ${ps.map((p,i)=>`<div class="pl"><span>${p.d?qd({data:p.d}):''}</span><b class="num">${fmt(p.v)}</b><button type="button" class="icbtn" data-delparc="${i}" aria-label="apagar esse pagamento">${ic('x','sm')}</button></div>`).join('')}
     <div class="pl-add"><input id="f-pv" inputmode="decimal" placeholder="R$ 0,00" aria-label="valor pago agora"><button type="button" class="btn line" data-addparc="1">${ic('check','sm')} paguei</button></div></div>`;
 }
+const QP={lais:'laís',igor:'igor',juntos:'juntos',grupo:'grupo'};
+// parts of one bill's total, each belonging to laís, igor, juntos or a group subscription; older "dividir" lines become group parts
+const partesDe=i=>i.partes||(i.div||[]).map(x=>({d:x.n,v:+x.v||0,q:'grupo',ok:!!x.ok}));
 function vDiv(f){
-  const ds=f.div||[], v=parseV(f.valor), o=ds.reduce((s,p)=>s+(+p.v||0),0), r=ds.reduce((s,p)=>s+(p.ok?0:+p.v||0),0), meu=Math.max(0,(isFinite(v)?v:0)-o);
-  return `<div class="pbox"><div class="pbox-h"><b>dividir com outras pessoas</b><span>${ds.length?`${r?`a receber <b>${fmt(r)}</b>`:'todos pagaram'} · a parte de vocês ${fmt(meu)}`:'assinatura com amigos? anote quem te deve'}</span></div>
-    ${ds.map((p,i)=>`<div class="dl ${p.ok?'ok':''}"><button type="button" class="box ${p.ok?'on':''}" data-divok="${i}" aria-label="${p.ok?'ainda não pagou':'já me pagou'}">${p.ok?ic('check','sm'):''}</button><span>${esc(p.n)}<small>${p.ok?'pagou':'a receber'}</small></span><b class="num">${fmt(p.v)}</b><button type="button" class="icbtn" data-divdel="${i}" aria-label="tirar ${esc(p.n)}">${ic('x','sm')}</button></div>`).join('')}
-    <div class="pl-add"><input id="f-dn" autocomplete="off" placeholder="nome" aria-label="nome da pessoa"><input id="f-dv" class="dv" inputmode="decimal" placeholder="R$ 0,00" aria-label="parte dela"><button type="button" class="btn line" data-divadd="1">${ic('plus','sm')} pôr</button></div>
-    ${ds.length?'':`<small class="pbox-n">deixe o valor vazio para dividir igual entre vocês e todo mundo da lista.</small>`}</div>`;
+  const ps=f.partes||[], v=parseV(f.valor), usado=ps.reduce((s,p)=>s+(+p.v||0),0), resto=Math.round(((isFinite(v)?v:0)-usado)*100)/100;
+  return `<div class="pbox"><div class="pbox-h"><b>dividir o valor</b><span>${ps.length?(resto>=0?`sem divisão: <b>${fmt(resto)}</b> fica com ${QUEM[f.quem]||'juntos'}`:`<b style="color:var(--bad)">as partes passam ${fmt(-resto)} do total</b>`):'separe o que é de cada um dentro do total'}</span></div>
+    ${ps.map((p,i)=>`<div class="pl pt-parte"><span class="pt-q ${p.q}">${QP[p.q]}</span><span class="pp-d">${esc(p.d||'parte')}${p.q==='grupo'?` · <button type="button" class="link" data-divok="${i}">${p.ok?'recebido':'a receber'}</button>`:''}</span><b class="num">${fmt(p.v)}</b><button type="button" class="icbtn" data-divdel="${i}" aria-label="tirar essa parte">${ic('x','sm')}</button></div>`).join('')}
+    <div class="pp-add"><select id="f-dq" aria-label="de quem">${Object.entries(QP).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select><input id="f-dn" autocomplete="off" placeholder="o quê" aria-label="descrição da parte"><input id="f-dv" inputmode="decimal" placeholder="R$ 0,00" aria-label="valor da parte"><button type="button" class="pt-mais" data-divadd="1" aria-label="pôr parte">${ic('plus','sm')}</button></div></div>`;
 }
 function readForm(){ const f=form; f.valor=$('#f-valor').value; f.desc=$('#f-desc').value; f.data=$('#f-data').value;
   if($('#f-cat')) f.cat=$('#f-cat').value; if($('#f-pago')) f.pago=$('#f-pago').value==='1';
@@ -2057,7 +2071,7 @@ async function submit(){
   if(!f.desc.trim()) return err('escreva uma descrição curta, por exemplo mercado.');
   const o={tipo:f.tipo,quem:f.tipo==='entrada'&&f.quem==='juntos'?'lais':f.quem,desc:f.desc.trim(),valor:v,data:f.data||null,mes:(f.data||ui.mes).slice(0,7)};
   if(f.tipo==='gasto'&&f.cat&&f.cat!==catGuess(o.desc)) o.cat=f.cat;
-  if(f.tipo!=='entrada'&&f.div?.length) o.div=f.div;
+  if(f.tipo!=='entrada'&&f.partes?.length) o.partes=f.partes;
   if(f.tipo==='conta'){ o.pago=!!f.pago; if(f.parciais?.length) o.parciais=f.parciais; const auto=banco({...o})||''; const sel=f.bankSel??auto; if(sel!==auto) o.banco=sel==='boleto'?'':sel; else if(f.banco!==undefined) o.banco=f.banco; if(f.auto) o.auto=true; }
   form=null; drawSheet();
   await safe(store.put({...o,id:f.id}), o.mes!==ui.mes?`alterado · foi para ${mName(o.mes)}`:'alterado');
@@ -2077,7 +2091,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-calfor],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-partes],[data-calfor],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -2119,6 +2133,7 @@ document.addEventListener('click',e=>{
     return; }
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
+  if(d.partes!==undefined){ const a=ui.partes||[]; ui.partes=a.includes(d.partes)?a.filter(x=>x!==d.partes):[...a,d.partes]; render(); return; }
   if(d.calfor){ abrirCal(d.calfor); return; }
   if(d.calclose){ cal=null; drawCal(); return; }
   if(d.calnav){ cal.mes=addM(cal.mes,+d.calnav); drawCal(); return; }
@@ -2153,14 +2168,11 @@ document.addEventListener('click',e=>{
   if(d.fatpag!==undefined){ if(!canWrite) return; const l=ofMes(ui.mes,'conta').filter(c=>banco(c)===d.fatpag), tudo=l.every(c=>c.pago);
     (async()=>{ for(const c of l) if(c.pago===tudo) await store.patch(c.id,{pago:!tudo}); toast(tudo?`fatura ${d.fatpag} voltou para a pagar`:`fatura ${d.fatpag} paga`,'check'); })(); return; }
   if(d.fatadd!==undefined){ ui.contN=0; ui.qbank=d.fatadd; openQuick('conta'); const s=$('#s-bank'); if(s) s.value=d.fatadd; return; }
-  if(d.divadd){ readForm(); const n=$('#f-dn').value.trim(), raw=$('#f-dv').value, tot=parseV(form.valor); let v=parseV(raw); const e=$('#f-err');
-    if(!n){ e.textContent='escreva o nome de quem vai te pagar.'; e.hidden=false; return; }
-    const ds=[...(form.div||[]),{n,v:0,ok:false}];
-    if(raw.trim()===''){ if(!(tot>0)){ e.textContent='digite o valor da conta primeiro.'; e.hidden=false; return; } const each=Math.round(tot/(ds.length+1)*100)/100; ds.forEach(p=>p.v=each); }
-    else { if(!(v>0)){ e.textContent='digite a parte dessa pessoa, por exemplo 15.'; e.hidden=false; return; } ds[ds.length-1].v=v; }
-    form.div=ds; drawSheet(); setTimeout(()=>$('#f-dn')?.focus(),30); return; }
-  if(d.divdel!==undefined){ readForm(); form.div=(form.div||[]).filter((_,i)=>i!==+d.divdel); drawSheet(); return; }
-  if(d.divok!==undefined){ readForm(); form.div=(form.div||[]).map((p,i)=>i===+d.divok?{...p,ok:!p.ok}:p); drawSheet(); return; }
+  if(d.divadd){ readForm(); const v=parseV($('#f-dv').value), e=$('#f-err');
+    if(!(v>0)){ e.textContent='digite o valor da parte, por exemplo 55,90.'; e.hidden=false; return; }
+    form.partes=[...(form.partes||[]),{d:$('#f-dn').value.trim(),v,q:$('#f-dq').value,ok:false}]; drawSheet(); setTimeout(()=>$('#f-dv')?.focus(),30); return; }
+  if(d.divdel!==undefined){ readForm(); form.partes=(form.partes||[]).filter((_,i)=>i!==+d.divdel); drawSheet(); return; }
+  if(d.divok!==undefined){ readForm(); form.partes=(form.partes||[]).map((p,i)=>i===+d.divok?{...p,ok:!p.ok}:p); drawSheet(); return; }
   if(d.delparc!==undefined){ readForm(); form.parciais=(form.parciais||[]).filter((_,i)=>i!==+d.delparc); drawSheet(); return; }
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
   if(d.del){ const id=form.id, old=items.get(id); form=null; drawSheet(); if(!old) return;
