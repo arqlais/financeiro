@@ -720,6 +720,31 @@ body:has(.scrim){overflow:hidden}
 .cfields{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px}
 .cfields label{display:flex;flex-direction:column;gap:4px;font-size:.7rem;font-weight:600;color:var(--muted)}
 .cfields input{height:44px;border-radius:14px;border:1px solid var(--bd);background:var(--bg);padding:0 10px;font-weight:600;width:100%;min-width:0;text-transform:none}
+
+/* phone polish: nothing squeezed, less empty space, calmer type */
+.qk .t-ico{flex:none}
+@media (max-width:600px){
+  .big{font-size:clamp(1.4rem,6.2vw,1.75rem)!important;line-height:1.12}
+  .qk{padding:9px 10px!important;gap:8px!important;border-radius:16px!important;font-size:.84rem}
+  .qk small{display:none}.qk .t-ico{width:28px!important;height:28px!important}
+  .quick{gap:8px;margin-bottom:10px}
+  .resumo{padding:14px 16px;gap:10px}.resumo .rs-main b{font-size:1.5rem!important}
+  .resumo .kv{padding-top:10px}
+  .seg3 button{min-height:42px}.seg3{border-radius:999px}.seg3 button{border-radius:999px}
+  .tile{padding:14px!important;border-radius:22px}
+  .tile.go{min-height:112px!important}
+  .tile .t-big{font-size:1.2rem!important}
+  .tile h2{font-size:1rem}
+  .tile .t-ico,.tile .t-go{width:34px!important;height:34px!important}
+  .stack .ccard{height:112px}.stack .ccard+.ccard{margin-top:-68px}
+  .bento{gap:10px}
+  .pt-tab{padding-top:10px;padding-bottom:8px}
+  .pt-th{padding-top:8px!important;padding-bottom:8px!important}.pt-th h2{font-size:.95rem}
+  .bkgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.bkit{font-size:.8rem;gap:8px;padding:6px 10px 6px 6px}.bkit .bm{width:26px;height:26px;flex:none}.bkit span:last-child{white-space:normal;line-height:1.2}
+  .card{padding:14px}
+  .banner{font-size:.78rem;padding:8px 12px}
+}
+.tile>.vazio{margin:auto 0;text-align:center}
 </style>
 
 <header class="topnav">
@@ -1961,7 +1986,7 @@ function pAjustes(){
     <div class="opt-row"><span class="tico">${ic('upload','sm')}</span><span><b>importar backup</b><small>o que tiver o mesmo código é atualizado, nada é apagado.</small></span>${canWrite?`<label class="pill-btn fileb">escolher<input type="file" id="impFile" accept=".json,.csv,application/json,text/csv"></label>`:''}</div>
     ${importPend?`<div class="alert">${ic('upload')}<span>importar <b>${importPend.length}</b> lançamentos?</span><span style="margin-left:auto;display:flex;gap:8px"><button class="pill-btn" data-impcancel="1">cancelar</button><button class="pill-btn rose" data-impok="1">importar</button></span></div>`:''}</section></div></div>`;
   if(!fonteCripto){ const fs=[...items.values()].filter(i=>i.tipo==='fonte'&&!i.removido);
-    h+=`<section class="card"><div class="card-h"><h2>fonte do <span class="script">planê</span></h2><span class="sub">só para vocês dois</span></div><div class="opt-row"><span class="tico">${ic('file','sm')}</span><span><b>${fs.length?'the seasons':'sem fonte do planê'}</b><small>${fs.length?fs.map(f=>esc(f.nome)).join(', '):'escolha os arquivos da the seasons.'}</small></span>
+    h+=`<section class="card"><div class="card-h"><h2>fonte <span class="script">the seasons</span></h2><span class="sub">só para vocês dois</span></div><div class="opt-row"><span class="tico">${ic('file','sm')}</span><span><b>${fs.length?'the seasons':'sem a fonte the seasons'}</b><small>${fs.length?fs.map(f=>esc(f.nome)).join(', '):'escolha os arquivos da the seasons.'}</small></span>
       <span style="display:flex;gap:8px;flex-wrap:wrap">${canWrite?`<label class="pill-btn fileb">${fs.length?'trocar':'escolher'}<input type="file" id="fonteFile" accept=".otf,.ttf,.woff,.woff2,font/*" multiple></label>`:''}${fs.length&&canWrite?`<button class="pill-btn" data-fontedel="1">remover</button>`:''}</span></div></section>`; }
   return h;
 }
