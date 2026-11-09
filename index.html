@@ -679,6 +679,20 @@ body:has(.scrim){overflow:hidden}
 .calx-d{aspect-ratio:1;border-radius:50%;font-size:.8rem;font-weight:500;color:var(--ink);display:grid;place-items:center}
 .calx-d:hover{background:var(--sunk)}.calx-d.hoje{box-shadow:inset 0 0 0 1.5px var(--c-acc)}.calx-d.on{background:var(--ink);color:var(--on-ink);font-weight:700}
 .calx-f{display:flex;justify-content:center;padding-top:6px}
+
+.dbtn{height:46px;border-radius:999px;border:1px solid var(--line);background:var(--bg);padding:0 18px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--ink);font:inherit;font-weight:500;cursor:pointer;text-align:left}
+.dbtn .ico{color:var(--muted)}.qadd .dbtn{flex:1 1 140px;height:50px}
+.calx-f{gap:18px}
+
+/* breathing room between the card stripe and the text, same on every line so columns stay aligned */
+.pt-grid .pt-r{padding-left:12px!important;padding-right:8px!important}
+.pt-grid .pt-hd{padding-left:12px!important;padding-right:8px!important}
+.pt-grid .pt-add{padding-left:12px!important;padding-right:8px!important}
+.pt-grid .pt-r.cartao{box-shadow:inset 3px 0 0 var(--bk)}
+
+.pt-tab{padding-left:8px!important;padding-right:8px!important}
+.pt-grid .pt-r{grid-template-columns:44px minmax(0,1fr) 38px 76px 26px!important;column-gap:7px!important}
+.pt-stats>div{padding:0 12px!important}.pt-th{padding-left:12px!important}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
 .bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1325,7 +1339,7 @@ function quickForm(p,tipo,fixo){
     <input id="${p}-desc" data-keep list="${p}dl" autocomplete="off" enterkeyhint="done" placeholder="${tipo==='conta'?'qual conta':tipo==='entrada'?'de onde veio':'o que foi'}" aria-label="descrição">
     <datalist id="${p}dl">${sugestoes(tipo)}</datalist>
     <div class="chipset">${Object.entries(QUEM).filter(([k])=>tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-qq="${k}" aria-pressed="${qq===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div>
-    <input id="${p}-data" data-keep type="date" value="${dDef}" aria-label="${tipo==='conta'?'vencimento':'data'}">${extra?`<div class="qrow">${extra}</div>`:''}
+    ${dateBtn(`${p}-data`,dDef,{longo:true,rotulo:tipo==='conta'?'vencimento':'data'})}${extra?`<div class="qrow">${extra}</div>`:''}
     ${tipo==='gasto'?`<p class="hint" id="${p}-cathint">a categoria é identificada sozinha pelo que você escrever.</p>`:''}
     <p class="err" id="${p}-err" hidden></p>
     <button class="btn dark" type="submit">${ic('check','sm')} adicionar</button></form>`;
@@ -1412,7 +1426,7 @@ function planilha(m){
 }
 function tabela(tipo,m){
   const P={entrada:'pe',conta:'pc',gasto:'pg'}[tipo], tit={entrada:'entradas',conta:'contas',gasto:'saídas diárias'}[tipo], ck=tipo==='conta', B=BK(), t=today();
-  const l=ofMes(m,tipo).sort((a,b)=>byDate(a,b)||(a.desc||'').localeCompare(b.desc||''));
+  const l=ofMes(m,tipo).sort((a,b)=>(tipo==='gasto'?byDate(b,a):byDate(a,b))||(a.desc||'').localeCompare(b.desc||''));
   const quens=tipo==='entrada'?['lais','igor']:['juntos','lais','igor'];
   const row=(i,sub)=>{ const b=ck?banco(i):null, k=b&&b!=='boleto'?B[b]||B['outro cartão']:null, pp=ck&&!i.pago?pagoParte(i):0, late=ck&&!i.pago&&i.data&&i.data<t;
     return `<div class="pt-r ${ck&&i.pago?'paid':''} ${sub?'pt-sub':''} ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}>
@@ -1442,8 +1456,8 @@ function tabela(tipo,m){
   const dia=m===t.slice(0,7)?+t.slice(8):ck?10:1, dEsc=(ui.pdata?.[P]||'').slice(0,7)===m?ui.pdata[P]:diaNoMes(m,dia);
   const add=canWrite?`<form class="pt-r pt-add" id="${P}F" data-tipo="${tipo}" novalidate>
       <select id="${P}-quem" class="pt-q ${quens.includes(ui.qquem)?ui.qquem:quens[0]}" aria-label="quem">${quens.map(k=>`<option value="${k}" ${(quens.includes(ui.qquem)?ui.qquem:quens[0])===k?'selected':''}>${QUEM[k]}</option>`).join('')}</select>
-      <input id="${P}-desc" list="${P}dl" autocomplete="off" enterkeyhint="next" placeholder="descrição" aria-label="descrição"><datalist id="${P}dl">${sugestoes(tipo)}</datalist>
-      <button type="button" class="pt-dia" id="${P}-dia" data-cal="${P}" aria-label="escolher o dia">${dm(dEsc)}</button><input type="hidden" id="${P}-data" value="${dEsc}">
+      <input id="${P}-desc" list="${P}dl" autocomplete="off" enterkeyhint="next" placeholder="item" aria-label="descrição"><datalist id="${P}dl">${sugestoes(tipo)}</datalist>
+      ${dateBtn(`${P}-data`,dEsc,{cls:'pt-dia',rotulo:ck?'vencimento':'data'})}
       <input id="${P}-valor" inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
       <button class="pt-mais" type="submit" aria-label="adicionar">${ic('plus','sm')}</button></form>`:'';
   return `<section class="pt-tab pt-${tipo}" id="pt-${tipo}">
@@ -1456,12 +1470,14 @@ function tabela(tipo,m){
       <div class="pt-stats pessoas">${quens.map(k=>`<div><span><i class="dot ${k}"></i>${QUEM[k]}</span><b class="num">${fmt(q[k]||0)}</b></div>`).join('')}</div></div>
   </section>`;
 }
-// ---------- small calendar (the site's own) to pick the day of a new line ----------
+// ---------- small calendar (the site's own) for every date field ----------
+const dTxt=(v,l)=>v?(l?`${v.slice(8)}/${v.slice(5,7)}/${v.slice(0,4)}`:dm(v)):'sem data';
+const dateBtn=(id,v,{longo=false,limpar=false,cls='dbtn',rotulo='data'}={})=>`<input type="hidden" id="${id}" value="${esc(v||'')}"><button type="button" class="${cls}" data-calfor="${id}" data-fmt="${longo?'l':'c'}" ${limpar?'data-limpar="1"':''} aria-label="${rotulo}">${dTxt(v,longo)}${longo?ic('cal','sm'):''}</button>`;
 let cal=null;
-function abrirCal(P){ const v=$('#'+P+'-data')?.value||diaNoMes(ui.mes,1); cal={P,mes:v.slice(0,7),sel:v}; drawCal(); }
+function abrirCal(id){ const inp=$('#'+id), b=document.querySelector(`[data-calfor="${id}"]`), v=inp?.value||''; const base=v||(ui.mes===today().slice(0,7)?today():diaNoMes(ui.mes,1)); cal={id,mes:base.slice(0,7),sel:v,limpar:!!b?.dataset.limpar}; drawCal(); }
 function drawCal(){
   const host=$('#calHost'); if(!cal){ host.innerHTML=''; return; }
-  const btn=$('#'+cal.P+'-dia'); if(!btn){ cal=null; host.innerHTML=''; return; }
+  const btn=document.querySelector(`[data-calfor="${cal.id}"]`); if(!btn){ cal=null; host.innerHTML=''; return; }
   const [y,mm]=cal.mes.split('-').map(Number), ini=new Date(y,mm-1,1).getDay(), n=new Date(y,mm,0).getDate(), t=today();
   let dias=''; for(let i=0;i<ini;i++) dias+='<span></span>';
   for(let d=1;d<=n;d++){ const k=`${cal.mes}-${pad(d)}`; dias+=`<button type="button" class="calx-d ${k===cal.sel?'on':''} ${k===t?'hoje':''}" data-calpick="${k}">${d}</button>`; }
@@ -1469,7 +1485,7 @@ function drawCal(){
   host.innerHTML=`<div class="cal-scrim" data-calclose="1"></div><div class="calx" style="width:${W}px;left:${left}px;${baixo?`top:${r.bottom+6}px`:`bottom:${innerHeight-r.top+6}px`}" role="dialog" aria-label="escolher o dia">
     <div class="calx-h"><button type="button" class="icbtn" data-calnav="-1" aria-label="mês anterior">${ic('left','sm')}</button><b>${mName(cal.mes)} <span class="script">${y}</span></b><button type="button" class="icbtn" data-calnav="1" aria-label="próximo mês">${ic('right','sm')}</button></div>
     <div class="calx-g">${['d','s','t','q','q','s','s'].map(x=>`<i>${x}</i>`).join('')}${dias}</div>
-    <div class="calx-f"><button type="button" class="link" data-calpick="${t}">hoje</button></div></div>`;
+    <div class="calx-f"><button type="button" class="link" data-calpick="${t}">hoje</button>${cal.limpar?`<button type="button" class="link" data-calpick="-">sem data</button>`:''}</div></div>`;
 }
 // ---------- dinheiro guardado ----------
 // what the couple has (the spreadsheet's "temos atualmente"): one snapshot per month {tipo:'saldo', mes, debito, guardado, invest}.
@@ -2007,10 +2023,11 @@ function drawSheet(){
     <div class="f"><label for="f-valor">valor</label><input id="f-valor" class="money num" inputmode="decimal" placeholder="R$ 0,00" value="${f.valor===''?'':String(f.valor).replace('.',',')}"></div>
     <div class="f"><label for="f-desc">o que foi</label><input id="f-desc" list="dl" autocomplete="off" placeholder="${f.tipo==='conta'?'ex.: fatura nubank, notebook':f.tipo==='entrada'?'ex.: cliente, salário':'ex.: mercado, uber'}" value="${esc(f.desc)}"><datalist id="dl">${sugs.map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
     <div class="f"><label>de quem</label><div class="segf">${Object.entries(QUEM).filter(([k])=>f.tipo!=='entrada'||k!=='juntos').map(([k,l])=>`<button type="button" data-fq="${k}" aria-pressed="${f.quem===k}"><span class="dot ${k}"></span>${l}</button>`).join('')}</div></div>
-    <div class="f2"><div class="f"><label for="f-data">${f.tipo==='conta'?'vencimento':'data'}</label><input id="f-data" type="date" value="${esc(f.data||'')}"></div>
+    <div class="f2"><div class="f"><label for="f-data">${f.tipo==='conta'?'vencimento':'data'}</label>${dateBtn('f-data',f.data||'',{longo:true,limpar:true,rotulo:f.tipo==='conta'?'vencimento':'data'})}</div>
       ${f.tipo==='gasto'?`<div class="f"><label for="f-cat">categoria (troque se errou)</label><select id="f-cat">${CATN.map(c=>`<option value="${c}" ${c===cat(f)?'selected':''}>${c}</option>`).join('')}</select></div>`
        :f.tipo==='conta'?`<div class="f"><label for="f-bank">banco ou cartão</label><select id="f-bank"><option value="" ${!bk?'selected':''}>não sei ainda</option><option value="boleto" ${bk==='boleto'?'selected':''}>boleto ou pix</option>${[...new Set([...bkAtivos(),...(bk&&bk!=='boleto'?[bk]:[])])].map(b=>`<option value="${b}" ${bk===b?'selected':''}>${b}${BK()[b]?.oculto?' (removido)':''}</option>`).join('')}</select></div>`:'<div></div>'}</div>
     ${f.tipo==='conta'?vParciais(f):''}
+    ${f.tipo!=='entrada'?vDiv(f):''}
     ${f.tipo==='conta'?`<div class="f"><label for="f-pago">situação</label><select id="f-pago"><option value="0">a pagar</option><option value="1" ${f.pago?'selected':''}>paga</option></select></div>`:''}
     <p class="err" id="f-err" hidden></p>
     <div class="sheet-foot">${f.confirm?`<button type="button" class="btn line" style="color:var(--bad)" data-del="1">${ic('trash','sm')} confirmar exclusão</button>`:`<button type="button" class="btn line" data-askdel="1">${ic('trash','sm')} excluir</button>`}
@@ -2060,7 +2077,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-cal],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-calfor],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -2102,10 +2119,11 @@ document.addEventListener('click',e=>{
     return; }
   if(d.bankrestore){ for(const b of bankDocs().filter(b=>b.oculto)) safe(store.patch(b.id,{oculto:false})); toast('bancos de volta'); return; }
   if(d.tema){ const t=TEMAS.find(x=>x[0]===d.tema); if(t){ setTema({id:t[0],...t[2]}); toast('cor salva'); } return; }
-  if(d.cal){ abrirCal(d.cal); return; }
+  if(d.calfor){ abrirCal(d.calfor); return; }
   if(d.calclose){ cal=null; drawCal(); return; }
   if(d.calnav){ cal.mes=addM(cal.mes,+d.calnav); drawCal(); return; }
-  if(d.calpick){ const P=cal?.P; if(P){ const h=$('#'+P+'-data'), b=$('#'+P+'-dia'); if(h) h.value=d.calpick; if(b) b.textContent=dm(d.calpick); ui.pdata={...(ui.pdata||{}),[P]:d.calpick}; } cal=null; drawCal(); return; }
+  if(d.calpick){ if(cal){ const v=d.calpick==='-'?'':d.calpick, inp=$('#'+cal.id), b=document.querySelector(`[data-calfor="${cal.id}"]`); if(inp) inp.value=v; if(b) b.innerHTML=dTxt(v,b.dataset.fmt==='l')+(b.dataset.fmt==='l'?ic('cal','sm'):'');
+      const P=/^(p[ecg])-data$/.exec(cal.id); if(P) ui.pdata={...(ui.pdata||{}),[P[1]]:v}; } cal=null; drawCal(); return; }
   if(d.esqueci){ esqueci(); return; }
   if(d.google){ const pr=new firebase.auth.GoogleAuthProvider(); pr.setCustomParameters({prompt:'select_account'});
     fbAuth.signInWithPopup(pr).catch(e=>{ const c=e?.code||''; if(/popup-blocked|operation-not-supported|web-storage/.test(c)) return fbAuth.signInWithRedirect(pr);
