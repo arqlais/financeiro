@@ -656,6 +656,19 @@ body:has(.scrim){overflow:hidden}
 .pt-stats>div>span{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap}
 .pt-stats b{font-size:clamp(.74rem,3.4vw,.86rem);font-weight:700;white-space:nowrap}
 .pt-stats.pessoas{background:none;padding:2px 0}.pt-stats.pessoas b{font-weight:600;font-size:.82rem}
+
+/* color back: each table in its tile color, card bills in their card color */
+.pt-tab{--tc:var(--lilac)}.pt-tab.pt-entrada{--tc:var(--lime)}.pt-tab.pt-gasto{--tc:var(--pink)}
+.pt-th{background:var(--tc);color:var(--t-txt);border-radius:14px;padding:10px 12px!important;margin-bottom:6px}
+.pt-th h2,.pt-th .num{color:var(--t-txt)}
+.pt-stats{background:var(--tc)!important;color:var(--t-txt)}.pt-stats>div>span{color:color-mix(in srgb,var(--t-txt) 70%,transparent)}
+.pt-stats>div+div{border-left-color:color-mix(in srgb,var(--t-txt) 18%,transparent)}
+.pt-stats.pessoas{background:none!important;color:var(--ink)}.pt-stats.pessoas>div>span{color:var(--muted)}.pt-stats.pessoas>div+div{border-left-color:var(--line)}
+.pt-bar{background:color-mix(in srgb,var(--tc) 45%,var(--sunk))}.pt-bar i{background:var(--c-ink)}
+.pt-grid .pt-r.cartao{background:color-mix(in srgb,var(--bk) 11%,transparent);box-shadow:inset 3px 0 0 var(--bk)}
+.pt-grid .pt-r.pt-sub.cartao{background:color-mix(in srgb,var(--bk) 6%,transparent)}
+.pt-add select,.pt-add input{background:var(--surface)!important}
+.pt-grid .pt-add{background:color-mix(in srgb,var(--tc) 30%,transparent);border-radius:12px;padding:8px 4px!important;margin-top:6px}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
 .bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1391,7 +1404,7 @@ function tabela(tipo,m){
   const l=ofMes(m,tipo).sort((a,b)=>byDate(a,b)||(a.desc||'').localeCompare(b.desc||''));
   const quens=tipo==='entrada'?['lais','igor']:['juntos','lais','igor'];
   const row=(i,sub)=>{ const b=ck?banco(i):null, k=b&&b!=='boleto'?B[b]||B['outro cartão']:null, pp=ck&&!i.pago?pagoParte(i):0, late=ck&&!i.pago&&i.data&&i.data<t;
-    return `<div class="pt-r ${ck&&i.pago?'paid':''} ${sub?'pt-sub':''}">
+    return `<div class="pt-r ${ck&&i.pago?'paid':''} ${sub?'pt-sub':''} ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}>
       <span class="pt-q ${i.quem}" data-edit="${esc(i.id)}">${QUEM[i.quem]||''}</span>
       <span class="pt-d" data-edit="${esc(i.id)}">${esc(i.desc)}${k&&!sub&&(i.desc||'').trim().toLowerCase()!==b?`<small><i class="bk-dot" style="background:${k.c}"></i>${esc(b)}</small>`:''}${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta ${fmt(resta(i))}</small>`:''}${(i.div||[]).length?`<small class="rec">a receber ${fmt(aReceber(i))}</small>`:''}</span>
       <span class="pt-dt ${late?'late':''}" data-edit="${esc(i.id)}">${dm(i.data)}</span>
@@ -1404,7 +1417,7 @@ function tabela(tipo,m){
       if(!gl||gl.length<2){ h+=row(i); continue; } if(feito.has(b)) continue; feito.add(b);
       const k=B[b]||B['outro cartão']||{c:'#8e8580'}, tot=sum(gl), falta=sumResta(gl), paga=!falta, parte=tot-falta, open=ui.fat?.includes(b);
       const qs=[...new Set(gl.map(x=>x.quem))], q1=qs.length===1?qs[0]:null, venc=gl.map(x=>x.data).filter(Boolean).sort()[0], late=!paga&&venc&&venc<t;
-      h+=`<div class="pt-r pt-fat ${open?'open':''}">
+      h+=`<div class="pt-r pt-fat cartao ${open?'open':''}" style="--bk:${k.c}">
         <span class="pt-q ${q1||'varios'}" data-fat="${esc(b)}">${q1?QUEM[q1]:'vários'}</span>
         <span class="pt-d" data-fat="${esc(b)}"><b><i class="bk-dot" style="background:${k.c}"></i>${esc(b)}</b><small>${gl.length} itens${parte>0.004&&!paga?` · falta ${fmt(falta)}`:''} ${ic('chev','sm')}</small></span>
         <span class="pt-dt ${late?'late':''}" data-fat="${esc(b)}">${dm(venc)}</span>
@@ -1422,13 +1435,12 @@ function tabela(tipo,m){
       <input id="${P}-dia" inputmode="numeric" maxlength="2" value="${dia}" aria-label="dia"><input type="hidden" id="${P}-data">
       <input id="${P}-valor" inputmode="decimal" enterkeyhint="done" placeholder="R$ 0,00" aria-label="valor">
       <button class="pt-mais" type="submit" aria-label="adicionar">${ic('plus','sm')}</button></form>`:'';
-  return `<section class="pt-tab" id="pt-${tipo}">
+  return `<section class="pt-tab pt-${tipo}" id="pt-${tipo}">
     <div class="pt-th"><h2>${tit}</h2><span class="num">${fmt(tot)}</span></div>
     <div class="pt-grid"><div class="pt-r pt-hd"><span>quem</span><span>descrição</span><span>${ck?'venc.':'data'}</span><span class="pt-v">valor</span><span class="pt-c" ${ck?'aria-label="pago"':''}>${ck?ic('check','sm'):''}</span></div>
       ${l.length?linhas(l):`<div class="pt-vazio">nada lançado ainda.</div>`}${add}</div>
     ${canWrite?`<p class="err" id="${P}-err" hidden></p>`:''}
     <div class="pt-foot">
-      ${ck?`<div class="pt-bar"><i style="width:${tot?(tot-falta)/tot*100:0}%"></i></div>`:''}
       <div class="pt-stats">${(ck?[['total',tot],['pago',tot-falta],['falta',falta]]:[['total',tot]]).map(([l,v])=>`<div><span>${l}</span><b class="num">${fmt(v)}</b></div>`).join('')}</div>
       <div class="pt-stats pessoas">${quens.map(k=>`<div><span><i class="dot ${k}"></i>${QUEM[k]}</span><b class="num">${fmt(q[k]||0)}</b></div>`).join('')}</div></div>
   </section>`;
