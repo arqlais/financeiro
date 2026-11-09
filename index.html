@@ -612,7 +612,12 @@ body:has(.scrim){overflow:hidden}
 .pt-v{text-align:right;font-weight:600;white-space:nowrap}
 .pt-c{display:flex;justify-content:center}
 .box.sm{width:24px;height:24px}
-.pt-r.cartao{background:color-mix(in srgb,var(--bk) 10%,transparent);box-shadow:inset 3px 0 0 var(--bk)}
+.pt-d .bk-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.pt-fat [data-fat]{cursor:pointer}.pt-fat .pt-d b{font-weight:600}.pt-fat .pt-d small{display:flex;align-items:center;gap:3px}
+.pt-fat .pt-d small .ico{width:12px;height:12px;transition:transform .2s}.pt-fat.open .pt-d small .ico{transform:rotate(180deg)}
+.pt-q.varios{color:var(--muted)}
+.pt-grid .pt-sub{min-height:34px;padding-top:6px;padding-bottom:6px;background:var(--sunk);border-bottom-color:color-mix(in srgb,var(--line) 60%,transparent)}
+.pt-sub .pt-d{padding-left:10px;font-size:.78rem}.pt-sub .pt-v{font-weight:500;font-size:.78rem}.pt-sub .pt-q,.pt-sub .pt-dt{opacity:.75}
 
 .pt-vazio{padding:14px 4px;color:var(--muted);font-size:.82rem}
 .pt-grid .pt-add{border-bottom:0;padding:8px 4px 2px}
@@ -1361,13 +1366,28 @@ function tabela(tipo,m){
   const P={entrada:'pe',conta:'pc',gasto:'pg'}[tipo], tit={entrada:'entradas',conta:'contas',gasto:'saídas diárias'}[tipo], ck=tipo==='conta', B=BK(), t=today();
   const l=ofMes(m,tipo).sort((a,b)=>byDate(a,b)||(a.desc||'').localeCompare(b.desc||''));
   const quens=tipo==='entrada'?['lais','igor']:['juntos','lais','igor'];
-  const row=i=>{ const b=ck?banco(i):null, k=b&&b!=='boleto'?B[b]||B['outro cartão']:null, pp=ck&&!i.pago?pagoParte(i):0, late=ck&&!i.pago&&i.data&&i.data<t;
-    return `<div class="pt-r ${ck&&i.pago?'paid':''} ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}>
+  const row=(i,sub)=>{ const b=ck?banco(i):null, k=b&&b!=='boleto'?B[b]||B['outro cartão']:null, pp=ck&&!i.pago?pagoParte(i):0, late=ck&&!i.pago&&i.data&&i.data<t;
+    return `<div class="pt-r ${ck&&i.pago?'paid':''} ${sub?'pt-sub':''}">
       <span class="pt-q ${i.quem}" data-edit="${esc(i.id)}">${QUEM[i.quem]||''}</span>
-      <span class="pt-d" data-edit="${esc(i.id)}">${esc(i.desc)}${k?`<small>${esc(b)}</small>`:''}${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta ${fmt(resta(i))}</small>`:''}${(i.div||[]).length?`<small class="rec">a receber ${fmt(aReceber(i))}</small>`:''}</span>
+      <span class="pt-d" data-edit="${esc(i.id)}">${esc(i.desc)}${k&&!sub&&(i.desc||'').trim().toLowerCase()!==b?`<small><i class="bk-dot" style="background:${k.c}"></i>${esc(b)}</small>`:''}${pp>0?`<small class="pp">pagou ${fmt(pp)} · falta ${fmt(resta(i))}</small>`:''}${(i.div||[]).length?`<small class="rec">a receber ${fmt(aReceber(i))}</small>`:''}</span>
       <span class="pt-dt ${late?'late':''}" data-edit="${esc(i.id)}">${dm(i.data)}</span>
       <span class="pt-v num" data-edit="${esc(i.id)}">${fmt(i.valor)}</span>
       <span class="pt-c">${ck?`<button class="box sm ${i.pago?'on':pp>0?'half':''}" data-pagar="${esc(i.id)}" aria-label="${i.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${i.pago?ic('check','sm'):''}</button>`:''}</span></div>`; };
+  const linhas=l=>{ if(!ck) return l.map(i=>row(i)).join('');
+    const g=new Map(); l.forEach(i=>{ const b=banco(i); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(i); } });
+    const feito=new Set(); let h='';
+    for(const i of l){ const b=banco(i), gl=g.get(b);
+      if(!gl||gl.length<2){ h+=row(i); continue; } if(feito.has(b)) continue; feito.add(b);
+      const k=B[b]||B['outro cartão']||{c:'#8e8580'}, tot=sum(gl), falta=sumResta(gl), paga=!falta, parte=tot-falta, open=ui.fat?.includes(b);
+      const qs=[...new Set(gl.map(x=>x.quem))], q1=qs.length===1?qs[0]:null, venc=gl.map(x=>x.data).filter(Boolean).sort()[0], late=!paga&&venc&&venc<t;
+      h+=`<div class="pt-r pt-fat ${open?'open':''}">
+        <span class="pt-q ${q1||'varios'}" data-fat="${esc(b)}">${q1?QUEM[q1]:'vários'}</span>
+        <span class="pt-d" data-fat="${esc(b)}"><b><i class="bk-dot" style="background:${k.c}"></i>${esc(b)}</b><small>${gl.length} itens${parte>0.004&&!paga?` · falta ${fmt(falta)}`:''} ${ic('chev','sm')}</small></span>
+        <span class="pt-dt ${late?'late':''}" data-fat="${esc(b)}">${dm(venc)}</span>
+        <span class="pt-v num" data-fat="${esc(b)}">${fmt(tot)}</span>
+        <span class="pt-c"><button class="box sm ${paga?'on':parte>0.004?'half':''}" data-fatpag="${esc(b)}" aria-label="${paga?'desmarcar a fatura':'marcar a fatura toda como paga'}" ${canWrite?'':'disabled'}>${paga?ic('check','sm'):''}</button></span></div>`;
+      if(open) h+=gl.map(x=>row(x,true)).join(''); }
+    return h; };
   const q={}; l.forEach(i=>q[i.quem]=(q[i.quem]||0)+(+i.valor||0));
   const tot=sum(l), falta=ck?sumResta(l):0;
   const dDef=m===t.slice(0,7)?t:`${m}-${ck?'10':'01'}`;
@@ -1381,10 +1401,9 @@ function tabela(tipo,m){
   return `<section class="pt-tab" id="pt-${tipo}">
     <div class="pt-th"><h2>${tit}</h2><span class="num">${fmt(tot)}</span></div>
     <div class="pt-grid"><div class="pt-r pt-hd"><span>quem</span><span>descrição</span><span>${ck?'venc.':'data'}</span><span class="pt-v">valor</span><span class="pt-c" ${ck?'aria-label="pago"':''}>${ck?ic('check','sm'):''}</span></div>
-      ${l.length?l.map(row).join(''):`<div class="pt-vazio">nada lançado ainda.</div>`}${add}</div>
+      ${l.length?linhas(l):`<div class="pt-vazio">nada lançado ainda.</div>`}${add}</div>
     ${canWrite?`<p class="err" id="${P}-err" hidden></p>`:''}
     <div class="pt-foot">${ck?`<div class="pt-l"><span>total</span><b class="num">${fmt(tot)}</b></div><div class="pt-l"><span>pago</span><b class="num">${fmt(tot-falta)}</b></div><div class="pt-l tot"><span>restante</span><b class="num">${fmt(falta)}</b></div>`:`<div class="pt-l tot"><span>total</span><b class="num">${fmt(tot)}</b></div>`}
-      ${ck?'<small class="pt-obs">parcelas e contas fixas (as que se repetem todo mês) entram sozinhas no mês seguinte.</small>':''}
       <div class="pt-cada"><span>${tipo==='entrada'?'recebido':'cada um'}</span>${quens.map(k=>`<span><i class="dot ${k}"></i>${QUEM[k]} <b class="num">${fmt(q[k]||0)}</b></span>`).join('')}</div></div>
   </section>`;
 }
