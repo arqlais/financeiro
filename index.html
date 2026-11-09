@@ -1250,10 +1250,11 @@ function resumo(m){ const E=sum(ofMes(m,'entrada')),C=sum(ofMes(m,'conta')),G=su
 const byDate=(a,b)=>(a.data||'9').localeCompare(b.data||'9');
 const qd=it=>it.data?`${it.data.slice(8)}/${MESES[+it.data.slice(5,7)-1].slice(0,3)}`:'';
 function monthNav(){
-  const m=ui.mes, Y=m.slice(0,4), cm=today().slice(0,7), ms=meses(), ys=[...new Set(ms.map(x=>x.slice(0,4)))];
+  // every month of this year and the next can be opened (to plan ahead); older years show the months that have data
+  const m=ui.mes, Y=m.slice(0,4), cm=today().slice(0,7), ms=meses(), prox=String(+cm.slice(0,4)+1), ys=[...new Set([...ms.map(x=>x.slice(0,4)),cm.slice(0,4),prox])].sort();
   const has=new Set(ms);
-  const caps=MESES.map((n,i)=>{ const k=`${Y}-${pad(i+1)}`, ok=has.has(k)||k<=addM(cm,1);
-    return `<button class="cap ${k===m?'on':''} ${k===cm?'now':''}" data-pickmes="${k}" ${ok?'':'disabled'} aria-current="${k===m}">${n.slice(0,3)}</button>`; }).join('');
+  const caps=MESES.map((n,i)=>{ const k=`${Y}-${pad(i+1)}`, ok=has.has(k)||Y>=cm.slice(0,4);
+    return `<button class="cap ${k===m?'on':''} ${k===cm?'now':''}" data-pickmes="${k}" ${ok?'':'disabled'} aria-current="${k===m}">${n.slice(0,3)}<small>${Y}</small></button>`; }).join('');
   const anos=ys.length>1?ys.map(y=>`<button class="cap ano ${y===Y?'on':''}" data-anomes="${y}">${y}</button>`).join(''):'';
   return `<div class="caps" id="mpills">${anos}${caps}</div>`;
 }
@@ -1995,7 +1996,7 @@ document.addEventListener('click',e=>{
   if(d.cropok){ foto=cropSalvar(); crop=null; $('#sheetHost').innerHTML=''; try{localStorage.setItem('fin-foto',foto)}catch(_){} setIcone({usaFoto:true}); toast('foto de perfil salva'); return; }
   if(d.cropclose){ if(e.target===t||t.tagName==='BUTTON'){ crop=null; $('#sheetHost').innerHTML=''; } return; }
   if(d.pickmes){ irMes(d.pickmes); return; }
-  if(d.anomes){ const ms=meses().filter(x=>x.startsWith(d.anomes)); const cm=today().slice(0,7); irMes(ms.includes(cm)?cm:ms.includes(d.anomes+ui.mes.slice(4))?d.anomes+ui.mes.slice(4):ms.at(-1)); return; }
+  if(d.anomes){ const ms=meses().filter(x=>x.startsWith(d.anomes)); const cm=today().slice(0,7); irMes(ms.includes(cm)?cm:ms.includes(d.anomes+ui.mes.slice(4))?d.anomes+ui.mes.slice(4):ms.at(-1)||d.anomes+ui.mes.slice(4)); return; }
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
   if(d.addrow!==undefined){ ui.add=d.addrow||null; render(); if(ui.add) setTimeout(()=>$('#'+PFX[ui.add]+'-valor')?.focus(),50); return; }
   if(d.buscaon){ const on=!(ui.buscaOn&&ui.page==='lanc'); ui.buscaOn=on; if(!on) ui.busca=''; ui.page='lanc'; saveUi(); render(); if(on){ window.scrollTo({top:0}); setTimeout(()=>$('#q-busca')?.focus(),30); } return; }
