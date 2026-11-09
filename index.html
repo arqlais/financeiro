@@ -702,6 +702,7 @@ body:has(.scrim){overflow:hidden}
 .pp-add select,.pp-add input{height:40px;min-width:0;width:100%;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:0 12px;font:inherit;font-size:.86rem}
 .pp-add select{padding:0 8px;font-weight:600}.pp-add [id="f-dv"]{text-align:right;font-weight:600}.pp-add .pt-mais{width:34px;height:34px}
 .pt-d small.rec{white-space:nowrap;font-size:.68rem}
+.pt-parte [data-divedit]{cursor:pointer}.pt-parte.editando{outline:1.5px solid var(--c-acc);border-radius:12px;outline-offset:2px}.pt-pt[data-edit]{cursor:pointer}
 .bkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .bkit{display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;border:1px solid var(--bd);background:var(--surface);font-size:.86rem;font-weight:500;text-align:left;min-width:0}
 .bkit span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1469,8 +1470,8 @@ function tabela(tipo,m){
       <span class="pt-dt ${late?'late':''}" data-edit="${esc(i.id)}">${dm(i.data)}</span>
       <span class="pt-v num" data-edit="${esc(i.id)}">${fmt(i.valor)}</span>
       <span class="pt-c">${ck?`<button class="box sm ${i.pago?'on':pp>0?'half':''}" data-pagar="${esc(i.id)}" aria-label="${i.pago?'desmarcar':'marcar como paga'}" ${canWrite?'':'disabled'}>${i.pago?ic('check','sm'):''}</button>`:''}</span></div>${abre?(()=>{ const resto=Math.round(((+i.valor||0)-ps.reduce((t,p)=>t+(+p.v||0),0))*100)/100;
-        return ps.map(p=>`<div class="pt-r pt-sub pt-pt ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}><span class="pt-q ${p.q}">${QP[p.q]}</span><span class="pt-d">${esc(p.d||'item')}${p.q==='grupo'?`<small>${p.ok?'recebido':'a receber'}</small>`:''}</span><span class="pt-dt"></span><span class="pt-v num">${fmt(p.v)}</span><span class="pt-c"></span></div>`).join('')
-          +(resto>0.004?`<div class="pt-r pt-sub pt-pt ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''}><span class="pt-q ${i.quem}">${QUEM[i.quem]||''}</span><span class="pt-d">restante</span><span class="pt-dt"></span><span class="pt-v num">${fmt(resto)}</span><span class="pt-c"></span></div>`:''); })():''}`; };
+        return ps.map(p=>`<div class="pt-r pt-sub pt-pt ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''} data-edit="${esc(i.id)}"><span class="pt-q ${p.q}">${QP[p.q]}</span><span class="pt-d">${esc(p.d||'item')}${p.q==='grupo'?`<small>${p.ok?'recebido':'a receber'}</small>`:''}</span><span class="pt-dt"></span><span class="pt-v num">${fmt(p.v)}</span><span class="pt-c"></span></div>`).join('')
+          +(resto>0.004?`<div class="pt-r pt-sub pt-pt ${k?'cartao':''}" ${k?`style="--bk:${k.c}"`:''} data-edit="${esc(i.id)}"><span class="pt-q ${i.quem}">${QUEM[i.quem]||''}</span><span class="pt-d">restante</span><span class="pt-dt"></span><span class="pt-v num">${fmt(resto)}</span><span class="pt-c"></span></div>`:''); })():''}`; };
   const linhas=l=>{ if(!ck) return l.map(i=>row(i)).join('');
     const g=new Map(); l.forEach(i=>{ const b=banco(i); if(b&&b!=='boleto'){ if(!g.has(b)) g.set(b,[]); g.get(b).push(i); } });
     const feito=new Set(); let h='';
@@ -2083,8 +2084,9 @@ const partesDe=i=>i.partes||(i.div||[]).map(x=>({d:x.n,v:+x.v||0,q:'grupo',ok:!!
 function vDiv(f){
   const ps=f.partes||[], v=parseV(f.valor), usado=ps.reduce((s,p)=>s+(+p.v||0),0), resto=Math.round(((isFinite(v)?v:0)-usado)*100)/100;
   return `<div class="pbox"><div class="pbox-h"><b>dividir o valor</b><span>${ps.length?(resto>=0?`sem divisão: <b>${fmt(resto)}</b> fica com ${QUEM[f.quem]||'juntos'}`:`<b style="color:var(--bad)">as partes passam ${fmt(-resto)} do total</b>`):'separe o que é de cada um dentro do total'}</span></div>
-    ${ps.map((p,i)=>`<div class="pl pt-parte"><span class="pt-q ${p.q}">${QP[p.q]}</span><span class="pp-d">${esc(p.d||'item')}${p.q==='grupo'?` · <button type="button" class="link" data-divok="${i}">${p.ok?'recebido':'a receber'}</button>`:''}</span><b class="num">${fmt(p.v)}</b><button type="button" class="icbtn" data-divdel="${i}" aria-label="tirar esse item">${ic('x','sm')}</button></div>`).join('')}
-    <div class="pp-add"><select id="f-dq" aria-label="de quem">${Object.entries(QP).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select><input id="f-dn" autocomplete="off" placeholder="o quê" aria-label="descrição do item"><input id="f-dv" inputmode="decimal" placeholder="R$ 0,00" aria-label="valor da parte"><button type="button" class="pt-mais" data-divadd="1" aria-label="pôr parte">${ic('plus','sm')}</button></div></div>`;
+    ${ps.map((p,i)=>`<div class="pl pt-parte ${f.partEdit===i?'editando':''}"><span class="pt-q ${p.q}" data-divedit="${i}">${QP[p.q]}</span><span class="pp-d" data-divedit="${i}">${esc(p.d||'item')}${p.q==='grupo'?` · <button type="button" class="link" data-divok="${i}">${p.ok?'recebido':'a receber'}</button>`:''}</span><b class="num" data-divedit="${i}">${fmt(p.v)}</b><button type="button" class="icbtn" data-divdel="${i}" aria-label="tirar esse item">${ic('x','sm')}</button></div>`).join('')}
+    ${(()=>{ const ed=f.partEdit!=null?ps[f.partEdit]:null;
+      return `<div class="pp-add"><select id="f-dq" aria-label="de quem">${Object.entries(QP).map(([k,l])=>`<option value="${k}" ${ed?.q===k?'selected':''}>${l}</option>`).join('')}</select><input id="f-dn" autocomplete="off" placeholder="o quê" aria-label="descrição do item" value="${esc(ed?.d||'')}"><input id="f-dv" inputmode="decimal" placeholder="R$ 0,00" aria-label="valor do item" value="${ed?(+ed.v).toFixed(2).replace('.',','):''}"><button type="button" class="pt-mais" data-divadd="1" aria-label="${ed?'salvar item':'pôr item'}">${ic(ed?'check':'plus','sm')}</button></div>${ed?`<button type="button" class="link" data-diveditx="1" style="align-self:flex-start">cancelar edição</button>`:''}`; })()}</div>`;
 }
 function readForm(){ const f=form; f.valor=$('#f-valor').value; f.desc=$('#f-desc').value; f.data=$('#f-data').value;
   if($('#f-cat')) f.cat=$('#f-cat').value; if($('#f-pago')) f.pago=$('#f-pago').value==='1';
@@ -2100,6 +2102,24 @@ async function submit(){
   if(f.tipo==='conta'){ o.pago=!!f.pago; if(f.parciais?.length) o.parciais=f.parciais; const auto=banco({...o})||''; const sel=f.bankSel??auto; if(sel!==auto) o.banco=sel==='boleto'?'':sel; else if(f.banco!==undefined) o.banco=f.banco; if(f.auto) o.auto=true; }
   form=null; drawSheet();
   await safe(store.put({...o,id:f.id}), o.mes!==ui.mes?`alterado · foi para ${mName(o.mes)}`:'alterado');
+  if(o.tipo==='conta'&&o.partes?.length) propagarPartes({...o,id:f.id});
+}
+// an installment inside a bill (e.g. "tênis 1/7" on the itaú bill) goes on to the same card's bill in the next months:
+// 2/7 next month, 3/7 the month after… It joins that month's bill of the same card (or same name); with none, a bill is created.
+async function propagarPartes(o){
+  const b=banco(o), cartao=b&&b!=='boleto'; let n=0;
+  for(const pt of o.partes){ const p=parc(pt.d); if(!p||p.x>=p.y) continue;
+    for(let k=1;k<=p.y-p.x;k++){
+      const m=addM(o.mes,k), d=`${p.base} ${p.x+k}/${p.y}`, lst=ofMes(m,'conta').filter(c=>!c.removido);
+      const alvo=lst.find(c=>baseOf(c)===baseOf(o))||(cartao?lst.find(c=>banco(c)===b):null);
+      const nova={d,v:pt.v,q:pt.q,ok:false};
+      if(alvo){ const ps=partesDe(alvo); if(ps.some(x=>(x.d||'').trim().toLowerCase()===d.toLowerCase())) continue;
+        const todas=[...ps,nova], soma=todas.reduce((t,x)=>t+(+x.v||0),0), it={...alvo,partes:todas}; delete it.div;
+        if(soma>(+alvo.valor||0)+0.004) it.valor=Math.round(soma*100)/100;
+        await store.put(it); n++; }
+      else { const it={id:uid(),tipo:'conta',quem:o.quem,desc:parc(o.desc)?parc(o.desc).base:o.desc,valor:pt.v,data:o.data?addMd(o.data,k):`${m}-10`,mes:m,pago:false,auto:true,partes:[nova]};
+        if(o.banco!==undefined) it.banco=o.banco; await store.put(it); n++; } } }
+  if(n) toast(`${n} parcela${n>1?'s':''} levada${n>1?'s':''} para os próximos meses`,'layers');
 }
 async function repetirFixas(){
   const m=ui.mes, nx=addM(m,1); const ex=new Set(ofMes(nx,'conta').map(c=>c.quem+'|'+baseOf(c))); let n=0;
@@ -2116,7 +2136,7 @@ async function exportCsv(){
 
 // ---------- events ----------
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-partes],[data-calfor],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
+  const t=e.target.closest('[data-divedit],[data-diveditx],[data-partes],[data-calfor],[data-calclose],[data-calnav],[data-calpick],[data-google],[data-recarregar],[data-esqueci],[data-addrow],[data-jump],[data-bankedit],[data-bksw],[data-bksave],[data-bkcancel],[data-bkdel],[data-modo],[data-anomes],[data-buscaon],[data-buscax],[data-vercontas],[data-golt],[data-bankrestore],[data-banco],[data-fotodel],[data-fotoaj],[data-fontedel],[data-dup],[data-saldoedit],[data-saldocancel],[data-cropok],[data-cropclose],[data-lt],[data-icone],[data-undo],[data-mesjump],[data-pickmes],[data-qt],[data-qq],[data-bankadd],[data-bankdel],[data-setmes],[data-tema],[data-sair],[data-export],[data-impok],[data-impcancel],[data-page],[data-mstep],[data-pagar],[data-edit],[data-new],[data-cat],[data-ano],[data-goto],[data-copiar],[data-csv],[data-close],[data-ft],[data-fq],[data-addparc],[data-delparc],[data-fat],[data-fatpag],[data-fatadd],[data-divadd],[data-divdel],[data-divok],[data-askdel],[data-del]');
   if(!t) return;
   const d=t.dataset;
   if(d.icone){ setIcone({id:d.icone}); toast('ícone salvo'); return; }
@@ -2195,8 +2215,12 @@ document.addEventListener('click',e=>{
   if(d.fatadd!==undefined){ ui.contN=0; ui.qbank=d.fatadd; openQuick('conta'); const s=$('#s-bank'); if(s) s.value=d.fatadd; return; }
   if(d.divadd){ readForm(); const v=parseV($('#f-dv').value), e=$('#f-err');
     if(!(v>0)){ e.textContent='digite o valor da parte, por exemplo 55,90.'; e.hidden=false; return; }
-    form.partes=[...(form.partes||[]),{d:$('#f-dn').value.trim(),v,q:$('#f-dq').value,ok:false}]; drawSheet(); setTimeout(()=>$('#f-dv')?.focus(),30); return; }
-  if(d.divdel!==undefined){ readForm(); form.partes=(form.partes||[]).filter((_,i)=>i!==+d.divdel); drawSheet(); return; }
+    const nv={d:$('#f-dn').value.trim(),v,q:$('#f-dq').value,ok:false}, ps=[...(form.partes||[])];
+    if(form.partEdit!=null&&ps[form.partEdit]){ nv.ok=ps[form.partEdit].ok; ps[form.partEdit]=nv; } else ps.push(nv);
+    form.partes=ps; form.partEdit=null; drawSheet(); setTimeout(()=>$('#f-dv')?.focus(),30); return; }
+  if(d.divedit!==undefined){ readForm(); form.partEdit=+d.divedit; drawSheet(); setTimeout(()=>$('#f-dv')?.focus(),30); return; }
+  if(d.diveditx){ readForm(); form.partEdit=null; drawSheet(); return; }
+  if(d.divdel!==undefined){ readForm(); form.partes=(form.partes||[]).filter((_,i)=>i!==+d.divdel); form.partEdit=null; drawSheet(); return; }
   if(d.divok!==undefined){ readForm(); form.partes=(form.partes||[]).map((p,i)=>i===+d.divok?{...p,ok:!p.ok}:p); drawSheet(); return; }
   if(d.delparc!==undefined){ readForm(); form.parciais=(form.parciais||[]).filter((_,i)=>i!==+d.delparc); drawSheet(); return; }
   if(d.askdel){ readForm(); form.confirm=true; drawSheet(); return; }
