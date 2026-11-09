@@ -764,6 +764,15 @@ body:has(.scrim){overflow:hidden}
 .mrow b{white-space:normal;line-height:1.25}
 .bkit span:last-child{white-space:normal!important;line-height:1.2}
 .ph+.chips,.chips{flex-wrap:wrap}
+
+details.fold{border-radius:18px;background:var(--sunk)}
+details.fold>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:12px 14px;font-weight:700;font-size:.86rem;cursor:pointer}
+details.fold>summary::-webkit-details-marker,details.fold-card>summary::-webkit-details-marker{display:none}
+details.fold>summary small{font-weight:500;color:var(--muted)}details.fold>summary .ico{margin-left:auto;color:var(--muted);transition:transform .2s}
+details.fold[open]>summary .ico,details.fold-card[open]>summary .ico{transform:rotate(180deg)}
+details.fold>.pbox{background:none;padding-top:0}details.fold>.pbox>.pbox-h>b{display:none}
+details.fold-card>summary{list-style:none;cursor:pointer;margin:0}details.fold-card[open]>summary{margin-bottom:10px}
+details.fold-card>summary .sub{display:flex;align-items:center;gap:6px}details.fold-card>summary .ico{transition:transform .2s}
 </style>
 
 <header class="topnav">
@@ -1417,12 +1426,9 @@ function pInicio(){
     :r.S<0?`faltam ${v} <span class="script">para fechar ${mName(m)}</span>`:`sobrando ${v} <span class="script">até agora em ${mName(m)}</span>`;
   let h=`<h1 class="big">${frase}</h1>`+monthNav();
   const ne=ofMes(m,'entrada').length;
-  if(canWrite) h+=`<div class="quick">${[['gasto','gasto','t-pink','bag'],['conta','conta','t-lilac','file'],['entrada','entrada','t-lime','up']].map(([k,l,c,i])=>`<button class="qk ${c}" data-new="${k}"><span class="t-ico">${ic('plus','sm')}</span><span>${l}<small>adicionar</small></span></button>`).join('')}</div>`;
   h+=resumoCard(m);
   h+=`<div class="bento">
-    <button class="tile t-lime go" style="min-height:140px" data-golt="entradas"><span class="t-top"><span class="t-ico">${ic('sw')}</span></span><span class="t-lbl" style="margin-top:auto">entrou</span><span class="t-big num">${fmt(r.E)}</span><span class="t-sub">${ne} entrada${ne===1?'':'s'}</span></button>
-    <button class="tile t-pink go" style="min-height:140px" data-golt="gastos"><span class="t-top"><span class="t-ico">${ic('ne')}</span></span><span class="t-lbl" style="margin-top:auto">saiu</span><span class="t-big num">${fmt(r.C+r.G)}</span><span class="t-sub">contas + gastos</span></button>
-    ${progTile(m)}${proximas(m)}${cartoesStack(m)}${cardMetas(m)?cardGuardado(m)+cardMetas(m):cardGuardado(m).replace('class="tile t-sky span2"','class="tile t-sky span2 span4"')}<div class="span2 span4">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
+    ${proximas(m)}${cartoesStack(m)}${cardMetas(m)?cardGuardado(m)+cardMetas(m):cardGuardado(m).replace('class="tile t-sky span2"','class="tile t-sky span2 span4"')}<div class="span2 span4">${cardCats(ofMes(m,'gasto'),'para onde foi')}</div></div>`;
   h+=`<details class="mais" ${ui.mais?'open':''}><summary>${ic('chart','sm')} mais detalhes do mês<small>últimos 6 meses, ritmo dos gastos, dias e quem gastou</small>${ic('chev','sm')}</summary>${ui.mais?`<div class="cols"><div class="col"><section class="card"><div class="card-h"><h2>últimos 6 meses</h2><button class="link" data-page="ano">ver ano ${ic('arrow','sm')}</button></div>${chartN(m,6)}</section>${chartRitmo(m)}</div><div class="col">${cardCalendario(m)}${cardQuem(m)}</div></div>`:''}</details>`;
   return h;
 }
@@ -1851,7 +1857,7 @@ function pAno(){
       <span class="ym-b"><i style="width:${r.E/mx*100}%;background:var(--ink)"></i><i style="width:${(r.C+r.G)/mx*100}%;background:var(--rose-mid)"></i></span>
       <span class="ym-v ${r.S<0?'neg':'pos'}">${r.S<0?'−':'+'}${fmt(Math.abs(r.S))}</span></button>`).join('')}
     <div class="legend" style="margin:10px 0 8px"><span><i class="sw" style="background:var(--ink)"></i>entrou</span><span><i class="sw" style="background:var(--rose-mid)"></i>saiu</span><span>à direita: quanto sobrou</span></div></section></div>
-    <div class="col"><section class="card cv"><div class="card-h"><h2>entrou e saiu</h2></div>${chartN(null,0,rows.map(r=>r.m))}</section>${chartAcumulado(Y)}</div></div>`;
+    <div class="col">${chartAcumulado(Y)}</div></div>`;
   h+=`<div class="cols cv"><div class="col">${cardCats(yr.filter(i=>i.tipo==='gasto'),'para onde foi no ano')}</div><div class="col">${cardQuem(null,yr.filter(i=>i.tipo!=='entrada'))}</div></div>`;
   return h;
 }
@@ -1991,11 +1997,11 @@ function pAjustes(){
     <div class="seg">${[['auto','automático'],['claro','claro'],['escuro','escuro']].map(([k,l])=>`<button type="button" data-modo="${k}" aria-pressed="${modo===k}">${l}</button>`).join('')}</div></section>
 </div></div>`;
   h+=`<p class="sec-t">dinheiro</p>
-  <section class="card" id="metas"><div class="card-h"><h2>metas <span class="script">por mês</span></h2><span class="sub">vazio = sem meta</span></div>
-    <div class="metas">${METACATS.map(c=>{ const v=metas()[c], md=media3(today().slice(0,7),c); return `<label class="mrow"><span><span class="dot" style="background:${c===TOTAL?'var(--ink)':CATC[c]}"></span><b>${esc(c)}</b><small>${md?`média recente ${fmt(md)}`:'sem gastos recentes'}</small></span><input data-meta="${esc(c)}" inputmode="decimal" placeholder="sem meta" value="${v?String(v).replace('.',','):''}" ${canWrite?'':'disabled'} aria-label="meta de ${esc(c)}"></label>`; }).join('')}</div></section>
-  <section class="card"><div class="card-h"><h2>bancos e <span class="script">cartões</span></h2><button class="link" data-banco="">explorar ${ic('arrow','sm')}</button></div>
+  <details class="card fold-card" id="metas" data-fold="metas" ${ui.fold?.metas?'open':''}><summary class="card-h"><h2>metas <span class="script">por mês</span></h2><span class="sub">vazio = sem meta ${ic('chev','sm')}</span></summary>
+    <div class="metas">${METACATS.map(c=>{ const v=metas()[c], md=media3(today().slice(0,7),c); return `<label class="mrow"><span><span class="dot" style="background:${c===TOTAL?'var(--ink)':CATC[c]}"></span><b>${esc(c)}</b><small>${md?`média recente ${fmt(md)}`:'sem gastos recentes'}</small></span><input data-meta="${esc(c)}" inputmode="decimal" placeholder="sem meta" value="${v?String(v).replace('.',','):''}" ${canWrite?'':'disabled'} aria-label="meta de ${esc(c)}"></label>`; }).join('')}</div></details>
+  <details class="card fold-card" data-fold="bancos" ${ui.fold?.bancos?'open':''}><summary class="card-h"><h2>bancos e <span class="script">cartões</span></h2><span class="sub">${ic('chev','sm')}</span></summary><button class="link" data-banco="" style="margin:-2px 0 8px">explorar ${ic('arrow','sm')}</button>
     <p class="hint" style="margin:-4px 0 10px">toque num banco para mudar o nome ou a cor.</p>
-    <div class="bkgrid">${Object.entries(BK()).filter(([n,k])=>n!=='outro cartão'&&!k.oculto).map(([n,k])=>`<button class="bkit" ${canWrite?`data-bankedit="${esc(n)}"`:''}><span class="bm" style="background:${k.c}">${esc(k.m)}</span><span>${esc(n)}</span></button>`).join('')}${canWrite?`<button class="bkit novo" data-bankedit=""><span class="bm">${ic('plus','sm')}</span><span>novo banco</span></button>`:''}</div>${bankDocs().some(b=>b.oculto&&!b.de&&!bankDocs().some(x=>x.de===b.nome))&&canWrite?`<button class="link" style="margin-top:10px" data-bankrestore="1">mostrar os bancos removidos</button>`:''}</section>`;
+    <div class="bkgrid">${Object.entries(BK()).filter(([n,k])=>n!=='outro cartão'&&!k.oculto).map(([n,k])=>`<button class="bkit" ${canWrite?`data-bankedit="${esc(n)}"`:''}><span class="bm" style="background:${k.c}">${esc(k.m)}</span><span>${esc(n)}</span></button>`).join('')}${canWrite?`<button class="bkit novo" data-bankedit=""><span class="bm">${ic('plus','sm')}</span><span>novo banco</span></button>`:''}</div>${bankDocs().some(b=>b.oculto&&!b.de&&!bankDocs().some(x=>x.de===b.nome))&&canWrite?`<button class="link" style="margin-top:10px" data-bankrestore="1">mostrar os bancos removidos</button>`:''}</details>`;
   h+=`<p class="sec-t">dados</p><div class="cols"><div class="col">
   <section class="card"><div class="card-h"><h2>onde ficam os dados</h2><span class="tag">${n} lançamentos</span></div>
     <div class="opt-row"><span class="tico">${ic(mode==='local'?'phone':'cloud','sm')}</span><span><b>${where[0]}</b><small>${where[1]}</small></span></div>
@@ -2083,8 +2089,8 @@ function drawSheet(){
     <div class="f2"><div class="f"><label for="f-data">${f.tipo==='conta'?'vencimento':'data'}</label>${dateBtn('f-data',f.data||'',{longo:true,limpar:true,rotulo:f.tipo==='conta'?'vencimento':'data'})}</div>
       ${f.tipo==='gasto'?`<div class="f"><label for="f-cat">categoria (troque se errou)</label><select id="f-cat">${CATN.map(c=>`<option value="${c}" ${c===cat(f)?'selected':''}>${c}</option>`).join('')}</select></div>`
        :f.tipo==='conta'?`<div class="f"><label for="f-bank">banco ou cartão</label><select id="f-bank"><option value="" ${!bk?'selected':''}>não sei ainda</option><option value="boleto" ${bk==='boleto'?'selected':''}>boleto ou pix</option>${[...new Set([...bkAtivos(),...(bk&&bk!=='boleto'?[bk]:[])])].map(b=>`<option value="${b}" ${bk===b?'selected':''}>${b}${BK()[b]?.oculto?' (removido)':''}</option>`).join('')}</select></div>`:'<div></div>'}</div>
-    ${f.tipo==='conta'?vParciais(f):''}
-    ${f.tipo!=='entrada'?vDiv(f):''}
+    ${f.tipo==='conta'?`<details class="fold" data-fold="parc" ${f.parciais?.length||ui.fold?.parc?'open':''}><summary>pagar uma parte${f.parciais?.length?` <small>${f.parciais.length} pagamento${f.parciais.length>1?'s':''}</small>`:''}${ic('chev','sm')}</summary>${vParciais(f)}</details>`:''}
+    ${f.tipo!=='entrada'?`<details class="fold" data-fold="div" ${f.partes?.length||f.partEdit!=null||ui.fold?.div?'open':''}><summary>dividir o valor${f.partes?.length?` <small>${f.partes.length} ${f.partes.length>1?'itens':'item'}</small>`:''}${ic('chev','sm')}</summary>${vDiv(f)}</details>`:''}
     ${f.tipo==='conta'?`<div class="f"><label for="f-pago">situação</label><select id="f-pago"><option value="0">a pagar</option><option value="1" ${f.pago?'selected':''}>paga</option></select></div>`:''}
     <p class="err" id="f-err" hidden></p>
     <div class="sheet-foot">${f.confirm?`<button type="button" class="btn line" style="color:var(--bad)" data-del="1">${ic('trash','sm')} confirmar exclusão</button>`:`<button type="button" class="btn line" data-askdel="1">${ic('trash','sm')} excluir</button>`}
@@ -2215,7 +2221,7 @@ document.addEventListener('click',e=>{
   if(d.impcancel){ importPend=null; render(); return; }
   if(d.close!==undefined){ if(e.target===t||t.tagName==='BUTTON'){form=null;drawSheet();} return; }
   if(d.goto&&ui.busca){ ui.busca=''; }
-  if(d.page){ ui.page=d.page; ui.cat=null; ui.busca=''; saveUi(); render(); if(d.metas) $('#metas')?.scrollIntoView({block:'start'}); else window.scrollTo({top:0}); return; }
+  if(d.page){ ui.page=d.page; ui.cat=null; ui.busca=''; saveUi(); render(); if(d.metas){ ui.fold={...(ui.fold||{}),metas:true}; render(); $('#metas')?.scrollIntoView({block:'start'}); } else window.scrollTo({top:0}); return; }
   if(d.mstep){ ui.mes=addM(ui.mes,+d.mstep); render(); return; }
   if(d.goto){ ui.mes=d.goto; ui.page='lanc'; saveUi(); render(); window.scrollTo({top:0}); return; }
   if(d.pagar){ if(!canWrite) return; const it=items.get(d.pagar); if(it) safe(store.patch(it.id,{pago:!it.pago}), it.pago?'voltou para a pagar':'conta paga'); return; }
@@ -2253,6 +2259,7 @@ document.addEventListener('change',async e=>{ if(e.target.id==='contLanc'){ ui.c
     if(!raw||!(v>0)){ if(items.has(id)) safe(store.del(id),`meta de ${c} tirada`); return; }
     safe(store.put({id,tipo:'meta',cat:c,valor:v}),`meta de ${c}: ${fmtT(v)} por mês`); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
 addEventListener('scroll',()=>{ if(cal&&Date.now()-(cal.t||0)>400){ cal=null; drawCal(); } },{passive:true});
+document.addEventListener('toggle',e=>{ const d=e.target; if(d.dataset?.fold){ ui.fold={...(ui.fold||{}),[d.dataset.fold]:d.open}; } },true);
 document.addEventListener('change',e=>{ const t=e.target; if(/^p[ecg]-quem$/.test(t.id||'')) t.className='pt-q '+t.value; });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='novaF'){e.preventDefault();salvarNovaSenha();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag|pe|pc|pg)F$/.exec(e.target.id); if(qm){e.preventDefault(); const qs=$('#'+qm[1]+'-quem'); if(qs) ui.qquem=qs.value; quickAdd(qm[1]);} });
 document.addEventListener('input',e=>{
