@@ -746,6 +746,24 @@ body:has(.scrim){overflow:hidden}
   .banner{font-size:.78rem;padding:8px 12px}
 }
 .tile>.vazio{margin:auto 0;text-align:center}
+
+/* small phones: who becomes a colored dot so the description has room; add rows break in two lines */
+@media (max-width:370px){
+  .pt-grid .pt-r{grid-template-columns:8px minmax(0,1fr) 36px 72px 24px!important;column-gap:6px!important;padding-left:10px!important;padding-right:6px!important}
+  .pt-grid .pt-r>span.pt-q{font-size:0!important;width:8px;height:8px;border-radius:50%;background:currentColor;padding:0}
+  .pt-grid .pt-hd>span:first-child{font-size:0!important}
+  .pt-grid .pt-add{grid-template-columns:64px minmax(0,1fr) 60px 26px!important;grid-template-areas:"q d d d" "dt v v b"}
+  .pt-grid .pt-add>select{grid-area:q;width:auto;height:32px;font-size:.72rem!important;border-radius:9px;background:var(--surface)!important;padding:0 4px}
+  .pt-grid .pt-add>[id$="-desc"]{grid-area:d}.pt-grid .pt-add>.pt-dia{grid-area:dt}.pt-grid .pt-add>[id$="-valor"]{grid-area:v}.pt-grid .pt-add>.pt-mais{grid-area:b}
+  .pt-stats>div{padding:0 8px!important}.pt-stats b{font-size:.72rem!important}
+}
+@media (max-width:400px){
+  .pp-add{grid-template-columns:78px minmax(0,1fr) 34px;grid-template-areas:"q d d" "v v b"}
+  .pp-add #f-dq{grid-area:q}.pp-add #f-dn{grid-area:d}.pp-add #f-dv{grid-area:v}.pp-add .pt-mais{grid-area:b}
+}
+.mrow b{white-space:normal;line-height:1.25}
+.bkit span:last-child{white-space:normal!important;line-height:1.2}
+.ph+.chips,.chips{flex-wrap:wrap}
 </style>
 
 <header class="topnav">
@@ -810,8 +828,8 @@ const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" aria-hidden="true"
 const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const QUEM={lais:'laís',igor:'igor',juntos:'juntos'};
 const BANKS={
-  'nubank pf':{m:'nu',c:'#820AD1'}, 'nubank pj':{m:'pj',c:'#4E0A82'}, 'nubank igor':{m:'nu',c:'#A35BD8'}, 'inter':{m:'in',c:'#FF7A00'}, 'mercado pago':{m:'mp',c:'#009EE3'},
-  'itaú':{m:'it',c:'#EC7000'}, 'c6 bank':{m:'c6',c:'#2B2B2B'}, 'riachuelo':{m:'ri',c:'#D7192F'},
+  'nubank pf':{m:'nu',c:'#820AD1'}, 'nubank pj':{m:'pj',c:'#3A0868'}, 'nubank igor':{m:'nu',c:'#C084F5'}, 'inter':{m:'in',c:'#FF7A00'}, 'mercado pago':{m:'mp',c:'#009EE3'},
+  'itaú':{m:'it',c:'#EC7000'}, 'itaú igor':{m:'it',c:'#0B3D91'}, 'c6 bank':{m:'c6',c:'#2B2B2B'}, 'riachuelo':{m:'ri',c:'#D7192F'},
   'santander':{m:'sa',c:'#EC0000'}, 'bradesco':{m:'br',c:'#CC092F'}, 'caixa':{m:'cx',c:'#005CA9'},
   'banco do brasil':{m:'bb',c:'#3B5BA5'}, 'picpay':{m:'pp',c:'#11A85F'}, 'outro cartão':{m:'··',c:'#8e8580'},
 };
@@ -859,7 +877,7 @@ function catGuess(desc){ const d=' '+(desc||'').toLowerCase().normalize('NFC')+'
   for(const [n,,ks] of CATS) if(ks.some(k=>d.includes(k.length<=3?' '+k+' ':k))) return n; return 'outros'; }
 function cat(it){ if(it.cat){const c=String(it.cat).toLowerCase(); if(CATN.includes(c)) return c;} const lc=learnedCat(it.desc); if(lc&&CATN.includes(lc)) return lc; return catGuess(it.desc); }
 function banco(it){ if(it.banco!==undefined) return it.banco?String(it.banco).toLowerCase():'boleto'; if(it.tipo!=='conta') return null;
-  const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) return apelido(b==='nubank pf'&&it.quem==='igor'&&/\bnu\b/.test(d)&&!/\bpf\b/.test(d)?'nubank igor':b); return BOLETO.test(d)?'boleto':null; }
+  const d=(it.desc||'').toLowerCase(); for(const b of bankDocs()){ const n=String(b.nome||'').toLowerCase(); if(n&&!BANKS[n]&&d.includes(n)) return n; } for(const [re,b] of BANK_RULES) if(re.test(d)) { const doIgor=it.quem==='igor'||/igor/.test(d); return apelido(b==='nubank pf'&&doIgor&&!/\bpf\b/.test(d)?'nubank igor':b==='itaú'&&doIgor?'itaú igor':b); } return BOLETO.test(d)?'boleto':null; }
 const apelido=b=>{ const a=bankDocs().find(x=>x.de===b&&!x.oculto); return a?String(a.nome).toLowerCase():b; };
 const slug=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'x';
 const uid=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1366,7 +1384,7 @@ function quickForm(p,tipo,fixo){
   const t=today(), m=ui.mes; let qq=ui.qquem||'juntos'; if(tipo==='entrada'&&qq==='juntos') qq='lais';
   const dDef=m===t.slice(0,7)?t:`${m}-${tipo==='conta'?'10':'01'}`;
   const extra=tipo==='conta'?`<select id="${p}-parc" data-keep aria-label="parcelas">${[1,2,3,4,5,6,7,8,9,10,12,18,24].map(n=>`<option value="${n}">${n===1?'à vista':n+'x'}</option>`).join('')}</select>
-      <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão: não sei</option><option value="boleto">boleto ou pix</option>${bkAtivos().map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
+      <select id="${p}-bank" data-keep aria-label="cartão"><option value="">cartão</option><option value="boleto">boleto ou pix</option>${bkAtivos().map(b=>`<option value="${b}">${b}</option>`).join('')}</select>`
     :'';
   return `<form class="qadd" id="${p}F" data-tipo="${tipo}" novalidate>
     ${fixo?'':`<div class="seg">${[['gasto','gasto'],['conta','conta'],['entrada','entrada']].map(([k,l])=>`<button type="button" data-qt="${k}" aria-pressed="${tipo===k}">${l}</button>`).join('')}</div>`}
@@ -1512,7 +1530,7 @@ function tabela(tipo,m){
 const dTxt=(v,l)=>v?(l?`${v.slice(8)}/${v.slice(5,7)}/${v.slice(0,4)}`:dm(v)):'sem data';
 const dateBtn=(id,v,{longo=false,limpar=false,cls='dbtn',rotulo='data'}={})=>`<input type="hidden" id="${id}" value="${esc(v||'')}"><button type="button" class="${cls}" data-calfor="${id}" data-fmt="${longo?'l':'c'}" ${limpar?'data-limpar="1"':''} aria-label="${rotulo}">${dTxt(v,longo)}${longo?ic('cal','sm'):''}</button>`;
 let cal=null;
-function abrirCal(id){ const inp=$('#'+id), b=document.querySelector(`[data-calfor="${id}"]`), v=inp?.value||''; const base=v||(ui.mes===today().slice(0,7)?today():diaNoMes(ui.mes,1)); cal={id,mes:base.slice(0,7),sel:v,limpar:!!b?.dataset.limpar}; drawCal(); }
+function abrirCal(id){ const inp=$('#'+id), b=document.querySelector(`[data-calfor="${id}"]`), v=inp?.value||''; const base=v||(ui.mes===today().slice(0,7)?today():diaNoMes(ui.mes,1)); cal={id,mes:base.slice(0,7),sel:v,limpar:!!b?.dataset.limpar,t:Date.now()}; drawCal(); }
 function drawCal(){
   const host=$('#calHost'); if(!cal){ host.innerHTML=''; return; }
   const btn=document.querySelector(`[data-calfor="${cal.id}"]`); if(!btn){ cal=null; host.innerHTML=''; return; }
@@ -1778,7 +1796,8 @@ async function quickAdd(p,force){
   if(!desc) return err('escreva o que foi.'); if(raw===''||!(v>=0)) return err('digite o valor, por exemplo 45,90.');
   const tipo=f.dataset.tipo; let quem=ui.qquem||'juntos'; if(tipo==='entrada'&&quem==='juntos') quem='lais';
   const base={tipo,quem,desc,valor:v,data,mes:(data||ui.mes).slice(0,7)};
-  if(tipo==='conta'){ base.pago=false; const b=$('#'+p+'-bank')?.value??''; const auto=banco({tipo:'conta',desc,quem})||''; if(b!==auto) base.banco=b==='boleto'?'':b;
+  if(tipo==='conta'&&/^p[ecg]$/.test(p)&&data&&data.slice(0,7)===addM(ui.mes,1)) base.mes=ui.mes;
+  if(tipo==='conta'){ base.pago=false; const sel=$('#'+p+'-bank'), auto=banco({tipo:'conta',desc,quem})||'', b=sel?sel.value:auto; if(sel&&b&&b!==auto) base.banco=b==='boleto'?'':b;
     const dc=BK()[b||auto]?.dia; if(dc){ base.data=diaNoMes(base.mes,dc); } }
   const n=tipo==='conta'?+($('#'+p+'-parc')?.value||1):1;
   if(!force){ const dups=acharDup({...base,desc:n>1?`${desc} 1/${n}`:desc}); if(dups.length){ dupPend={p,base,dups}; abrirDup(); return; } }
@@ -2097,6 +2116,7 @@ async function submit(){
   if(f.valor===''||!(v>=0)) return err('digite o valor, por exemplo 45,90.');
   if(!f.desc.trim()) return err('escreva uma descrição curta, por exemplo mercado.');
   const o={tipo:f.tipo,quem:f.tipo==='entrada'&&f.quem==='juntos'?'lais':f.quem,desc:f.desc.trim(),valor:v,data:f.data||null,mes:(f.data||ui.mes).slice(0,7)};
+  if(f.tipo==='conta'&&f.mes&&o.data&&o.data.slice(0,7)===addM(f.mes,1)) o.mes=f.mes;
   if(f.tipo==='gasto'&&f.cat&&f.cat!==catGuess(o.desc)) o.cat=f.cat;
   if(f.tipo!=='entrada'&&f.partes?.length) o.partes=f.partes;
   if(f.tipo==='conta'){ o.pago=!!f.pago; if(f.parciais?.length) o.parciais=f.parciais; const auto=banco({...o})||''; const sel=f.bankSel??auto; if(sel!==auto) o.banco=sel==='boleto'?'':sel; else if(f.banco!==undefined) o.banco=f.banco; if(f.auto) o.auto=true; }
@@ -2232,7 +2252,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',async e=>{ if(e.target.id==='contLanc'){ ui.cont=e.target.checked; try{localStorage.setItem('fin-cont',ui.cont?'1':'0')}catch(_){} return; } if(e.target.id==='fonteFile'&&e.target.files.length){ await lerFontes([...e.target.files]); e.target.value=''; return; } if(e.target.id==='fotoFile'&&e.target.files[0]){ try{ const o=await lerOriginal(e.target.files[0]); try{localStorage.setItem('fin-foto-orig',o)}catch(_){} abrirFoto(o); }catch(_){ toast('não consegui abrir essa foto.','alert'); } e.target.value=''; return; } if(e.target.dataset?.meta!==undefined){ const c=e.target.dataset.meta, id='meta_'+slug(c), raw=e.target.value.trim(), v=parseV(raw);
     if(!raw||!(v>0)){ if(items.has(id)) safe(store.del(id),`meta de ${c} tirada`); return; }
     safe(store.put({id,tipo:'meta',cat:c,valor:v}),`meta de ${c}: ${fmtT(v)} por mês`); return; } if(e.target.dataset?.bankcor){ const n=e.target.dataset.bankcor; const id='banco_'+slug(n); safe(store.put({...(items.get(id)||{}),id,tipo:'banco',nome:n,cor:e.target.value}),'cor do banco salva'); return; } if(e.target.id==='impFile'&&e.target.files[0]) readImport(e.target.files[0]); if(e.target.id==='temaCor'){ setTema(temaCustom(e.target.value)); toast('cor salva'); } });
-addEventListener('scroll',()=>{ if(cal){ cal=null; drawCal(); } },{passive:true});
+addEventListener('scroll',()=>{ if(cal&&Date.now()-(cal.t||0)>400){ cal=null; drawCal(); } },{passive:true});
 document.addEventListener('change',e=>{ const t=e.target; if(/^p[ecg]-quem$/.test(t.id||'')) t.className='pt-q '+t.value; });
 document.addEventListener('submit',e=>{ if(e.target.id==='sheet'){e.preventDefault();submit();} if(e.target.id==='loginF'){e.preventDefault();doLogin();} if(e.target.id==='novaF'){e.preventDefault();salvarNovaSenha();} if(e.target.id==='gF'){ e.preventDefault(); const o={id:'saldo_'+ui.mes,tipo:'saldo',mes:ui.mes}; for(const [k] of SALDO_K){ const v=parseV($('#g-'+k).value||'0'); o[k]=isFinite(v)?v:0; } ui.editSaldo=false; safe(store.put(o),'valores guardados'); return; } const qm=/^(q|s|ae|ac|ag|pe|pc|pg)F$/.exec(e.target.id); if(qm){e.preventDefault(); const qs=$('#'+qm[1]+'-quem'); if(qs) ui.qquem=qs.value; quickAdd(qm[1]);} });
 document.addEventListener('input',e=>{
