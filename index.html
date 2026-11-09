@@ -920,8 +920,8 @@ async function lerFontes(files){ let n=0;
 // every change to items bumps ver, so the per-month index is rebuilt once per change instead of on every lookup
 let ver=0; class Store extends Map{ set(k,v){ver++;return super.set(k,v)} delete(k){ver++;return super.delete(k)} clear(){ver++;return super.clear()} }
 let items=new Store(), store=null, canWrite=true, ready=false, autoDone=false, bannerMsg='';
-const ui={page:'lanc', mes:today().slice(0,7), cat:null, ano:today().slice(0,4)};
-// the app always opens on the month's sheet
+const ui={page:'inicio', mes:today().slice(0,7), cat:null, ano:today().slice(0,4)};
+// the app always opens on início (the month's numbers)
 const saveUi=()=>{try{localStorage.setItem('fin2-ui',JSON.stringify({page:ui.page}))}catch(e){}};
 let idxVer=-1, idx={live:[],byMes:new Map(),meses:[]};
 function index(){ if(idxVer===ver) return idx; const lv=[],bm=new Map(),ms=new Set();
@@ -1191,11 +1191,22 @@ async function autoParcelas(){
       try{ await store.put(it); }catch(e){}
     }
   }
-  if(n){ toast(`${n} parcela${n>1?'s':''} lançada${n>1?'s':''} sozinha${n>1?'s':''}`,'layers'); render(); }
+  // fixed bills (the same one in each of the last two months, not an installment) repeat in the current month by themselves;
+  // a repeated bill that gets deleted stays deleted (it is kept as removido), so it is never created twice
+  let f=0; { const m=cur, p1=addM(m,-1), p2=addM(m,-2), all=[...items.values()];
+    const keys=new Set(all.filter(i=>i.mes===m&&i.tipo==='conta').map(i=>i.quem+'|'+baseOf(i)));
+    const antes=new Set(all.filter(i=>i.mes===p2&&i.tipo==='conta'&&!i.removido&&!parc(i.desc)).map(i=>i.quem+'|'+baseOf(i)));
+    for(const c of all.filter(i=>i.mes===p1&&i.tipo==='conta'&&!i.removido&&!parc(i.desc)&&+i.valor>0)){
+      const k=c.quem+'|'+baseOf(c); if(keys.has(k)||!antes.has(k)) continue;
+      const id=`fixa_${m}_${c.quem}_${slug(baseOf(c))}`; if(items.has(id)) continue;
+      const it={id,tipo:'conta',quem:c.quem,desc:c.desc,valor:c.valor,data:c.data?addMd(c.data,1):`${m}-10`,mes:m,pago:false,auto:true,fixa:true};
+      if(c.banco!==undefined) it.banco=c.banco; if(c.div?.length) it.div=c.div.map(x=>({n:x.n,v:x.v,ok:false}));
+      items.set(id,it); keys.add(k); f++; try{ await store.put(it); }catch(e){} } }
+  if(n||f){ toast([n?`${n} parcela${n>1?'s':''}`:'',f?`${f} conta${f>1?'s':''} fixa${f>1?'s':''}`:''].filter(Boolean).join(' e ')+' lançada'+((n+f)>1?'s':'')+' sozinha'+((n+f)>1?'s':''),'layers'); render(); }
 }
 
 // ---------- navigation ----------
-const PAGES=[['lanc','planilha','file'],['inicio','resumo','home'],['ano','balanço anual','chart']];
+const PAGES=[['inicio','início','home'],['lanc','mês','file'],['ano','ano','chart']];
 function renderNav(){
   const cur=today().slice(0,7), t=today();
   const atras=ofMes(cur,'conta').filter(c=>!c.pago&&c.data&&c.data<t).length;
@@ -1207,7 +1218,7 @@ function renderNav(){
   $('#appbar').innerHTML=`<span class="mark" data-mark>${markHead()}</span><span class="who"><small>${on||`${saud.replace(',','')} · ${hoje}`}</small><b>laís &amp; igor</b></span><button class="rbtn" data-buscaon="1" aria-label="buscar">${ic('search')}</button>`;
   $('#navR').innerHTML=(online.length?`<span class="online"><i></i>${online.join(' e ')} online</span>`:'')+`<button class="icbtn" data-buscaon="1" aria-label="buscar">${ic('search')}</button><button class="icbtn" data-page="ajustes" aria-label="ajustes" ${cur_('ajustes')}>${ic('gear')}</button>${canWrite?`<button class="btn dark" data-new="auto">${ic('plus','sm')} lançar</button>`:''}`;
   const d=(k,l,i)=>`<a data-page="${k}" ${cur_(k)}>${ic(i,'lg')}<span>${l}</span>${k==='lanc'&&atras?'<span class="dotb"></span>':''}</a>`;
-  $('#dock').innerHTML=d('lanc','planilha','file')+d('inicio','resumo','home')
+  $('#dock').innerHTML=d('inicio','início','home')+d('lanc','mês','file')
     +(canWrite?`<button class="plus" data-new="auto" aria-label="lançar">${ic('plus','lg')}</button>`:'<span></span>')
     +d('ano','ano','chart')+d('ajustes','ajustes','gear');
   document.body.classList.toggle('gated',!!gate);
@@ -1389,6 +1400,7 @@ function tabela(tipo,m){
       ${l.length?l.map(row).join(''):`<div class="pt-vazio">nada lançado ainda.</div>`}</div>
     ${add}
     <div class="pt-foot">${ck?`<div class="pt-l"><span>total</span><b class="num">${fmt(tot)}</b></div><div class="pt-l"><span>pago</span><b class="num">${fmt(tot-falta)}</b></div><div class="pt-l tot"><span>restante</span><b class="num">${fmt(falta)}</b></div>`:`<div class="pt-l tot"><span>total</span><b class="num">${fmt(tot)}</b></div>`}
+      ${ck?'<small class="pt-obs">parcelas e contas fixas (as que se repetem todo mês) entram sozinhas no mês seguinte.</small>':''}
       <div class="pt-cada"><span>${tipo==='entrada'?'recebido':'cada um'}</span>${quens.map(k=>`<span><i class="dot ${k}"></i>${QUEM[k]} <b class="num">${fmt(q[k]||0)}</b></span>`).join('')}</div></div>
   </section>`;
 }
@@ -2006,8 +2018,8 @@ document.addEventListener('click',e=>{
   if(d.qt){ if($('#sF')){ const k=keepVals('s'); openQuick(d.qt); putVals('s',k); } else { ui.qtipo=d.qt; ui.lt={conta:'contas',gasto:'gastos',entrada:'entradas'}[d.qt]; ui.cat=null; render(); } return; }
   if(d.addrow!==undefined){ ui.add=d.addrow||null; render(); if(ui.add) setTimeout(()=>$('#'+PFX[ui.add]+'-valor')?.focus(),50); return; }
   if(d.buscaon){ const on=!(ui.buscaOn&&ui.page==='lanc'); ui.buscaOn=on; if(!on) ui.busca=''; ui.page='lanc'; saveUi(); render(); if(on){ window.scrollTo({top:0}); setTimeout(()=>$('#q-busca')?.focus(),30); } return; }
-  if(d.golt){ ui.page='lanc'; ui.lt=d.golt; ui.cat=null; saveUi(); render(); window.scrollTo({top:0}); return; }
-  if(d.vercontas){ ui.page='lanc'; ui.lt='contas'; ui.cat=null; saveUi(); render(); window.scrollTo({top:0}); return; }
+  if(d.golt){ ui.page='lanc'; ui.lt=d.golt; ui.cat=null; saveUi(); render(); const alvo=$('#pt-'+({entradas:'entrada',contas:'conta',gastos:'gasto'}[d.golt]||'gasto')); if(alvo) alvo.scrollIntoView({block:'start'}); else window.scrollTo({top:0}); return; }
+  if(d.vercontas){ ui.page='lanc'; ui.lt='contas'; ui.cat=null; saveUi(); render(); const alvo=$('#pt-conta'); if(alvo) alvo.scrollIntoView({block:'start'}); else window.scrollTo({top:0}); return; }
   if(d.buscax){ ui.buscaOn=false; ui.busca=''; render(); return; }
   if(d.jump){ $('#'+d.jump)?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
   if(d.lt){ ui.lt=d.lt; ui.cat=null; ui.add=null; ui.qtipo={contas:'conta',gastos:'gasto',entradas:'entrada'}[d.lt]; render(); return; }
