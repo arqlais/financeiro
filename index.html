@@ -1360,7 +1360,7 @@ function render(){
   // keep what is being typed in the quick-add line when live updates re-render the page
   const keep={}; m.querySelectorAll('[data-keep]').forEach(el=>keep[el.id]=el.value); const fid=document.activeElement?.id;
   const oldL=$('#mpills')?.scrollLeft, trocou=render.mes!==undefined&&render.mes!==ui.mes&&render.page===ui.page; render.mes=ui.mes; render.page=ui.page;
-  m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+(outbox.length?`<div class="pending">${ic('cloud','sm')}${outbox.length} ${outbox.length>1?'alterações esperando':'alteração esperando'} a internet voltar · já estão salvas neste celular</div>`:'')+v();
+  m.innerHTML=(bannerMsg?`<div class="banner">${esc(bannerMsg)}</div>`:'')+(!navigator.onLine&&mode==='nuvem'?`<div class="pending">${ic('cloud','sm')}sem internet: pode lançar normal, fica salvo no aparelho e sobe sozinho quando a internet voltar.</div>`:'')+(outbox.length?`<div class="pending">${ic('cloud','sm')}${outbox.length} ${outbox.length>1?'alterações esperando':'alteração esperando'} a internet voltar · já estão salvas neste celular</div>`:'')+v();
   for(const [id,val] of Object.entries(keep)){ const el=document.getElementById(id); if(el&&val) el.value=val; }
   if(fid&&keep[fid]!==undefined) document.getElementById(fid)?.focus();
   // month strip: keep where it was and glide to the new month, instead of jumping back to january
@@ -2293,7 +2293,8 @@ async function voltar(){
   render(); if(!autoDone) setTimeout(autoParcelas,300);
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') hiddenAt=Date.now(); else if(Date.now()-hiddenAt>45000||today()!==dia) voltar(); else if(render.pend) render(); });
-addEventListener('online',()=>flush());
+addEventListener('online',()=>{ flush(); render(); });
+addEventListener('offline',()=>render());
 
 // dragging the photo inside the frame (mouse or finger)
 let drag=null;
